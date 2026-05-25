@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}Übersicht – Training Manager{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+
+  <!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+  <div class="dash-hero">
+    <div class="dash-hero-inner">
+      <div>
+        <div class="dash-hero-greeting" id="dash-greeting">Hallo, {{ username }}!</div>
+        <div class="dash-hero-date" id="dash-date"></div>
+        <div class="dash-hero-tagline" id="dash-tagline"></div>
+      </div>
+    </div>
+    <div class="dash-hero-deco" aria-hidden="true">
+      <svg width="220" height="180" viewBox="0 0 220 180" fill="none">
+        <circle cx="180" cy="90" r="90" stroke="rgba(255,255,255,0.035)" stroke-width="54"/>
+        <circle cx="180" cy="90" r="56" stroke="rgba(255,255,255,0.045)" stroke-width="28"/>
+        <circle cx="180" cy="90" r="28" stroke="rgba(255,255,255,0.06)" stroke-width="14"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- ── Stats ──────────────────────────────────────────────────────────── -->
+    <div class="dash-stats">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-icon-blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="dash-stat-value" id="stat-month">–</div>
+        <div class="dash-stat-label">Trainings diesen Monat</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-icon-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="dash-stat-value" id="stat-total">–</div>
+        <div class="dash-stat-label">Trainings gesamt</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-icon-purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/></svg>
+        </div>
+        <div class="dash-stat-value" id="stat-exercises">–</div>
+        <div class="dash-stat-label">Übungen verfügbar</div>
+      </div>
+    </div>
+
+    <!-- ── 4-Day Preview ─────────────────────────────────────────────────── -->
+    <div>
+      <div class="dash-section-title">Nächste 4 Tage</div>
+      <div class="dash-days" id="dash-days">
+        <div class="dash-skeleton"></div>
+        <div class="dash-skeleton"></div>
+        <div class="dash-skeleton"></div>
+        <div class="dash-skeleton"></div>
+      </div>
+    </div>
+
+    <!-- ── Bottom Row ──────────────────────────────────────────────────────── -->
+    <div class="dash-bottom">
+      <div>
+        <div class="dash-section-title">Vorgeschlagene Übungen</div>
+        <div class="dash-exercises-list" id="dash-exercises">
+          <div class="dash-skeleton" style="height:68px"></div>
+          <div class="dash-skeleton" style="height:68px"></div>
+          <div class="dash-skeleton" style="height:68px"></div>
+        </div>
+      </div>
+      <div class="dash-quote-col">
+        <div class="dash-section-title">Motivation</div>
+        <div class="dash-quote">
+          <div class="dash-quote-mark" aria-hidden="true">"</div>
+          <div class="dash-quote-text" id="quote-text"></div>
+          <div class="dash-quote-author" id="quote-author"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Dashboard ─────────────────────────────────────────────────────────────── */
+
+const SHORT_DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+const MONTHS     = ['Januar','Februar','März','April','Mai','Juni',
+                    'Juli','August','September','Oktober','November','Dezember'];
+const FULL_DAYS  = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
+const SPORT_BG = {
+  'Fußball':    'linear-gradient(135deg,#14532d,#16a34a)',
+  'Tennis':     'linear-gradient(135deg,#7c2d12,#ea580c)',
+  'Floorball':  'linear-gradient(135deg,#1e3a8a,#3b82f6)',
+  'Basketball': 'linear-gradient(135deg,#4c1d95,#7c3aed)',
+  'Volleyball': 'linear-gradient(135deg,#78350f,#d97706)',
+  'Gym':        'linear-gradient(135deg,#1f2937,#4b5563)',
+  'Allgemein':  'linear-gradient(135deg,#134e4a,#0d9488)',
+};
+
+const QUOTES = [
+  { text: 'Champions werden nicht in Sporthallen gemacht. Champions werden aus etwas gemacht, das sie tief in sich tragen – einem Wunsch, einem Traum, einer Vision.', author: 'Muhammad Ali' },
+  { text: 'Erfolg ist kein Zufall. Er ist harte Arbeit, Ausdauer, Lernen und vor allem Liebe zu dem, was du tust.', author: 'Pelé' },
+  { text: 'Disziplin ist die Brücke zwischen Zielen und Erfolg.', author: 'Jim Rohn' },
+  { text: 'Es gibt kein Limit. Es gibt nur Plateaus – und du musst nicht dort bleiben.', author: 'Bruce Lee' },
+  { text: 'Der Schmerz des Trainings ist temporär. Der Stolz auf das Erreichte bleibt ein Leben lang.', author: '' },
+  { text: 'Das einzige schlechte Training ist das, das nicht stattgefunden hat.', author: '' },
+  { text: 'Nicht aufzugeben ist der erste Schritt zum Sieg.', author: '' },
+  { text: 'Glaube an dich. Arbeite für dich. Die Ergebnisse kommen von selbst.', author: '' },
+  { text: 'Herausforderungen machen das Leben interessant. Sie zu überwinden macht das Leben bedeutsam.', author: 'Joshua J. Marine' },
+  { text: 'Wer aufhört, besser zu werden, hat aufgehört, gut zu sein.', author: 'Philip Rosenthal' },
+];
+
+const TAGLINES = [
+  ['Guten Morgen', 'Bereit für einen starken Start in den Tag?'],
+  ['Guten Mittag', 'Mittagspause – perfekte Zeit für ein Training.'],
+  ['Guten Nachmittag', 'Der Nachmittag gehört dir. Zeit zu trainieren!'],
+  ['Guten Abend', 'Abendtraining ist besonders effektiv – los geht\'s!'],
+];
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 5  && h < 12) return TAGLINES[0];
+  if (h >= 12 && h < 14) return TAGLINES[1];
+  if (h >= 14 && h < 19) return TAGLINES[2];
+  return TAGLINES[3];
+}
+
+/* Hero */
+(function initHero() {
+  const now = new Date();
+  const [label, tagline] = getGreeting();
+  document.getElementById('dash-greeting').textContent =
+    `${label}, {{ username }}!`;
+  document.getElementById('dash-date').textContent =
+    `${FULL_DAYS[now.getDay()]}, ${now.getDate()}. ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('dash-tagline').textContent = tagline;
+})();
+
+/* Quote (rotates daily) */
+(function initQuote() {
+  const start      = new Date(new Date().getFullYear(), 0, 0);
+  const dayOfYear  = Math.floor((Date.now() - start) / 86400000);
+  const q          = QUOTES[dayOfYear % QUOTES.length];
+  document.getElementById('quote-text').textContent   = '„' + q.text + '“';
+  document.getElementById('quote-author').textContent = q.author ? `— ${q.author}` : '— Unbekannt';
+})();
+
+/* Animated counter */
+function countUp(el, target, duration = 600) {
+  const start = Date.now();
+  const tick = () => {
+    const p = Math.min((Date.now() - start) / duration, 1);
+    el.textContent = Math.round(p * target);
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* Fetch & render */
+async function loadDashboard() {
+  const res  = await fetch('/api/dashboard');
+  const data = await res.json();
+
+  /* Stats */
+  countUp(document.getElementById('stat-month'),     data.stats.trainings_this_month);
+  countUp(document.getElementById('stat-total'),     data.stats.total_trainings);
+  countUp(document.getElementById('stat-exercises'), data.stats.total_exercises, 900);
+
+  /* 4-Day calendar */
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('dash-days').innerHTML = data.upcoming.map(({ date, trainings }) => {
+    const d       = new Date(date + 'T12:00:00');
+    const isToday = date === todayStr;
+    const trainHtml = trainings.length
+      ? trainings.map(t =>
+          `<div class="dash-day-pill" onclick="event.stopPropagation();window.location='/training/${t.id}'">${t.title}</div>`
+        ).join('')
+      : `<span class="dash-day-empty">Kein Training</span>`;
+    return `
+      <div class="dash-day${isToday ? ' today' : ''}" onclick="window.location='/calendar'">
+        <div class="dash-day-header">
+          <span class="dash-day-name">${SHORT_DAYS[d.getDay()]}</span>
+          <span class="dash-day-num">${d.getDate()}. ${MONTHS[d.getMonth()]}</span>
+        </div>
+        <div class="dash-day-trainings">${trainHtml}</div>
+        <div class="dash-day-add">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Hinzufügen
+        </div>
+      </div>`;
+  }).join('');
+
+  /* Suggested exercises */
+  document.getElementById('dash-exercises').innerHTML = data.suggested.map(ex => {
+    const bg = SPORT_BG[ex.sport] || SPORT_BG['Allgemein'];
+    return `
+      <a class="dash-ex-card" href="/exercises">
+        <div class="dash-ex-icon" style="background:${bg}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="2">
+            <path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/>
+          </svg>
+        </div>
+        <div class="dash-ex-info">
+          <div class="dash-ex-title">${ex.title}</div>
+          <div class="dash-ex-meta">${ex.core_competency} &middot; ${ex.difficulty} &middot; ${ex.sport}</div>
+        </div>
+        <svg class="dash-ex-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9,18 15,12 9,6"/>
+        </svg>
+      </a>`;
+  }).join('');
+}
+
+loadDashboard();
+</script>
+{% endblock %}

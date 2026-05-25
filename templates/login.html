@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Login – Training Manager</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0f1f35">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Training">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.svg">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+  <div class="login-page">
+    <!-- Left panel -->
+    <div class="login-hero">
+      <div class="hero-content">
+        <div class="hero-logo">⚽</div>
+        <h1>Training Manager</h1>
+        <p>Plane deine Trainings. Verwalte Übungen. Werde besser.</p>
+        <div class="hero-features">
+          <div class="hero-feature">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+            Übungsdatenbank mit Bildern & Erklärungen
+          </div>
+          <div class="hero-feature">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+            Trainingskalender & -planung
+          </div>
+          <div class="hero-feature">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Persönliches Konto – nur für dich
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel: Form -->
+    <div class="login-form-panel">
+      <div class="login-form-container">
+        <!-- Tabs -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Anmelden</button>
+          <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Registrieren</button>
+        </div>
+
+        <!-- Login form -->
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Benutzername oder E-Mail</label>
+            <input type="text" id="login-username" placeholder="Benutzername oder E-Mail" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label>Passwort</label>
+            <input type="password" id="login-password" placeholder="Passwort" required autocomplete="current-password">
+          </div>
+          <div id="login-error" class="form-error hidden"></div>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+            Anmelden
+          </button>
+        </form>
+
+        <!-- Register form -->
+        <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label>Benutzername</label>
+            <input type="text" id="reg-username" placeholder="Dein Benutzername" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label>E-Mail</label>
+            <input type="email" id="reg-email" placeholder="deine@email.de" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>Passwort</label>
+            <input type="password" id="reg-password" placeholder="Mindestens 6 Zeichen" required minlength="6" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label>Passwort wiederholen</label>
+            <input type="password" id="reg-password2" placeholder="Passwort wiederholen" required autocomplete="new-password">
+          </div>
+          <div id="register-error" class="form-error hidden"></div>
+          <button type="submit" class="btn btn-primary btn-full" id="register-btn">
+            Konto erstellen
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script>
+    function switchTab(tab) {
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const tabLogin = document.getElementById('tab-login');
+      const tabRegister = document.getElementById('tab-register');
+
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+      } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        tabLogin.classList.remove('active');
+        tabRegister.classList.add('active');
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const errEl = document.getElementById('login-error');
+      btn.disabled = true;
+      btn.textContent = 'Wird angemeldet...';
+      errEl.classList.add('hidden');
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('login-username').value,
+          password: document.getElementById('login-password').value
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        window.location.href = '/calendar';
+      } else {
+        errEl.textContent = data.error;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Anmelden';
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('register-btn');
+      const errEl = document.getElementById('register-error');
+      const pw1 = document.getElementById('reg-password').value;
+      const pw2 = document.getElementById('reg-password2').value;
+
+      errEl.classList.add('hidden');
+      if (pw1 !== pw2) {
+        errEl.textContent = 'Passwörter stimmen nicht überein';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Konto wird erstellt...';
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('reg-username').value,
+          email: document.getElementById('reg-email').value,
+          password: pw1
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        window.location.href = '/calendar';
+      } else {
+        errEl.textContent = data.error;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Konto erstellen';
+      }
+    }
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Einstellungen – Training Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Konto-Einstellungen</h1>
+    <p class="page-subtitle">Profil und Sicherheit verwalten</p>
+  </div>
+</div>
+
+<div class="settings-layout">
+
+  <!-- Profil -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <div class="settings-card-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+      </div>
+      <div>
+        <div class="settings-card-title">Profil</div>
+        <div class="settings-card-sub">Benutzername und E-Mail-Adresse</div>
+      </div>
+    </div>
+
+    <form id="profile-form" onsubmit="submitProfile(event)">
+      <div class="form-group">
+        <label>Benutzername</label>
+        <input type="text" id="input-username" value="{{ user.username }}" minlength="2" required>
+      </div>
+      <div class="form-group">
+        <label>E-Mail-Adresse</label>
+        <input type="email" id="input-email" value="{{ user.email }}" required>
+      </div>
+      <div class="settings-form-footer">
+        <span id="profile-status" class="settings-status"></span>
+        <button type="submit" class="btn btn-primary btn-sm" id="profile-btn">Änderungen speichern</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Passwort -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <div class="settings-card-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div>
+        <div class="settings-card-title">Passwort ändern</div>
+        <div class="settings-card-sub">Lege ein neues Passwort fest</div>
+      </div>
+    </div>
+
+    <form id="password-form" onsubmit="submitPassword(event)">
+      <div class="form-group">
+        <label>Aktuelles Passwort</label>
+        <div class="input-password-wrap">
+          <input type="password" id="input-current-pw" required autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('input-current-pw', this)" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Neues Passwort</label>
+        <div class="input-password-wrap">
+          <input type="password" id="input-new-pw" minlength="6" required autocomplete="new-password"
+            oninput="checkPwMatch()">
+          <button type="button" class="pw-toggle" onclick="togglePw('input-new-pw', this)" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="pw-strength-bar"><div id="pw-strength-fill"></div></div>
+        <div id="pw-strength-label" class="form-hint"></div>
+      </div>
+      <div class="form-group">
+        <label>Neues Passwort bestätigen</label>
+        <div class="input-password-wrap">
+          <input type="password" id="input-confirm-pw" required autocomplete="new-password"
+            oninput="checkPwMatch()">
+          <button type="button" class="pw-toggle" onclick="togglePw('input-confirm-pw', this)" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div id="pw-match-hint" class="form-hint"></div>
+      </div>
+      <div class="settings-form-footer">
+        <span id="password-status" class="settings-status"></span>
+        <button type="submit" class="btn btn-primary btn-sm" id="password-btn">Passwort ändern</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Konto-Info -->
+  <div class="settings-card settings-card-info">
+    <div class="settings-card-header">
+      <div class="settings-card-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div>
+        <div class="settings-card-title">Konto-Informationen</div>
+        <div class="settings-card-sub">Allgemeine Infos zu deinem Konto</div>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-row">
+        <span class="info-label">Mitglied seit</span>
+        <span class="info-value" id="joined-date">{{ user.created_at[:10] if user.created_at else '–' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Benutzername</span>
+        <span class="info-value">{{ user.username }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">E-Mail</span>
+        <span class="info-value">{{ user.email }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Profile ───────────────────────────────────────────────────────────────────
+async function submitProfile(e) {
+  e.preventDefault();
+  const btn = document.getElementById('profile-btn');
+  const status = document.getElementById('profile-status');
+  btn.disabled = true;
+  btn.textContent = 'Wird gespeichert...';
+  status.textContent = '';
+  status.className = 'settings-status';
+
+  const res = await fetch('/api/auth/change-profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: document.getElementById('input-username').value.trim(),
+      email:    document.getElementById('input-email').value.trim()
+    })
+  });
+  const data = await res.json();
+
+  btn.disabled = false;
+  btn.textContent = 'Änderungen speichern';
+
+  if (res.ok) {
+    status.textContent = 'Gespeichert';
+    status.className = 'settings-status status-ok';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  } else {
+    status.textContent = data.error || 'Fehler';
+    status.className = 'settings-status status-err';
+  }
+}
+
+// ── Password ──────────────────────────────────────────────────────────────────
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.style.color = show ? 'var(--primary)' : '';
+}
+
+function checkPwMatch() {
+  const nw  = document.getElementById('input-new-pw').value;
+  const cfm = document.getElementById('input-confirm-pw').value;
+  const hint = document.getElementById('pw-match-hint');
+  const fill = document.getElementById('pw-strength-fill');
+  const lbl  = document.getElementById('pw-strength-label');
+
+  // Strength
+  let score = 0;
+  if (nw.length >= 6)  score++;
+  if (nw.length >= 10) score++;
+  if (/[A-Z]/.test(nw)) score++;
+  if (/[0-9]/.test(nw)) score++;
+  if (/[^A-Za-z0-9]/.test(nw)) score++;
+  const levels = [
+    { w: '0%',   color: 'transparent', label: '' },
+    { w: '25%',  color: '#ef4444',     label: 'Schwach' },
+    { w: '50%',  color: '#f97316',     label: 'Mittel' },
+    { w: '75%',  color: '#eab308',     label: 'Gut' },
+    { w: '100%', color: '#22c55e',     label: 'Stark' },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  fill.style.width = nw.length ? lvl.w : '0%';
+  fill.style.background = lvl.color;
+  lbl.textContent = nw.length ? lvl.label : '';
+  lbl.style.color = lvl.color;
+
+  // Match
+  if (!cfm) { hint.textContent = ''; return; }
+  if (nw === cfm) {
+    hint.textContent = 'Passwörter stimmen überein';
+    hint.style.color = 'var(--success)';
+  } else {
+    hint.textContent = 'Passwörter stimmen nicht überein';
+    hint.style.color = 'var(--danger)';
+  }
+}
+
+async function submitPassword(e) {
+  e.preventDefault();
+  const nw  = document.getElementById('input-new-pw').value;
+  const cfm = document.getElementById('input-confirm-pw').value;
+  if (nw !== cfm) {
+    document.getElementById('password-status').textContent = 'Passwörter stimmen nicht überein';
+    document.getElementById('password-status').className = 'settings-status status-err';
+    return;
+  }
+
+  const btn = document.getElementById('password-btn');
+  const status = document.getElementById('password-status');
+  btn.disabled = true;
+  btn.textContent = 'Wird gespeichert...';
+  status.textContent = '';
+  status.className = 'settings-status';
+
+  const res = await fetch('/api/auth/change-password', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      current_password: document.getElementById('input-current-pw').value,
+      new_password: nw
+    })
+  });
+  const data = await res.json();
+
+  btn.disabled = false;
+  btn.textContent = 'Passwort ändern';
+
+  if (res.ok) {
+    document.getElementById('password-form').reset();
+    document.getElementById('pw-strength-fill').style.width = '0';
+    document.getElementById('pw-strength-label').textContent = '';
+    document.getElementById('pw-match-hint').textContent = '';
+    status.textContent = 'Passwort erfolgreich geändert';
+    status.className = 'settings-status status-ok';
+    setTimeout(() => { status.textContent = ''; }, 4000);
+  } else {
+    status.textContent = data.error || 'Fehler';
+    status.className = 'settings-status status-err';
+  }
+}
+</script>
+{% endblock %}

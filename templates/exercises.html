@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Übungen – Training Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Übungsdatenbank</h1>
+    <p class="page-subtitle">Alle Übungen auf einen Blick</p>
+  </div>
+  <button class="btn btn-primary" onclick="showCreateExerciseModal()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Neue Übung
+  </button>
+</div>
+
+<div class="sport-tabs-bar">
+  <button class="sport-tab active" data-sport="" onclick="setSport(this,'')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="8" y1="2" x2="8" y2="14"/></svg>
+    Alle Sportarten
+  </button>
+  <button class="sport-tab" data-sport="Fußball" onclick="setSport(this,'Fußball')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3" width="14" height="10" rx="1"/><line x1="8" y1="3" x2="8" y2="13"/><circle cx="8" cy="8" r="2.5"/><rect x="1" y="5" width="3" height="6" rx="0.5"/><rect x="12" y="5" width="3" height="6" rx="0.5"/></svg>
+    Fußball
+  </button>
+  <button class="sport-tab" data-sport="Tennis" onclick="setSport(this,'Tennis')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="14" height="14" rx="1"/><line x1="8" y1="1" x2="8" y2="15"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="4" y1="3" x2="4" y2="13"/><line x1="12" y1="3" x2="12" y2="13"/></svg>
+    Tennis
+  </button>
+  <button class="sport-tab" data-sport="Floorball" onclick="setSport(this,'Floorball')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3" width="14" height="10" rx="4"/><circle cx="8" cy="8" r="2"/><line x1="8" y1="3" x2="8" y2="13"/><rect x="1" y="5" width="3" height="6" rx="1"/><rect x="12" y="5" width="3" height="6" rx="1"/></svg>
+    Floorball
+  </button>
+  <button class="sport-tab" data-sport="Basketball" onclick="setSport(this,'Basketball')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/><path d="M5 1.8 C7 4.5 7 11.5 5 14.2"/><path d="M11 1.8 C9 4.5 9 11.5 11 14.2"/></svg>
+    Basketball
+  </button>
+  <button class="sport-tab" data-sport="Volleyball" onclick="setSport(this,'Volleyball')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6.5"/><path d="M1.5 10 C4 9 6 9 8 9.5"/><path d="M8 9.5 C10 10 12 10 14.5 10"/><path d="M8 1.5 C8 4 6 6.5 1.5 10"/><path d="M8 1.5 C8 4 10 6.5 14.5 10"/></svg>
+    Volleyball
+  </button>
+  <button class="sport-tab" data-sport="Gym" onclick="setSport(this,'Gym')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="0.75" y="6" width="2.5" height="4" rx="0.75"/><rect x="12.75" y="6" width="2.5" height="4" rx="0.75"/><rect x="3" y="4.5" width="2" height="7" rx="0.75"/><rect x="11" y="4.5" width="2" height="7" rx="0.75"/><line x1="5" y1="8" x2="11" y2="8" stroke-width="2.2"/></svg>
+    Gym
+  </button>
+  <button class="sport-tab" data-sport="Allgemein" onclick="setSport(this,'Allgemein')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="3.2" r="1.5"/><line x1="8" y1="4.7" x2="8" y2="10"/><path d="M5 7 L8 6 L11 7"/><path d="M6.5 10 L5.5 13.5"/><path d="M9.5 10 L10.5 13.5"/></svg>
+    Allgemein
+  </button>
+</div>
+
+<button class="mobile-filter-btn" id="mobile-filter-toggle" onclick="toggleMobileFilter()" style="display:none">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+  <span id="filter-btn-label">Filter anzeigen</span>
+</button>
+
+<div class="exercises-layout">
+  <!-- Filter sidebar -->
+  <aside class="filter-sidebar">
+    <div class="filter-header">
+      <h3>Filter</h3>
+      <button class="btn-link" onclick="resetFilters()">Zurücksetzen</button>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Suche</label>
+      <input type="text" id="search-input" class="filter-input" placeholder="Übung suchen..." oninput="debounceSearch()">
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Feldspieler</label>
+      <select id="filter-players" class="filter-select" onchange="applyFilters()">
+        <option value="">Alle</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Torhüter</label>
+      <select id="filter-gk" class="filter-select" onchange="applyFilters()">
+        <option value="">Alle</option>
+        <option value="0">0 Torhüter</option>
+        <option value="1">1 Torhüter</option>
+        <option value="2">2 Torhüter</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Kernkompetenz</label>
+      <select id="filter-competency" class="filter-select" onchange="applyFilters()">
+        <option value="">Alle</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Schwierigkeitsgrad</label>
+      <div class="filter-checks" id="filter-difficulty">
+        <label class="check-item">
+          <input type="radio" name="difficulty" value="" checked onchange="applyFilters()"> Alle
+        </label>
+        <label class="check-item">
+          <input type="radio" name="difficulty" value="Anfänger" onchange="applyFilters()"> Anfänger
+        </label>
+        <label class="check-item">
+          <input type="radio" name="difficulty" value="Fortgeschritten" onchange="applyFilters()"> Fortgeschritten
+        </label>
+        <label class="check-item">
+          <input type="radio" name="difficulty" value="Profi" onchange="applyFilters()"> Profi
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Spielfeldgröße</label>
+      <select id="filter-fieldsize" class="filter-select" onchange="applyFilters()">
+        <option value="">Alle</option>
+      </select>
+    </div>
+  </aside>
+
+  <!-- Exercise grid -->
+  <div class="exercises-main">
+    <div class="exercises-count" id="exercises-count"></div>
+    <div class="exercises-grid" id="exercises-grid">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Übungen werden geladen...</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/exercises.js') }}"></script>
+{% endblock %}

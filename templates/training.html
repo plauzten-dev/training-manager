@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Training – Training Manager{% endblock %}
+
+{% block content %}
+<div id="training-page-content">
+  <div class="loading-spinner" style="margin-top:80px">
+    <div class="spinner"></div>
+    <p>Training wird geladen...</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const TRAINING_ID = {{ training_id }};
+</script>
+<script src="{{ url_for('static', filename='js/training.js') }}"></script>
+{% endblock %}
