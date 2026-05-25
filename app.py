@@ -732,10 +732,11 @@ def filter_options():
     return jsonify({'competencies': competencies, 'difficulties': difficulties, 'field_sizes': field_sizes, 'sports': sports})
 
 
+init_db()
+
 if __name__ == '__main__':
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = True
-    init_db()
     print('\n' + '='*40)
     print('  Training Manager gestartet!')
     print('  Oeffne: http://localhost:5000')
