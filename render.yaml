@@ -6,19 +6,11 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --workers 1 --timeout 120
-    # Persistent Disk (optional, $0.25/GB/Monat – nur auf bezahlten Plänen verfügbar)
-    # disk:
-    #   name: data
-    #   mountPath: /data
-    #   sizeGB: 1
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
-        value: 3.11.9
-      # DB_PATH nur setzen wenn Disk aktiviert ist (s.o.):
-      # - key: DB_PATH
-      #   value: /data/training.db
+        value: "3.11.9"
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
