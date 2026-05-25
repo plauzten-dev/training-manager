@@ -161,10 +161,28 @@ training_exercises (id, training_id, exercise_id, order_index)
 
 ---
 
-## Was bereits vollständig funktioniert (v1.3)
+## Live-Deployment (v1.4)
+
+- **Live-URL:** `https://training-manager-nwga.onrender.com`
+- **GitHub:** `plauzten-dev/training-manager` (branch: main)
+- **Hosting:** Render.com Free-Tier (Python 3, gunicorn)
+- **Bilder:** Cloudinary (Env-Vars in Render: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`)
+- **DB:** SQLite ephemer – Daten gehen bei Redeploy verloren, Seed-Übungen kommen automatisch zurück
+- **PWA:** Auf iOS via Safari → Teilen → "Zum Home-Bildschirm" installierbar
+
+### Neue Version deployen
+```powershell
+git add .
+git commit -m "Beschreibung"
+git push
+```
+
+---
+
+## Was bereits vollständig funktioniert (v1.4)
 
 - Benutzer-Accounts (Register, Login, Logout, Profil + Passwort ändern)
-- Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload, Suche, Filter, Sport-Tabs
+- Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload (Cloudinary), Suche, Filter, Sport-Tabs
 - Übungs-Detail-Modal: "Zu Training hinzufügen" direkt aus der Detailansicht
 - Trainingskalender: monatlich, Navigation, Training erstellen/öffnen
 - Training-Detailseite: Übungen per Drag & Drop sortieren (gespeichert), Notizen (Auto-Save), PDF-Export
@@ -174,6 +192,7 @@ training_exercises (id, training_id, exercise_id, order_index)
 - **46 Seed-Übungen** inkl. Aufwärmen, Dehnen, Cool-down (Allgemein-Kategorie)
 - **Dashboard** (`/dashboard`): Begrüßung, Stats, 4-Tage-Vorschau, Übungsvorschläge, Motivation
 - **Responsives Design + Mobile-Nav**: Bottom-Nav auf Mobilgeräten (≤640px), Sidebar kollabiert auf Tablet (≤900px)
+- **PWA**: manifest.json, Service Worker, Apple-Meta-Tags – auf iOS & Android installierbar
 
 ### Sport-Farben (vollständig)
 ```css
@@ -199,17 +218,11 @@ training_exercises (id, training_id, exercise_id, order_index)
 - Sport-Tabs: horizontal scrollbar auf Mobile
 - Modals: Bottom-Sheet-Stil auf Mobile
 
-### Phase 2 – PWA-Setup (nächste Session)
-- [ ] `manifest.json` erstellen (Name, Icons, theme_color, display: standalone)
-- [ ] `<meta name="viewport">` + Theme-Color in base.html sicherstellen
-- [ ] Service Worker für Offline-Fallback (optional, da Backend nötig)
-- [ ] Apple-spezifische Meta-Tags (`apple-mobile-web-app-capable` etc.)
+### Phase 2 – PWA-Setup ✅ (erledigt)
+- manifest.json, SVG-Icons (192+512), Service Worker, Apple-Meta-Tags
 
-### Phase 3 – Hosting (für echten mobilen Einsatz)
-- [ ] Backend auf **Railway** oder **Render.com** deployen (beide gratis-Tier)
-- [ ] `requirements.txt` ggf. um `gunicorn` erweitern
-- [ ] `SECRET_KEY` als Umgebungsvariable statt Datei
-- [ ] `uploads/`-Ordner → externen Storage (Cloudinary o.ä.) für persistente Bilder
+### Phase 3 – Hosting ✅ (erledigt)
+- Render.com Free-Tier, gunicorn, Cloudinary, SECRET_KEY als Env-Var
 
 ### Phase 4 – Native App (optional, viel Aufwand)
 - [ ] **Capacitor** (Ionic) wrappen – benötigt Node.js, verpackt HTML/CSS/JS als native App
@@ -246,3 +259,6 @@ training_exercises (id, training_id, exercise_id, order_index)
 10. **Template-Auto-Reload**: `TEMPLATES_AUTO_RELOAD = True` gesetzt – Template-Änderungen werden ohne Restart erkannt.
 11. **Nested `<a>` vermeiden**: Niemals `<a>` in `<a>` – für klickbare Elemente in Links stattdessen `<div onclick="...">` verwenden.
 12. **Responsive Breakpoints**: ≤640px = Mobile (Bottom-Nav), ≤900px = Tablet (Icon-Sidebar), ≤380px = Kleines Phone.
+13. **init_db() läuft beim Import**: Außerhalb von `__main__` – wird auch unter gunicorn ausgeführt.
+14. **Bildupload**: `_upload_image()` + `_delete_image()` in app.py – Cloudinary wenn Env-Vars gesetzt, sonst lokal.
+15. **image_path**: Kann lokaler Dateiname (z.B. `abc123.jpg`) ODER volle Cloudinary-URL sein – JS prüft `startsWith('http')`.

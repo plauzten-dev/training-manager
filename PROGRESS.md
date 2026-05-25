@@ -1,7 +1,31 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 25. Mai 2026
-> Status: ✅ Version 1.3 – Responsive + Dashboard + 7 Sportarten
+> Status: ✅ Version 1.4 – PWA + Hosting (Render.com + Cloudinary)
+
+---
+
+## v1.4 – Änderungen (25.05.2026, 4. Session)
+
+### PWA (Phase 2) ✅
+- [x] `static/manifest.json` – App-Name, Icons, `display: standalone`, Theme-Farbe (#0f1f35)
+- [x] `static/icons/icon-192.svg` + `icon-512.svg` – Trainer-Logo auf dunkelblauem Grund
+- [x] `static/sw.js` – Service Worker: statische Assets gecacht, API-Calls immer live
+- [x] Route `/sw.js` in app.py mit `Service-Worker-Allowed: /` Header
+- [x] `base.html` + `login.html` – Manifest-Link, Theme-Color, Apple-Meta-Tags, SW-Registrierung
+- [x] `viewport-fit=cover` für iPhone-Notch
+
+### Hosting auf Render.com (Phase 3) ✅
+- [x] `gunicorn` + `cloudinary` in requirements.txt
+- [x] `render.yaml` – Render-Deployment-Konfiguration (Free-Tier, Python 3)
+- [x] `.gitignore` – training.db, secret_key.txt, uploads/ ausgeschlossen
+- [x] `app.py` – SECRET_KEY aus Env-Var (`os.environ.get('SECRET_KEY')`)
+- [x] `app.py` – `_upload_image()` + `_delete_image()` mit Cloudinary-Integration (lokaler Fallback)
+- [x] `app.py` – `init_db()` außerhalb von `__main__` (läuft jetzt auch unter gunicorn)
+- [x] `database.py` – DB-Pfad via `DB_PATH` Env-Var konfigurierbar
+- [x] `exercises.js` + `training.js` + `training_print.html` – Bild-URLs für Cloudinary-URLs kompatibel
+- [x] GitHub-Repo: `plauzten-dev/training-manager`
+- [x] Live-URL: `https://training-manager-nwga.onrender.com`
 
 ---
 
@@ -91,27 +115,25 @@
 
 ---
 
-## Nächste Schritte – PWA-Roadmap
+## Nächste Schritte – Offene Features
 
-### Phase 2 – PWA-Setup (NÄCHSTE SESSION)
-- [ ] `static/manifest.json` erstellen
-- [ ] Meta-Tags in `base.html` (theme-color, apple-mobile-web-app-capable etc.)
-- [ ] App-Icons generieren (192×192, 512×512, 180×180 Apple)
-- [ ] Service Worker für Offline-Fallback (`static/sw.js`)
-- [ ] Route `/static/manifest.json` in Flask servieren (oder als statische Datei)
+### Mittel priorisiert
+- [ ] **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
+- [ ] **Statistiken-Dashboard** – Diagramme mit SVG/Canvas (kein Chart-Framework)
+- [ ] **Spieler-Verwaltung** – Spieler anlegen, Anwesenheitsliste pro Training
+- [ ] **Touch-Drag & Drop** – Übungen auf Mobilgeräten per Touch sortieren
 
-### Phase 3 – Hosting
-- [ ] Backend auf Railway oder Render.com deployen
-- [ ] `gunicorn` in requirements.txt hinzufügen
-- [ ] `SECRET_KEY` als Umgebungsvariable
-- [ ] Datei-Uploads → Cloudinary (persistenter Storage)
-- [ ] `.gitignore` für training.db, secret_key.txt, uploads/
+### Hosting-Verbesserungen (optional)
+- [ ] **Render Disk** ($0,25/Monat) für persistente SQLite-Datenbank aktivieren → `DB_PATH=/data/training.db` setzen
+- [ ] Phase 4: Native App via Capacitor (erfordert Node.js)
 
-### Funktions-Features (parallel möglich)
-- [ ] Trainingsvorlagen – Training als Vorlage markieren und wiederverwenden
-- [ ] Statistiken-Dashboard – Diagramme mit SVG/Canvas (kein Chart-Framework)
-- [ ] Spieler-Verwaltung – Spieler anlegen, Anwesenheitsliste pro Training
-- [ ] Touch-Drag & Drop auf Mobilgeräten
+### Deployment – Neue Version pushen
+```powershell
+git add .
+git commit -m "Beschreibung"
+git push
+```
+Render deployt automatisch nach jedem Push.
 
 ---
 
