@@ -43,7 +43,16 @@ const SPORT_COMPETENCIES = {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  await loadFilterOptions('');
+  const savedSport = localStorage.getItem('exercises_sport') || '';
+  if (savedSport) {
+    const tab = document.querySelector(`.sport-tab[data-sport="${savedSport}"]`);
+    if (tab) {
+      currentSport = savedSport;
+      document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    }
+  }
+  await loadFilterOptions(currentSport);
   await fetchExercises();
 }
 
@@ -74,6 +83,7 @@ async function loadFilterOptions(sport) {
 // ── Sport tabs ────────────────────────────────────────────────────────────────
 async function setSport(el, sport) {
   currentSport = sport;
+  localStorage.setItem('exercises_sport', sport);
   document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   // Reset competency + field size filters for the new sport

@@ -189,9 +189,12 @@ async function loadDashboard() {
 
   /* 4-Day calendar */
   const todayStr = new Date().toISOString().split('T')[0];
-  document.getElementById('dash-days').innerHTML = data.upcoming.map(({ date, trainings }) => {
+  const REL_LABELS = ['Heute', 'Morgen', 'Übermorgen'];
+  document.getElementById('dash-days').innerHTML = data.upcoming.map(({ date, trainings }, idx) => {
     const d       = new Date(date + 'T12:00:00');
     const isToday = date === todayStr;
+    const dayName  = idx < 3 ? REL_LABELS[idx] : SHORT_DAYS[d.getDay()];
+    const dateNum  = `${d.getDate()}. ${MONTHS[d.getMonth()]}`;
     const trainHtml = trainings.length
       ? trainings.map(t =>
           `<div class="dash-day-pill" onclick="event.stopPropagation();window.location='/training/${t.id}'">${t.title}</div>`
@@ -200,8 +203,8 @@ async function loadDashboard() {
     return `
       <div class="dash-day${isToday ? ' today' : ''}" onclick="window.location='/calendar'">
         <div class="dash-day-header">
-          <span class="dash-day-name">${SHORT_DAYS[d.getDay()]}</span>
-          <span class="dash-day-num">${d.getDate()}. ${MONTHS[d.getMonth()]}</span>
+          <span class="dash-day-name">${dayName}</span>
+          <span class="dash-day-num">${dateNum}</span>
         </div>
         <div class="dash-day-trainings">${trainHtml}</div>
         <div class="dash-day-add">

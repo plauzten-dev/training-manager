@@ -187,6 +187,37 @@ def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+@app.route('/offline')
+def offline_page():
+    return render_template('offline.html')
+
+
+@app.route('/privacy')
+def privacy_page():
+    return render_template('privacy.html')
+
+
+@app.route('/.well-known/assetlinks.json')
+def assetlinks():
+    """Verknüpft die Domain mit der Android-App (TWA). SHA-Fingerprint nach Play-Store-Upload eintragen."""
+    links = [
+        {
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": "com.trainingmanager.app",
+                "sha256_cert_fingerprints": [
+                    "PLACEHOLDER_SHA256_FINGERPRINT_AFTER_PLAY_STORE_UPLOAD"
+                ]
+            }
+        }
+    ]
+    from flask import jsonify
+    response = jsonify(links)
+    response.headers['Content-Type'] = 'application/json'
+    return response
+
+
 # ── Auth API ──────────────────────────────────────────────────────────────────
 
 @app.route('/api/auth/register', methods=['POST'])

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Datenschutzerklärung – Training Manager</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0f1f35">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .privacy-page {
+      min-height: 100vh;
+      background: var(--bg, #f1f5f9);
+      padding: 2rem 1rem 4rem;
+    }
+    .privacy-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+    .privacy-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      text-decoration: none;
+    }
+    .privacy-logo-text {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #0f1f35;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #0f1f35;
+      margin-bottom: 0.5rem;
+    }
+    .privacy-date {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f1f35;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    p, li {
+      color: #475569;
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+    ul {
+      padding-left: 1.25rem;
+      margin: 0.5rem 0;
+    }
+    li { margin-bottom: 0.35rem; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #2563eb;
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-decoration: none;
+      margin-bottom: 2rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+    @media (max-width: 640px) {
+      .privacy-inner { padding: 2rem 1.25rem; }
+      h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="privacy-page">
+    <div class="privacy-inner">
+      <a href="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M12 5l-7 7 7 7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Zurück zur App
+      </a>
+
+      <div class="privacy-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect x="2" y="5" width="24" height="18" rx="2" stroke="#4ade80" stroke-width="1.8"/>
+          <line x1="14" y1="5" x2="14" y2="23" stroke="#4ade80" stroke-width="1.4"/>
+          <circle cx="14" cy="14" r="4" stroke="#4ade80" stroke-width="1.4"/>
+          <rect x="2" y="9" width="5" height="10" rx="1" stroke="#4ade80" stroke-width="1.2"/>
+          <rect x="21" y="9" width="5" height="10" rx="1" stroke="#4ade80" stroke-width="1.2"/>
+        </svg>
+        <span class="privacy-logo-text">Training Manager</span>
+      </div>
+
+      <h1>Datenschutzerklärung</h1>
+      <p class="privacy-date">Stand: Mai 2026</p>
+
+      <h2>1. Verantwortlicher</h2>
+      <p>
+        Verantwortlich für diese App im Sinne der DSGVO ist der Betreiber des Dienstes
+        unter <strong>training-manager-nwga.onrender.com</strong>.
+        Bei Fragen zum Datenschutz wende dich über die App an uns.
+      </p>
+
+      <h2>2. Welche Daten wir erfassen</h2>
+      <p>Wenn du ein Konto erstellst und die App verwendest, speichern wir:</p>
+      <ul>
+        <li><strong>Kontodaten:</strong> Benutzername und E-Mail-Adresse</li>
+        <li><strong>Passwort:</strong> ausschließlich als sicherer Hash (bcrypt), nie im Klartext</li>
+        <li><strong>Trainingsdaten:</strong> von dir erstellte Trainings, Übungen und Notizen</li>
+        <li><strong>Bilder:</strong> von dir hochgeladene Übungsbilder (gespeichert bei Cloudinary)</li>
+      </ul>
+
+      <h2>3. Zweck der Datenverarbeitung</h2>
+      <p>Alle gespeicherten Daten dienen ausschließlich dem Betrieb der Trainingsplanungs-App.
+      Wir verwenden deine Daten nicht für Werbung, verkaufen sie nicht und geben sie nicht an Dritte weiter.</p>
+
+      <h2>4. Datenspeicherung</h2>
+      <p>
+        Die Daten werden auf Servern von <strong>Render.com</strong> (USA) gespeichert.
+        Bilder werden bei <strong>Cloudinary</strong> (USA) gehostet.
+        Beide Dienste sind nach EU-Standardvertragsklauseln zertifiziert.
+      </p>
+      <p>
+        Da wir den kostenlosen Tarif von Render nutzen, werden Daten bei jedem Neustart
+        des Servers zurückgesetzt – mit Ausnahme der Seed-Übungen, die automatisch
+        wiederhergestellt werden.
+      </p>
+
+      <h2>5. Deine Rechte</h2>
+      <p>Du hast jederzeit das Recht auf:</p>
+      <ul>
+        <li>Auskunft über deine gespeicherten Daten</li>
+        <li>Berichtigung unrichtiger Daten</li>
+        <li>Löschung deines Kontos und aller zugehörigen Daten</li>
+        <li>Einschränkung der Verarbeitung</li>
+      </ul>
+      <p>
+        Du kannst dein Passwort und deinen Benutzernamen jederzeit in den Einstellungen
+        der App ändern. Für eine vollständige Kontolöschung wende dich an uns.
+      </p>
+
+      <h2>6. Cookies und lokaler Speicher</h2>
+      <p>
+        Die App verwendet ausschließlich eine serverseitige Session-Cookie für die Anmeldung.
+        Es werden keine Tracking-Cookies oder Analyse-Dienste (Google Analytics o.ä.) eingesetzt.
+      </p>
+
+      <h2>7. Service Worker und Offline-Nutzung</h2>
+      <p>
+        Die App installiert einen Service Worker, der statische Dateien (CSS, JavaScript, Icons)
+        lokal im Browser-Cache speichert, um die App schneller und offline nutzbar zu machen.
+        Es werden keine persönlichen Daten lokal gespeichert.
+      </p>
+
+      <h2>8. Änderungen dieser Erklärung</h2>
+      <p>
+        Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren.
+        Die jeweils aktuelle Version ist unter <strong>/privacy</strong> in der App abrufbar.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

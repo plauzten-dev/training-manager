@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Offline – Training Manager</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0f1f35">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .offline-page {
+      min-height: 100vh;
+      background: var(--bg, #f1f5f9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .offline-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .offline-icon {
+      width: 72px;
+      height: 72px;
+      background: #f1f5f9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    .offline-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0f1f35;
+      margin-bottom: 0.75rem;
+    }
+    .offline-text {
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .offline-btn {
+      display: inline-block;
+      background: #2563eb;
+      color: #fff;
+      padding: 0.75rem 2rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+    }
+    .offline-btn:active { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="offline-page">
+    <div class="offline-card">
+      <div class="offline-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+          <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="offline-title">Keine Verbindung</div>
+      <p class="offline-text">
+        Du bist gerade offline. Verbinde dich mit dem Internet und versuche es erneut.
+      </p>
+      <button class="offline-btn" onclick="window.location.reload()">
+        Erneut versuchen
+      </button>
+    </div>
+  </div>
+</body>
+</html>

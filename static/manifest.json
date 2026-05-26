@@ -1,25 +1,82 @@
 {
+  "id": "https://training-manager-nwga.onrender.com/",
   "name": "Training Manager",
   "short_name": "Training",
-  "description": "Trainingsplanung für Sporttrainer",
+  "description": "Professionelle Trainingsplanung für Sporttrainer – Übungen, Kalender, PDF-Export.",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "theme_color": "#0f1f35",
   "background_color": "#0f1f35",
   "lang": "de",
+  "dir": "ltr",
+  "categories": ["sports", "productivity", "education"],
   "icons": [
     {
-      "src": "/static/icons/icon-192.svg",
+      "src": "/static/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/static/icons/icon-512.svg",
+      "src": "/static/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Neues Training",
+      "short_name": "Neu",
+      "description": "Kalender öffnen und Training erstellen",
+      "url": "/calendar",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Meine Trainings",
+      "short_name": "Trainings",
+      "description": "Alle Trainings anzeigen",
+      "url": "/my-trainings",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Übungsdatenbank",
+      "short_name": "Übungen",
+      "description": "Übungsdatenbank durchsuchen",
+      "url": "/exercises",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/dashboard.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard mit Trainingsübersicht"
+    },
+    {
+      "src": "/static/screenshots/exercises.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Übungsdatenbank mit Sportarten-Filter"
+    }
+  ],
+  "prefer_related_applications": false
 }

@@ -1,5 +1,4 @@
-const CACHE = 'training-manager-v1';
-const OFFLINE_URL = '/offline';
+const CACHE = 'training-manager-v2';
 
 const PRECACHE = [
   '/static/css/style.css',
@@ -7,8 +6,9 @@ const PRECACHE = [
   '/static/js/calendar.js',
   '/static/js/training.js',
   '/static/js/my_trainings.js',
-  '/static/icons/icon-192.svg',
-  '/static/icons/icon-512.svg',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png',
+  '/offline',
 ];
 
 self.addEventListener('install', event => {
@@ -28,14 +28,12 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Nur GET-Requests cachen, API-Calls immer live
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/')) return;
 
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Statische Assets im Cache aktualisieren
         if (event.request.url.includes('/static/')) {
           const clone = response.clone();
           caches.open(CACHE).then(cache => cache.put(event.request, clone));
@@ -43,7 +41,13 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(() =>
-        caches.match(event.request).then(cached => cached || Response.error())
+        caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          if (event.request.destination === 'document') {
+            return caches.match('/offline');
+          }
+          return Response.error();
+        })
       )
   );
 });
