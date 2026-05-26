@@ -40,21 +40,31 @@ MaxiWebs/
 │
 ├── templates/
 │   ├── base.html            ← Sidebar + Mobile-Nav, globale Modal-/Toast-Funktionen
-│   ├── dashboard.html       ← Startseite: Begrüßung, Stats, 4-Tage, Übungsvorschläge, Zitat
+│   ├── dashboard.html       ← Startseite: Begrüßung, Stats, 4-Tage (Heute/Morgen/Übermorgen), Übungsvorschläge, Zitat
 │   ├── login.html           ← Login + Registrierung (KEIN extends base.html!)
 │   ├── exercises.html       ← Übungsdatenbank (7 Sport-Tabs + Filter-Sidebar + Mobile-Toggle)
 │   ├── calendar.html        ← Trainingskalender
 │   ├── training.html        ← Training-Detailseite
 │   ├── training_print.html  ← PDF-Export (Standalone, kein extends base.html!)
 │   ├── my_trainings.html    ← Alle Trainings (Monatsgruppen, Stats, Suche)
-│   └── settings.html        ← Konto-Einstellungen (Profil + Passwort)
+│   ├── settings.html        ← Konto-Einstellungen (Profil + Passwort)
+│   ├── offline.html         ← Offline-Fallback-Seite (Service Worker)
+│   └── privacy.html         ← DSGVO-Datenschutzerklärung (Pflicht Play Store)
 │
 ├── static/
 │   ├── css/style.css        ← GESAMTES Stylesheet inkl. responsiver Breakpoints
+│   ├── manifest.json        ← PWA-Manifest (id, name, icons, shortcuts, categories)
+│   ├── sw.js                ← Service Worker (Cache v2, Offline-Fallback auf /offline)
+│   ├── icons/
+│   │   ├── icon-192.svg     ← Original-SVG
+│   │   ├── icon-512.svg     ← Original-SVG
+│   │   ├── icon-192.png     ← PNG für Play Store + apple-touch-icon
+│   │   └── icon-512.png     ← PNG für Play Store
+│   ├── screenshots/         ← Leer – Store-Screenshots hier ablegen (390×844px)
 │   └── js/
-│       ├── exercises.js     ← Übungen: Filter, Sport-Tabs, CRUD, Mobile-Filter-Toggle
+│       ├── exercises.js     ← Übungen: Filter, Sport-Tabs (localStorage), CRUD, Mobile-Filter-Toggle
 │       ├── calendar.js      ← Kalender: Render, Navigation, Training-Erstellung
-│       ├── training.js      ← Training-Detail: Drag & Drop, Übungen, Notizen, PDF
+│       ├── training.js      ← Training-Detail: Drag & Drop (Mouse+Touch), Übungen, Notizen, PDF
 │       └── my_trainings.js  ← Meine Trainings: Gruppen, Stats, Suche, Wiederholen
 │
 ├── PROGRESS.md         ← Vollständige Feature-Liste, Changelog, offene To-Dos (AKTUELL)
@@ -135,6 +145,9 @@ training_exercises (id, training_id, exercise_id, order_index)
 | `/training/<id>/pdf` | Druckoptimierte PDF-Ansicht |
 | `/my-trainings` | Trainings-Übersicht (alle) |
 | `/settings` | Konto-Einstellungen |
+| `/offline` | Offline-Fallback (Service Worker) |
+| `/privacy` | DSGVO-Datenschutzerklärung |
+| `/.well-known/assetlinks.json` | TWA-Verknüpfung für Android/Play Store |
 
 ---
 
@@ -179,7 +192,7 @@ git push
 
 ---
 
-## Was bereits vollständig funktioniert (v1.4)
+## Was bereits vollständig funktioniert (v1.6)
 
 - Benutzer-Accounts (Register, Login, Logout, Profil + Passwort ändern)
 - Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload (Cloudinary), Suche, Filter, Sport-Tabs
@@ -192,7 +205,9 @@ git push
 - **46 Seed-Übungen** inkl. Aufwärmen, Dehnen, Cool-down (Allgemein-Kategorie)
 - **Dashboard** (`/dashboard`): Begrüßung, Stats, 4-Tage-Vorschau, Übungsvorschläge, Motivation
 - **Responsives Design + Mobile-Nav**: Bottom-Nav auf Mobilgeräten (≤640px), Sidebar kollabiert auf Tablet (≤900px)
-- **PWA**: manifest.json, Service Worker, Apple-Meta-Tags – auf iOS & Android installierbar
+- **PWA**: manifest.json, Service Worker (Cache v2), Apple-Meta-Tags – auf iOS & Android installierbar
+- **Play Store Basis**: PNG-Icons, erweitertes Manifest, `/offline`, `/privacy`, `/.well-known/assetlinks.json`
+- **QoL**: Sport-Tab-Auswahl wird per localStorage gespeichert; Dashboard-Vorschau zeigt "Heute"/"Morgen"/"Übermorgen"
 
 ### Sport-Farben (vollständig)
 ```css
@@ -232,16 +247,22 @@ git push
 
 ## Offene To-Dos (Funktionen)
 
+### Play Store (wenn App release-bereit)
+- [ ] Screenshots erstellen (390×844px) → `static/screenshots/dashboard.png` + `exercises.png`
+- [ ] [pwab.com](https://pwab.com) → Live-URL → Android AAB herunterladen
+- [ ] Google Play Developer-Konto anlegen ($25 Einmalgebühr)
+- [ ] SHA-256-Fingerprint aus Play Console → in `app.py` bei `assetlinks.json` eintragen (Placeholder ersetzen)
+- [ ] Store-Listing: Datenschutz-URL = `https://training-manager-nwga.onrender.com/privacy`
+
 ### Mittel priorisiert
 - [ ] **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
-- [ ] **Statistiken-Dashboard** – meist genutzte Übungen, Trainings/Monat (Canvas/SVG)
 - [ ] **Spieler-Verwaltung** – Spieler anlegen, Anwesenheitsliste pro Training
 
 ### Nice-to-have
 - [ ] Saison-/Wochenplanung
 - [ ] Admin-Modus für Übungen
 - [ ] Bild-Zuschnitt beim Upload (Canvas API)
-- [ ] Drag & Drop auf Touchscreen (Touch-Events für Training-Detailseite)
+- [ ] Render Disk ($0,25/Monat) für persistente SQLite-DB → `DB_PATH=/data/training.db`
 
 ---
 

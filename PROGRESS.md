@@ -1,7 +1,33 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 26. Mai 2026
-> Status: ✅ Version 1.5 – Statistiken-Dashboard + Touch Drag & Drop
+> Status: ✅ Version 1.6 – QoL-Verbesserungen + Play Store Vorbereitung
+
+---
+
+## v1.6 – Änderungen (26.05.2026, 6. Session)
+
+### QoL-Verbesserungen
+- [x] `exercises.js` – Letzten Sport-Tab via `localStorage` merken + beim nächsten Seitenaufruf wiederherstellen
+- [x] `dashboard.html` – 4-Tage-Vorschau zeigt "Heute", "Morgen", "Übermorgen" statt Wochentags-Kürzel (4. Tag = Kürzel)
+- [x] Übungsanzahl auf Trainingskarten (`/my-trainings`) war bereits implementiert ✅
+
+### Play Store Vorbereitung (technische Basis)
+- [x] `static/icons/icon-192.png` + `icon-512.png` – PNG-Icons generiert (Play Store akzeptiert kein SVG)
+- [x] `static/manifest.json` – Erweitert mit `id`, `categories`, `shortcuts`, `screenshots`-Felder, `display_override`
+- [x] `static/sw.js` – Cache-Version auf v2, Offline-Fallback auf `/offline`-Seite verdrahtet
+- [x] `app.py` – Neue Routen: `/offline`, `/privacy`, `/.well-known/assetlinks.json`
+- [x] `templates/offline.html` – Offline-Seite (wird vom SW als Fallback gezeigt)
+- [x] `templates/privacy.html` – DSGVO-Datenschutzerklärung (Pflicht für Play Store)
+- [x] `base.html` – `apple-touch-icon` auf PNG umgestellt
+- [x] `static/screenshots/` – Ordner für Store-Screenshots angelegt (noch leer)
+
+### Was für den echten Play Store noch fehlt (manuell)
+1. Screenshots erstellen (390×844px) → in `static/screenshots/` ablegen
+2. [pwab.com](https://pwab.com) → Live-URL eingeben → Android AAB herunterladen
+3. Google Play Developer-Konto ($25 Einmalgebühr)
+4. SHA-256-Fingerprint aus Play Console → in `app.py` bei `assetlinks.json` eintragen
+5. Store-Listing ausfüllen (Datenschutz-URL: `https://training-manager-nwga.onrender.com/privacy`)
 
 ---
 
