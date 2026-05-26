@@ -30,9 +30,30 @@ html, body { height: 100%; font-family: 'Inter', system-ui, -apple-system, sans-
 a { text-decoration: none; color: inherit; }
 
 /* ── App Layout ──────────────────────────────────────────────────────────── */
-.app-layout { display: flex; height: 100vh; overflow: hidden; }
+.app-layout { display: flex; height: 100vh; height: 100dvh; overflow: hidden; box-sizing: border-box; padding-top: env(safe-area-inset-top); }
 
 .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Splash Screen (PWA only) ─────────────────────────────────────────────── */
+#splash-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0f1f35;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  transition: opacity 0.4s ease;
+}
+#splash-screen.splash-hide { opacity: 0; pointer-events: none; }
+.splash-logo {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.splash-logo-text {
+  color: #ffffff; font-size: 1.3rem; font-weight: 700; letter-spacing: 0.02em;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.splash-bar {
+  width: 40px; height: 3px; background: #4ade80; border-radius: 2px;
+  animation: splash-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes splash-pulse { from { opacity: 0.4; } to { opacity: 1; } }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────── */
 .sidebar {
@@ -863,8 +884,8 @@ textarea { resize: vertical; min-height: 90px; }
   .sidebar { display: none; }
   .mobile-nav { display: flex; }
 
-  /* Core layout: add padding for bottom nav */
-  .main-wrapper { padding-bottom: 60px; }
+  /* Core layout: add padding for bottom nav + safe areas */
+  .main-wrapper { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
   .dash-page, .exercises-main, .my-trainings-layout { padding-bottom: 16px; }
 
   /* Page header */

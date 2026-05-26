@@ -18,6 +18,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="login-body">
+  <!-- PWA Splash Screen -->
+  <div id="splash-screen" style="display:none">
+    <div class="splash-logo">
+      <svg width="52" height="52" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="5" width="24" height="18" rx="2" stroke="#4ade80" stroke-width="1.8"/>
+        <line x1="14" y1="5" x2="14" y2="23" stroke="#4ade80" stroke-width="1.4"/>
+        <circle cx="14" cy="14" r="4" stroke="#4ade80" stroke-width="1.4"/>
+        <rect x="2" y="9" width="5" height="10" rx="1" stroke="#4ade80" stroke-width="1.2"/>
+        <rect x="21" y="9" width="5" height="10" rx="1" stroke="#4ade80" stroke-width="1.2"/>
+      </svg>
+      <span class="splash-logo-text">Training Manager</span>
+      <div class="splash-bar"></div>
+    </div>
+  </div>
+
   <div class="login-page">
     <!-- Left panel -->
     <div class="login-hero">
@@ -187,6 +202,18 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' });
     }
+
+    (function() {
+      const isStandalone = window.navigator.standalone === true ||
+                           window.matchMedia('(display-mode: standalone)').matches;
+      if (!isStandalone) return;
+      const splash = document.getElementById('splash-screen');
+      splash.style.display = 'flex';
+      setTimeout(() => {
+        splash.classList.add('splash-hide');
+        setTimeout(() => splash.remove(), 400);
+      }, 1400);
+    })();
   </script>
 </body>
 </html>
