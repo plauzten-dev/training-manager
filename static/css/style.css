@@ -843,24 +843,33 @@ textarea { resize: vertical; min-height: 90px; }
 /* ── Mobile Bottom Nav ───────────────────────────────────────────────────── */
 .mobile-nav {
   display: none;
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-  background: var(--sidebar-bg);
-  border-top: 1px solid rgba(255,255,255,0.08);
-  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  position: fixed;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 14px; right: 14px;
+  z-index: 200;
+  background: rgba(13, 26, 46, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 26px;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.25);
 }
 .mobile-nav-inner {
-  display: flex; height: 60px;
+  display: flex; height: 62px; padding: 6px 4px; gap: 2px;
 }
 .mobile-nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; color: rgba(255,255,255,0.45); font-size: 0.6rem; font-weight: 600;
-  text-decoration: none; letter-spacing: 0.01em; transition: color 0.15s;
-  padding: 6px 2px;
+  gap: 4px; color: rgba(255,255,255,0.38); font-size: 0.58rem; font-weight: 600;
+  text-decoration: none; letter-spacing: 0.02em;
+  border-radius: 20px; padding: 6px 4px;
+  transition: color 0.18s ease, background 0.18s ease;
 }
-.mobile-nav-item svg { width: 20px; height: 20px; }
-.mobile-nav-item.active { color: var(--sidebar-active-text); }
-.mobile-nav-item:hover { color: rgba(255,255,255,0.8); }
-.mobile-nav-item svg { flex-shrink: 0; }
+.mobile-nav-item svg { width: 21px; height: 21px; flex-shrink: 0; stroke-width: 1.8; }
+.mobile-nav-item.active {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.13);
+}
+.mobile-nav-item:not(.active):hover { color: rgba(255,255,255,0.65); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 /* Tablet: shrink sidebar to icon-only */
@@ -884,8 +893,8 @@ textarea { resize: vertical; min-height: 90px; }
   .sidebar { display: none; }
   .mobile-nav { display: flex; }
 
-  /* Core layout: add padding for bottom nav */
-  .main-wrapper { padding-bottom: 60px; }
+  /* Core layout: add padding for floating bottom nav (14px gap + 62px nav + 14px clearance) */
+  .main-wrapper { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
   .dash-page, .exercises-main, .my-trainings-layout { padding-bottom: 16px; }
 
   /* Page header */

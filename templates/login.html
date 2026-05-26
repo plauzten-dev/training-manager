@@ -207,6 +207,8 @@
       const isStandalone = window.navigator.standalone === true ||
                            window.matchMedia('(display-mode: standalone)').matches;
       if (!isStandalone) return;
+      if (sessionStorage.getItem('splashShown')) return;
+      sessionStorage.setItem('splashShown', '1');
       const splash = document.getElementById('splash-screen');
       splash.style.display = 'flex';
       setTimeout(() => {
