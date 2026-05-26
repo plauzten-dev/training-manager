@@ -316,25 +316,28 @@ async function removeExercise(exerciseId) {
   }
 }
 
-// ── Drag & Drop ───────────────────────────────────────────────────────────────
-let dragSrcId = null;
+// ── Drag & Drop (Mouse + Touch) ───────────────────────────────────────────────
+let dragSrcId    = null;
+let touchDragId  = null;
+let touchClone   = null;
+let touchOffX    = 0;
+let touchOffY    = 0;
 
 function attachDragHandlers() {
   const list = document.getElementById('exercise-list');
   if (!list) return;
 
   list.querySelectorAll('.exercise-list-item[draggable]').forEach(item => {
+    // ── Mouse drag ──
     item.addEventListener('dragstart', (e) => {
       dragSrcId = item.dataset.id;
       item.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
     });
-
     item.addEventListener('dragend', () => {
       item.classList.remove('dragging');
       list.querySelectorAll('.exercise-list-item').forEach(i => i.classList.remove('drag-over'));
     });
-
     item.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -343,21 +346,90 @@ function attachDragHandlers() {
         item.classList.add('drag-over');
       }
     });
-
     item.addEventListener('drop', (e) => {
       e.preventDefault();
       if (item.dataset.id === dragSrcId) return;
-
-      const srcIdx = training.exercises.findIndex(ex => String(ex.id) === dragSrcId);
-      const dstIdx = training.exercises.findIndex(ex => String(ex.id) === item.dataset.id);
-      const [moved] = training.exercises.splice(srcIdx, 1);
-      training.exercises.splice(dstIdx, 0, moved);
-
-      document.getElementById('exercise-list').innerHTML = renderExerciseList();
-      attachDragHandlers();
-      saveDragOrder();
+      reorderExercises(dragSrcId, item.dataset.id);
     });
+
+    // ── Touch drag (nur auf dem Handle) ──
+    item.querySelector('.drag-handle')?.addEventListener('touchstart', onTouchStart, { passive: false });
   });
+}
+
+function onTouchStart(e) {
+  e.preventDefault();
+  const item = e.currentTarget.closest('.exercise-list-item');
+  if (!item) return;
+  touchDragId = item.dataset.id;
+
+  const touch = e.touches[0];
+  const rect  = item.getBoundingClientRect();
+  touchOffX   = touch.clientX - rect.left;
+  touchOffY   = touch.clientY - rect.top;
+
+  touchClone = item.cloneNode(true);
+  Object.assign(touchClone.style, {
+    position: 'fixed', left: rect.left + 'px', top: rect.top + 'px',
+    width: rect.width + 'px', zIndex: '9999', opacity: '0.88',
+    pointerEvents: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+    borderRadius: '10px', background: 'white', transition: 'none',
+  });
+  item.style.opacity = '0.3';
+  document.body.appendChild(touchClone);
+
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend',  onTouchEnd);
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!touchClone) return;
+  const touch = e.touches[0];
+  touchClone.style.left = (touch.clientX - touchOffX) + 'px';
+  touchClone.style.top  = (touch.clientY - touchOffY) + 'px';
+
+  touchClone.style.display = 'none';
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  touchClone.style.display = '';
+
+  const list = document.getElementById('exercise-list');
+  list?.querySelectorAll('.exercise-list-item').forEach(i => i.classList.remove('drag-over'));
+  const over = el?.closest('.exercise-list-item');
+  if (over && over.dataset.id !== touchDragId) over.classList.add('drag-over');
+}
+
+function onTouchEnd(e) {
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend',  onTouchEnd);
+
+  if (touchClone) { touchClone.remove(); touchClone = null; }
+
+  const list = document.getElementById('exercise-list');
+  list?.querySelectorAll('.exercise-list-item').forEach(i => {
+    i.classList.remove('drag-over');
+    i.style.opacity = '';
+  });
+
+  if (!touchDragId || !list) { touchDragId = null; return; }
+
+  const touch  = e.changedTouches[0];
+  const el     = document.elementFromPoint(touch.clientX, touch.clientY);
+  const over   = el?.closest('.exercise-list-item');
+  if (over && over.dataset.id !== touchDragId) reorderExercises(touchDragId, over.dataset.id);
+
+  touchDragId = null;
+}
+
+function reorderExercises(srcId, dstId) {
+  const srcIdx = training.exercises.findIndex(ex => String(ex.id) === srcId);
+  const dstIdx = training.exercises.findIndex(ex => String(ex.id) === dstId);
+  if (srcIdx === -1 || dstIdx === -1) return;
+  const [moved] = training.exercises.splice(srcIdx, 1);
+  training.exercises.splice(dstIdx, 0, moved);
+  document.getElementById('exercise-list').innerHTML = renderExerciseList();
+  attachDragHandlers();
+  saveDragOrder();
 }
 
 async function saveDragOrder() {

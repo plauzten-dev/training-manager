@@ -711,6 +711,49 @@ def dashboard_api():
     })
 
 
+@app.route('/api/statistik')
+@login_required
+def stats_api():
+    user_id = session['user_id']
+    conn    = get_db()
+    today   = datetime.date.today()
+
+    # Trainings der letzten 6 Monate
+    monthly = []
+    for i in range(5, -1, -1):
+        month = today.month - i
+        year  = today.year
+        while month <= 0:
+            month += 12
+            year  -= 1
+        month_start = datetime.date(year, month, 1)
+        next_month  = month + 1 if month < 12 else 1
+        next_year   = year if month < 12 else year + 1
+        month_end   = datetime.date(next_year, next_month, 1)
+        count = conn.execute(
+            'SELECT COUNT(*) FROM trainings WHERE user_id=? AND date>=? AND date<?',
+            (user_id, month_start.isoformat(), month_end.isoformat())
+        ).fetchone()[0]
+        MONTHS_SHORT = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
+        monthly.append({'month': MONTHS_SHORT[month - 1], 'count': count})
+
+    # Top 5 meistgenutzte Übungen
+    top_exercises = [dict(r) for r in conn.execute(
+        '''SELECT e.title, COUNT(te.exercise_id) AS usage_count
+           FROM training_exercises te
+           JOIN exercises e ON e.id = te.exercise_id
+           JOIN trainings t  ON t.id = te.training_id
+           WHERE t.user_id = ?
+           GROUP BY te.exercise_id
+           ORDER BY usage_count DESC
+           LIMIT 5''',
+        (user_id,)
+    ).fetchall()]
+
+    conn.close()
+    return jsonify({'monthly': monthly, 'top_exercises': top_exercises})
+
+
 @app.route('/api/filter-options')
 @login_required
 def filter_options():

@@ -491,6 +491,25 @@ textarea { resize: vertical; min-height: 90px; }
 .dash-ex-card:hover .dash-ex-arrow { opacity: 1; }
 
 /* Motivation quote */
+/* Stats Charts */
+.dash-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dash-chart-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 20px 16px;
+}
+.dash-chart-label {
+  font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 14px;
+}
+.top-ex-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.top-ex-row:last-child { margin-bottom: 0; }
+.top-ex-rank { font-size: 0.72rem; color: var(--text-muted); width: 14px; text-align: right; flex-shrink: 0; }
+.top-ex-bar-wrap { flex: 1; min-width: 0; }
+.top-ex-title { font-size: 0.8rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.top-ex-track { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.top-ex-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.6s ease; }
+.top-ex-count { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+
 .dash-quote-col { display: flex; flex-direction: column; }
 .dash-quote {
   background: linear-gradient(140deg, #0f1f35 0%, #102240 50%, #1a3460 100%);
@@ -834,6 +853,7 @@ textarea { resize: vertical; min-height: 90px; }
   .filter-sidebar { width: 180px; }
   .dash-bottom { grid-template-columns: 1fr; }
   .dash-quote-col { display: none; }
+  .dash-stats-grid { grid-template-columns: 1fr; }
 }
 
 /* Mobile: hide sidebar, show bottom nav, adjust layouts */
@@ -873,6 +893,7 @@ textarea { resize: vertical; min-height: 90px; }
   /* Bottom section: stack */
   .dash-bottom { grid-template-columns: 1fr; gap: 16px; }
   .dash-quote-col { display: none; }
+  .dash-stats-grid { grid-template-columns: 1fr; }
 
   /* Sport tabs: scrollable row */
   .sport-tabs-bar { flex-wrap: nowrap; overflow-x: auto; padding: 14px 16px 0; gap: 6px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }

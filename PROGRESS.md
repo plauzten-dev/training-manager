@@ -1,7 +1,21 @@
 # Training Manager – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 25. Mai 2026
-> Status: ✅ Version 1.4 – PWA + Hosting (Render.com + Cloudinary)
+> Zuletzt aktualisiert: 26. Mai 2026
+> Status: ✅ Version 1.5 – Statistiken-Dashboard + Touch Drag & Drop
+
+---
+
+## v1.5 – Änderungen (26.05.2026, 5. Session)
+
+### Statistiken-Dashboard ✅
+- [x] `app.py` – Neuer `/api/statistik` Endpunkt: Trainings der letzten 6 Monate + Top-5-Übungen nach Nutzung
+- [x] `dashboard.html` – Neue "Statistiken"-Sektion mit zwei Karten (SVG-Balkendiagramm + Horizontale Balkenliste)
+- [x] `style.css` – Styles für `.dash-stats-grid`, `.dash-chart-card`, `.top-ex-row`, responsive 1-Spalte auf Tablet/Mobile
+
+### Touch Drag & Drop ✅
+- [x] `training.js` – Touch-Events (`touchstart`/`touchmove`/`touchend`) für Drag-Handle auf Mobilgeräten
+- [x] Visueller Klon folgt dem Finger, Zielobjekt wird hervorgehoben, Drop speichert die neue Reihenfolge
+- [x] Mouse-DnD und Touch-DnD teilen sich `reorderExercises()` – keine Code-Duplizierung
 
 ---
 

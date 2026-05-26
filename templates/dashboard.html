@@ -60,6 +60,21 @@
       </div>
     </div>
 
+    <!-- ── Statistiken ──────────────────────────────────────────────────────── -->
+    <div>
+      <div class="dash-section-title">Statistiken</div>
+      <div class="dash-stats-grid">
+        <div class="dash-chart-card">
+          <div class="dash-chart-label">Trainings pro Monat</div>
+          <div id="monthly-chart"><div class="dash-skeleton" style="height:110px"></div></div>
+        </div>
+        <div class="dash-chart-card">
+          <div class="dash-chart-label">Meistgenutzte Übungen</div>
+          <div id="top-exercises-chart"><div class="dash-skeleton" style="height:110px"></div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Bottom Row ──────────────────────────────────────────────────────── -->
     <div class="dash-bottom">
       <div>
@@ -220,5 +235,60 @@ async function loadDashboard() {
 }
 
 loadDashboard();
+
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ── Statistiken ───────────────────────────────────────────────────────────── */
+
+function renderMonthlyChart(data) {
+  const max    = Math.max(...data.map(d => d.count), 1);
+  const BAR_W  = 32, GAP = 14, PAD_LEFT = 8;
+  const CHART_H = 80, LABEL_H = 20, COUNT_H = 14;
+  const totalW  = data.length * (BAR_W + GAP) + PAD_LEFT;
+  const totalH  = COUNT_H + CHART_H + LABEL_H;
+
+  const bars = data.map((d, i) => {
+    const x    = PAD_LEFT + i * (BAR_W + GAP);
+    const barH = d.count > 0 ? Math.max(Math.round(d.count / max * CHART_H), 6) : 3;
+    const y    = COUNT_H + CHART_H - barH;
+    const fill = d.count > 0 ? '#2563eb' : '#e2e8f0';
+    return `
+      <rect x="${x}" y="${y}" width="${BAR_W}" height="${barH}" rx="4" fill="${fill}"/>
+      ${d.count > 0 ? `<text x="${x + BAR_W / 2}" y="${COUNT_H + CHART_H - barH - 4}" text-anchor="middle" fill="#374151" font-size="10" font-weight="600" font-family="Inter,sans-serif">${d.count}</text>` : ''}
+      <text x="${x + BAR_W / 2}" y="${COUNT_H + CHART_H + LABEL_H - 2}" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">${d.month}</text>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${totalW} ${totalH}" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block">${bars}</svg>`;
+}
+
+function renderTopChart(data) {
+  if (!data.length) {
+    return `<p style="color:var(--text-muted);font-size:0.83rem;padding:12px 0">Noch keine Trainingsdaten vorhanden.</p>`;
+  }
+  const max = Math.max(...data.map(d => d.usage_count));
+  return data.map((d, i) => `
+    <div class="top-ex-row">
+      <span class="top-ex-rank">${i + 1}</span>
+      <div class="top-ex-bar-wrap">
+        <div class="top-ex-title">${escHtml(d.title)}</div>
+        <div class="top-ex-track">
+          <div class="top-ex-fill" style="width:${Math.round(d.usage_count / max * 100)}%"></div>
+        </div>
+      </div>
+      <span class="top-ex-count">${d.usage_count}&times;</span>
+    </div>`).join('');
+}
+
+async function loadStats() {
+  const res  = await fetch('/api/statistik');
+  if (!res.ok) return;
+  const data = await res.json();
+  document.getElementById('monthly-chart').innerHTML      = renderMonthlyChart(data.monthly);
+  document.getElementById('top-exercises-chart').innerHTML = renderTopChart(data.top_exercises);
+}
+
+loadStats();
 </script>
 {% endblock %}
