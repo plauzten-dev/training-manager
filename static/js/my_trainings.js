@@ -32,11 +32,20 @@ function renderAll(trainings) {
   const container = document.getElementById('mt-list');
 
   if (!trainings.length) {
+    const isSearch = document.getElementById('mt-search').value.trim().length > 0;
     container.innerHTML = `
-      <div class="empty-state" style="margin-top:60px">
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <h3>Keine Trainings gefunden</h3>
-        <p>Erstelle dein erstes Training über den Button oben.</p>
+      <div class="mt-empty">
+        <div class="mt-empty-icon">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.4">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="8" y1="15" x2="16" y2="15"/>
+          </svg>
+        </div>
+        <p class="mt-empty-title">${isSearch ? 'Kein Ergebnis' : 'Noch keine Trainings'}</p>
+        <p class="mt-empty-text">${isSearch ? 'Versuch einen anderen Suchbegriff.' : 'Tippe auf + um dein erstes Training zu erstellen.'}</p>
       </div>`;
     return;
   }

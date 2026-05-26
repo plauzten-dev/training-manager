@@ -841,36 +841,39 @@ textarea { resize: vertical; min-height: 90px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* ── Mobile Bottom Nav ───────────────────────────────────────────────────── */
+/* Nav ist im normalen Flow (kein position:fixed) – kein iOS-PWA-Bug mehr */
 .mobile-nav {
   display: none;
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-  background: transparent;
-  padding: 0 14px calc(14px + env(safe-area-inset-bottom)) 14px;
-  pointer-events: none;
+  flex-shrink: 0;
+  background: var(--bg);
+  padding: 8px 14px calc(10px + env(safe-area-inset-bottom)) 14px;
 }
 .mobile-nav-inner {
-  display: flex; height: 62px; padding: 5px 6px; gap: 2px;
+  display: flex; height: 60px; padding: 5px 6px; gap: 0;
   background: rgba(11, 22, 40, 0.97);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border-radius: 26px;
-  border: 1px solid rgba(255,255,255,0.09);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.3);
-  pointer-events: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 6px rgba(0,0,0,0.2);
 }
 .mobile-nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; color: rgba(255,255,255,0.35); font-size: 0.56rem; font-weight: 700;
-  text-decoration: none; letter-spacing: 0.04em; text-transform: uppercase;
-  border-radius: 20px; padding: 5px 4px;
-  transition: color 0.15s ease, background 0.15s ease;
+  gap: 4px; color: rgba(255,255,255,0.38); font-size: 0.57rem; font-weight: 600;
+  text-decoration: none; letter-spacing: 0.03em;
+  border-radius: 18px; padding: 4px 2px;
+  position: relative;
+  transition: color 0.15s ease;
 }
-.mobile-nav-item svg { width: 20px; height: 20px; flex-shrink: 0; stroke-width: 1.7; }
-.mobile-nav-item.active {
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.12);
+.mobile-nav-item svg { width: 21px; height: 21px; flex-shrink: 0; stroke-width: 1.7; }
+.mobile-nav-item.active { color: #4ade80; }
+.mobile-nav-item.active::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 22px; height: 2px;
+  background: #4ade80; border-radius: 0 0 3px 3px;
 }
-.mobile-nav-item:not(.active):hover { color: rgba(255,255,255,0.6); }
+.mobile-nav-item:not(.active):hover { color: rgba(255,255,255,0.65); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 /* Tablet: shrink sidebar to icon-only */
@@ -890,12 +893,11 @@ textarea { resize: vertical; min-height: 90px; }
 
 /* Mobile: hide sidebar, show bottom nav, adjust layouts */
 @media (max-width: 640px) {
-  /* Navigation */
+  /* Nav im Flow – app-layout als Spalte */
+  .app-layout { flex-direction: column; }
   .sidebar { display: none; }
   .mobile-nav { display: flex; }
-
-  /* Core layout: add padding for floating bottom nav (14px gap + 62px nav + 14px clearance) */
-  .main-wrapper { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .main-wrapper { padding-bottom: 0; overflow-y: auto; }
   .dash-page, .exercises-main, .my-trainings-layout { padding-bottom: 16px; }
 
   /* Page header */
@@ -969,9 +971,11 @@ textarea { resize: vertical; min-height: 90px; }
   .training-exercise-item { touch-action: none; }
 
   /* My Trainings */
-  .my-trainings-layout { padding: 0 14px 16px; }
+  .my-trainings-layout { padding: 0 14px 80px; }
   .mt-stats { gap: 20px; }
   .mt-card-title { font-size: 0.88rem; }
+  .mt-desktop-btn { display: none; }
+  .mt-fab { display: flex; }
 
   /* Settings */
   .settings-layout { padding: 0 16px 40px; }
@@ -1167,3 +1171,29 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .mt-repeat-btn:hover { color: var(--text) !important; background: #e2e8f0; }
 .mt-chevron { color: #cbd5e1; flex-shrink: 0; }
+
+/* My Trainings Empty State */
+.mt-empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 64px 24px 32px; text-align: center; gap: 10px;
+}
+.mt-empty-icon {
+  width: 72px; height: 72px; border-radius: 22px;
+  background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+.mt-empty-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+.mt-empty-text { font-size: 0.82rem; color: var(--text-muted); max-width: 220px; line-height: 1.5; }
+
+/* FAB – nur auf Mobile sichtbar */
+.mt-fab {
+  display: none;
+  position: fixed; bottom: 100px; right: 20px;
+  width: 54px; height: 54px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.2);
+  border: none; cursor: pointer; z-index: 100;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.mt-fab:active { transform: scale(0.93); box-shadow: 0 2px 10px rgba(37,99,235,0.4); }
