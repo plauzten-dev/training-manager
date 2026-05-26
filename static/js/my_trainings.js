@@ -49,17 +49,15 @@ function renderAll(trainings) {
     <div class="mt-stats">
       <div class="mt-stat">
         <span class="mt-stat-num">${allTrainings.length}</span>
-        <span class="mt-stat-label">Trainings gesamt</span>
+        <span class="mt-stat-label">Gesamt</span>
       </div>
-      <div class="mt-stat-divider"></div>
       <div class="mt-stat">
         <span class="mt-stat-num">${countMonth}</span>
         <span class="mt-stat-label">Diesen Monat</span>
       </div>
-      <div class="mt-stat-divider"></div>
       <div class="mt-stat">
         <span class="mt-stat-num">${trainings.reduce((s,t) => s + (t.exercise_count||0), 0)}</span>
-        <span class="mt-stat-label">Übungen insgesamt</span>
+        <span class="mt-stat-label">Übungen</span>
       </div>
     </div>`;
 
@@ -80,6 +78,7 @@ function renderAll(trainings) {
       <div class="mt-group">
         <div class="mt-month-header">
           <span class="mt-month-label">${label}</span>
+          <div class="mt-month-line"></div>
           <span class="mt-month-count">${count} Training${count !== 1 ? 's' : ''}</span>
         </div>
         <div class="mt-cards">
@@ -99,34 +98,23 @@ function trainingCardHTML(t) {
   const exCount = t.exercise_count ?? 0;
 
   return `
-    <div class="mt-card">
+    <div class="mt-card" onclick="window.location.href='/training/${t.id}'">
       <div class="mt-card-date">
         <span class="mt-card-month">${mon}</span>
         <span class="mt-card-day">${day}</span>
         <span class="mt-card-wd">${wd}</span>
       </div>
-
       <div class="mt-card-body">
         <div class="mt-card-title">${escHtml(t.title)}</div>
-        <div class="mt-card-chips">
-          <span class="mt-chip">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/></svg>
-            ${exCount} Übung${exCount !== 1 ? 'en' : ''}
-          </span>
-        </div>
+        <div class="mt-card-meta">${exCount} Übung${exCount !== 1 ? 'en' : ''}</div>
       </div>
-
       <div class="mt-card-actions">
-        <button class="btn btn-ghost btn-sm mt-repeat-btn"
-          title="Als neues Training wiederholen"
-          onclick="showRepeatModal(${t.id}, '${escHtml(t.title).replace(/'/g,"\\'")}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          Wiederholen
+        <button class="mt-repeat-btn"
+          title="Wiederholen"
+          onclick="event.stopPropagation(); showRepeatModal(${t.id}, '${escHtml(t.title).replace(/'/g,"\\'")}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
         </button>
-        <a href="/training/${t.id}" class="btn btn-primary btn-sm">
-          Öffnen
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </a>
+        <svg class="mt-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>`;
 }

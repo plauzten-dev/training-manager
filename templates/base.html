@@ -177,11 +177,17 @@
       if (!isStandalone) return;
       if (sessionStorage.getItem('splashShown')) return;
       sessionStorage.setItem('splashShown', '1');
+      document.documentElement.style.background = '#0f1f35';
+      document.body.style.background = '#0f1f35';
       const splash = document.getElementById('splash-screen');
       splash.style.display = 'flex';
       setTimeout(() => {
         splash.classList.add('splash-hide');
-        setTimeout(() => splash.remove(), 400);
+        setTimeout(() => {
+          splash.remove();
+          document.documentElement.style.background = '';
+          document.body.style.background = '';
+        }, 400);
       }, 1400);
     })();
   </script>
