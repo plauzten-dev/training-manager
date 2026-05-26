@@ -135,7 +135,7 @@
       const data = await res.json();
 
       if (res.ok) {
-        window.location.href = '/calendar';
+        window.location.href = '/dashboard';
       } else {
         errEl.textContent = data.error;
         errEl.classList.remove('hidden');
@@ -173,7 +173,7 @@
       const data = await res.json();
 
       if (res.ok) {
-        window.location.href = '/calendar';
+        window.location.href = '/dashboard';
       } else {
         errEl.textContent = data.error;
         errEl.classList.remove('hidden');

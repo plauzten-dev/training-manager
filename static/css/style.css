@@ -99,7 +99,7 @@ a { text-decoration: none; color: inherit; }
   background: var(--bg);
 }
 .page-title { font-size: 1.5rem; font-weight: 700; color: var(--text); }
-.page-subtitle { color: var(--text-muted); font-size: 0.875rem; margin-top: 2px; }
+.page-subtitle { color: var(--text-muted); font-size: 0.875rem; margin-top: 5px; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn {
@@ -832,10 +832,11 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .mobile-nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; color: rgba(255,255,255,0.45); font-size: 0.65rem; font-weight: 600;
+  gap: 3px; color: rgba(255,255,255,0.45); font-size: 0.6rem; font-weight: 600;
   text-decoration: none; letter-spacing: 0.01em; transition: color 0.15s;
-  padding: 6px 4px;
+  padding: 6px 2px;
 }
+.mobile-nav-item svg { width: 20px; height: 20px; }
 .mobile-nav-item.active { color: var(--sidebar-active-text); }
 .mobile-nav-item:hover { color: rgba(255,255,255,0.8); }
 .mobile-nav-item svg { flex-shrink: 0; }
@@ -963,6 +964,7 @@ textarea { resize: vertical; min-height: 90px; }
 }
 
 /* ── Settings Page ───────────────────────────────────────────────────────── */
+.settings-page { overflow-y: auto; height: 100%; }
 .settings-layout {
   max-width: 600px;
   display: flex;
