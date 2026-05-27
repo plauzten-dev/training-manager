@@ -1573,13 +1573,21 @@ input.team-search-input:focus {
 }
 
 @media (max-width: 640px) {
-  .players-page { padding: 16px 16px 96px; gap: 20px; }
+  .players-page { padding: 16px 16px 20px; gap: 16px; }
   .players-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .mobile-nav-item { font-size: 0.58rem; }
   .nav-icon { width: 44px; }
   .player-card-top  { height: 48px; }
   .player-avatar    { width: 46px; height: 46px; margin-top: -23px; font-size: 0.95rem; }
-  .team-header-actions { width: 100%; justify-content: flex-end; }
+  /* Team header: Info-Block + Actions stapeln */
+  .team-header-row  { flex-direction: column; align-items: stretch; gap: 10px; }
+  .team-header-info { min-width: 0; }
+  .team-header-actions {
+    width: 100%; flex-wrap: wrap; gap: 8px;
+  }
+  /* Ghost-Buttons teilen sich Zeile 1, Primary-Button nimmt volle Zeile 2 */
+  .team-header-actions .btn-ghost { flex: 1 1 0; min-width: 0; font-size: 0.75rem; justify-content: center; }
+  .team-header-actions .btn-primary { width: 100%; justify-content: center; }
   .sport-select-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
