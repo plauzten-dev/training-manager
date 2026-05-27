@@ -64,8 +64,9 @@ MaxiWebs/
 │   └── js/
 │       ├── exercises.js     ← Übungen: Filter, Sport-Tabs (localStorage), CRUD, Mobile-Filter-Toggle
 │       ├── calendar.js      ← Kalender: Render, Navigation, Training-Erstellung
-│       ├── training.js      ← Training-Detail: Drag & Drop (Mouse+Touch), Übungen, Notizen, PDF
-│       └── my_trainings.js  ← Meine Trainings: Gruppen, Stats, Suche, Wiederholen
+│       ├── training.js      ← Training-Detail: Drag & Drop (Mouse+Touch), Übungen, Notizen, PDF, Anwesenheit
+│       ├── my_trainings.js  ← Meine Trainings: Gruppen, Stats, Suche, Wiederholen
+│       └── players.js       ← Mein Team: Multi-Team-Tabs, Spielerkarten, Status-Toggle, Anwesenheit
 │
 ├── PROGRESS.md         ← Vollständige Feature-Liste, Changelog, offene To-Dos (AKTUELL)
 └── CLAUDE.md           ← Diese Datei
@@ -89,6 +90,30 @@ exercises (
 trainings (id, user_id, title, date, notes, created_at)
 
 training_exercises (id, training_id, exercise_id, order_index)
+
+teams (
+  id, user_id,
+  name TEXT NOT NULL,
+  sport TEXT NOT NULL DEFAULT 'Fußball',  -- 7 Sportarten
+  created_at
+)
+
+players (
+  id, user_id,
+  team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL,  -- nullable
+  name TEXT NOT NULL,
+  position TEXT NOT NULL DEFAULT 'Universal',
+  number INTEGER,  -- Trikotnummer, nullable
+  notes TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'fit',  -- 'fit' | 'krank' | 'verletzt'
+  created_at
+)
+
+training_attendance (
+  id, training_id, player_id,
+  present INTEGER NOT NULL DEFAULT 1,  -- 1=anwesend, 0=fehlt
+  UNIQUE(training_id, player_id)
+)
 ```
 
 ---
@@ -128,6 +153,31 @@ training_exercises (id, training_id, exercise_id, order_index)
 | DELETE | `/api/trainings/<id>/exercises/<eid>` | Übung entfernen |
 | PUT | `/api/trainings/<id>/exercises/reorder` | Reihenfolge speichern (body: {order: [id,...]}) |
 
+### Teams
+| Method | Route | Beschreibung |
+|--------|-------|-------------|
+| GET | `/api/teams` | Alle Teams des Users (inkl. player_count) |
+| POST | `/api/teams` | Neues Team (name, sport) |
+| PUT | `/api/teams/<id>` | Team bearbeiten |
+| DELETE | `/api/teams/<id>` | Team löschen (Spieler bleiben, team_id → NULL) |
+| GET | `/api/teams/<id>/attendance-summary` | Anwesenheitsstatistik pro Spieler (present_count, absent_count, marked_count) |
+
+### Spieler
+| Method | Route | Beschreibung |
+|--------|-------|-------------|
+| GET | `/api/players` | Alle Spieler (opt. ?team_id=X) |
+| POST | `/api/players` | Neuer Spieler |
+| PUT | `/api/players/<id>` | Spieler bearbeiten |
+| DELETE | `/api/players/<id>` | Spieler löschen |
+| PUT | `/api/players/<id>/status` | Status schnell ändern (body: {status}) |
+
+### Anwesenheit
+| Method | Route | Beschreibung |
+|--------|-------|-------------|
+| GET | `/api/trainings/<id>/attendance` | Spielerliste + Anwesenheitsstatus (opt. ?team_id=X) |
+| PUT | `/api/trainings/<id>/attendance` | Einzelnen Spieler markieren (body: {player_id, present}) |
+| PUT | `/api/trainings/<id>/attendance/all` | Ganzes Team markieren (body: {present, team_id}) |
+
 ### Dashboard
 | Method | Route | Beschreibung |
 |--------|-------|-------------|
@@ -145,6 +195,7 @@ training_exercises (id, training_id, exercise_id, order_index)
 | `/training/<id>/pdf` | Druckoptimierte PDF-Ansicht |
 | `/my-trainings` | Trainings-Übersicht (alle) |
 | `/settings` | Konto-Einstellungen |
+| `/players` | Multi-Team Spielerverwaltung |
 | `/offline` | Offline-Fallback (Service Worker) |
 | `/privacy` | DSGVO-Datenschutzerklärung |
 | `/.well-known/assetlinks.json` | TWA-Verknüpfung für Android/Play Store |
@@ -192,7 +243,7 @@ git push
 
 ---
 
-## Was bereits vollständig funktioniert (v1.6)
+## Was bereits vollständig funktioniert (v0.21)
 
 - Benutzer-Accounts (Register, Login, Logout, Profil + Passwort ändern)
 - Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload (Cloudinary), Suche, Filter, Sport-Tabs
@@ -204,6 +255,12 @@ git push
 - **7 Sportarten**: Fußball, Tennis, Floorball, Basketball, Volleyball, Gym, Allgemein
 - **46 Seed-Übungen** inkl. Aufwärmen, Dehnen, Cool-down (Allgemein-Kategorie)
 - **Dashboard** (`/dashboard`): Begrüßung, Stats, 4-Tage-Vorschau, Übungsvorschläge, Motivation
+- **Multi-Team Spielerverwaltung** (`/players`):
+  - Beliebig viele Teams pro User, jedes mit eigener Sportart
+  - Sportspezifische Positionen im Spieler-Modal (je nach Teamsport)
+  - Spielerkarten mit direkten Status-Toggle-Chips (Fit/Krank/Verletzt), optimistisches UI
+  - Team-Tabs mit Sportfarben, Sportart-Auswahl-Grid im Modal
+- **Anwesenheit pro Training**: Team-Selektor (Team zuerst wählen, dann Spieler sichtbar), Einzelmarkierung (Anwesend/Fehlt/Unmarkiert), "Ganzes Team anwesend"-Bulk-Button
 - **Responsives Design + Mobile-Nav**: Bottom-Nav auf Mobilgeräten (≤640px), Sidebar kollabiert auf Tablet (≤900px)
 - **PWA**: manifest.json, Service Worker (Cache v2), Apple-Meta-Tags – auf iOS & Android installierbar
 - **Play Store Basis**: PNG-Icons, erweitertes Manifest, `/offline`, `/privacy`, `/.well-known/assetlinks.json`
@@ -256,11 +313,10 @@ git push
 
 ### Mittel priorisiert
 - [ ] **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
-- [ ] **Spieler-Verwaltung** – Spieler anlegen, Anwesenheitsliste pro Training
+- [ ] **Saison-/Wochenplanung** – Überblick über geplante Trainingswochen
 
 ### Nice-to-have
-- [ ] Saison-/Wochenplanung
-- [ ] Admin-Modus für Übungen
+- [ ] Admin-Modus für Übungen (andere User können keine Übungen anlegen)
 - [ ] Bild-Zuschnitt beim Upload (Canvas API)
 - [ ] Render Disk ($0,25/Monat) für persistente SQLite-DB → `DB_PATH=/data/training.db`
 

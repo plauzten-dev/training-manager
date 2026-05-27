@@ -57,6 +57,39 @@ def init_db():
             FOREIGN KEY (training_id) REFERENCES trainings(id) ON DELETE CASCADE,
             FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS teams (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            sport TEXT NOT NULL DEFAULT 'Fußball',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS players (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            team_id INTEGER,
+            name TEXT NOT NULL,
+            position TEXT NOT NULL DEFAULT 'Universal',
+            number INTEGER,
+            notes TEXT DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'fit',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS training_attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            training_id INTEGER NOT NULL,
+            player_id INTEGER NOT NULL,
+            present INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (training_id) REFERENCES trainings(id) ON DELETE CASCADE,
+            FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
+            UNIQUE (training_id, player_id)
+        );
     ''')
     conn.commit()
 
@@ -65,7 +98,14 @@ def init_db():
         conn.execute("ALTER TABLE exercises ADD COLUMN sport TEXT NOT NULL DEFAULT 'Fußball'")
         conn.commit()
     except Exception:
-        pass  # Column already exists – that's fine
+        pass
+
+    # Migration: add team_id to existing players
+    try:
+        conn.execute("ALTER TABLE players ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL")
+        conn.commit()
+    except Exception:
+        pass
 
     # Mark any pre-existing exercises without sport tag
     conn.execute("UPDATE exercises SET sport='Fußball' WHERE sport IS NULL OR sport=''")

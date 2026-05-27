@@ -1,7 +1,47 @@
 # Training Manager – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 26. Mai 2026
-> Status: ✅ Version 1.6 – QoL-Verbesserungen + Play Store Vorbereitung
+> Zuletzt aktualisiert: 27. Mai 2026
+> Status: ✅ Version 0.22 – Anwesenheits-Übersicht + Floating Mobile Nav
+
+---
+
+## v0.22 – Änderungen (27.05.2026, 8. Session)
+
+### Bugfixes & UX-Verbesserungen
+- [x] `style.css` – Suchleiste Players-Page: `max-width: 300px`, Selektor auf `input.team-search-input` erhöht (behebt CSS-Spezifitätsbug: globale `input[type="text"]`-Regel überschrieb `padding-left`)
+- [x] `style.css` – `#team-content { display: flex; flex-direction: column; gap: 24px }` – gleichmäßige Abstände zwischen Header, Stats, Toolbar und Grid
+- [x] `style.css` – Attendance Summary Modal: neue `.sum-*`-Klassen (kein Konflikt mit bestehenden `.att-*`)
+
+### Anwesenheits-Übersicht (Mein Team)
+- [x] `app.py` – Neuer Endpoint `GET /api/teams/<id>/attendance-summary`: aggregiert pro Spieler Anwesend/Abwesend-Zähler + Gesamttrackings
+- [x] `players.js` – Button "Anwesenheits-Übersicht" im Team-Header (Bar-Chart-Icon)
+- [x] `players.js` – `showAttendanceSummary()`: Modal mit Fortschrittsbalken pro Spieler (grün ≥75%, orange ≥50%, rot darunter), Prozent, Zähler; sortiert nach Anwesenheit absteigend
+
+### Mobile Nav – Floating Pill Redesign
+- [x] `base.html` – Icons in `<span class="nav-icon">` gewrappt für Pill-Highlight
+- [x] `style.css` – Nav-Bar komplett neu: frei schwebend (`position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%)`), `border-radius: 24px`, `overflow: hidden`, Frosted-Glass-Hintergrund, Box-Shadow
+- [x] `style.css` – Aktiver Tab: `.nav-icon` bekommt `background: rgba(37,99,235,0.12)` als Pill-Highlight (WhatsApp-Stil)
+- [x] `style.css` – `main-wrapper` padding-bottom entfernt; stattdessen je 90px direkt auf scrollbare Bereiche (`.dash-page`, `.exercises-main`, `.my-trainings-layout`, `.calendar-body`, `.players-page`) – behebt weißen Rechteck-Bug hinter der Nav
+
+---
+
+## v0.21 – Änderungen (27.05.2026, 7. Session)
+
+### Multi-Team + Spielerverwaltung
+- [x] `database.py` – Neue Tabellen: `teams` (id, user_id, name, sport), `players` (id, user_id, team_id, name, position, number, notes, status), `training_attendance`
+- [x] `app.py` – CRUD-Routen für Teams (`/api/teams`, `/api/teams/<id>`) + Spieler (`/api/players`, `/api/players/<id>`, `/api/players/<id>/status`)
+- [x] `app.py` – Anwesenheits-Routen: `GET/PUT /api/trainings/<id>/attendance`, `PUT /api/trainings/<id>/attendance/all`
+- [x] `templates/players.html` – Neu: dynamisches Gerüst mit `team-tabs-row` + `team-content` (vollständig JS-gesteuert)
+- [x] `static/js/players.js` – Komplett neu: Multi-Team-Tabs, Sportart-Auswahl-Grid, sportspezifische Positionen, Spieler-Karten mit direkten Status-Toggle-Buttons
+- [x] `static/css/style.css` – Neue Komponenten: `.team-tab`, `.team-header-row`, `.sport-select-grid`, `.st-btn` (Status-Toggle), `.no-team-state`, `.att-team-row`
+- [x] `templates/base.html` – "Mein Team"-Link in Sidebar + Mobile-Nav, Splash-Version `v0.21`
+- [x] `static/js/training.js` – Anwesenheitssektion: Team-Selektor-Dropdown + "Ganzes Team anwesend"-Button
+
+### Neue Features im Detail
+- **Multi-Team**: Beliebig viele Teams pro User, jedes Team hat eine Sportart (7 Sportarten)
+- **Sportspezifische Positionen**: Positionen im Spieler-Modal hängen von der Teamsportart ab
+- **Direkte Status-Buttons**: Fit / Krank / Verletzt direkt auf der Spielerkarte (optimistisches UI)
+- **Anwesenheit pro Training**: Team-Filter + Einzelmarkierung + "Ganzes Team anwesend"-Bulk-Aktion
 
 ---
 

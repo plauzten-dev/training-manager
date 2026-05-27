@@ -143,6 +143,12 @@ def my_trainings_page():
     return render_template('my_trainings.html', username=session.get('username'))
 
 
+@app.route('/players')
+@login_required
+def players_page():
+    return render_template('players.html', username=session.get('username'))
+
+
 @app.route('/settings')
 @login_required
 def settings_page():
@@ -783,6 +789,318 @@ def stats_api():
 
     conn.close()
     return jsonify({'monthly': monthly, 'top_exercises': top_exercises})
+
+
+# ── Teams API ─────────────────────────────────────────────────────────────────
+
+@app.route('/api/teams', methods=['GET'])
+@login_required
+def get_teams():
+    conn = get_db()
+    teams = [dict(r) for r in conn.execute(
+        '''SELECT t.*, COUNT(p.id) as player_count
+           FROM teams t LEFT JOIN players p ON p.team_id = t.id
+           WHERE t.user_id = ? GROUP BY t.id ORDER BY t.created_at''',
+        (session['user_id'],)
+    ).fetchall()]
+    conn.close()
+    return jsonify(teams)
+
+
+@app.route('/api/teams', methods=['POST'])
+@login_required
+def create_team():
+    data  = request.get_json()
+    name  = (data.get('name') or '').strip()
+    sport = (data.get('sport') or 'Fußball').strip()
+    if not name:
+        return jsonify({'error': 'Teamname ist erforderlich'}), 400
+    conn = get_db()
+    cursor = conn.execute(
+        'INSERT INTO teams (user_id, name, sport) VALUES (?,?,?)',
+        (session['user_id'], name, sport)
+    )
+    conn.commit()
+    team = dict(conn.execute('SELECT * FROM teams WHERE id = ?', (cursor.lastrowid,)).fetchone())
+    conn.close()
+    return jsonify(team), 201
+
+
+@app.route('/api/teams/<int:team_id>', methods=['PUT'])
+@login_required
+def update_team(team_id):
+    data  = request.get_json()
+    name  = (data.get('name') or '').strip()
+    sport = (data.get('sport') or 'Fußball').strip()
+    if not name:
+        return jsonify({'error': 'Teamname ist erforderlich'}), 400
+    conn = get_db()
+    t = conn.execute('SELECT id FROM teams WHERE id = ? AND user_id = ?', (team_id, session['user_id'])).fetchone()
+    if not t:
+        conn.close()
+        return jsonify({'error': 'Team nicht gefunden'}), 404
+    conn.execute('UPDATE teams SET name=?, sport=? WHERE id=?', (name, sport, team_id))
+    conn.commit()
+    team = dict(conn.execute('SELECT * FROM teams WHERE id = ?', (team_id,)).fetchone())
+    conn.close()
+    return jsonify(team)
+
+
+@app.route('/api/teams/<int:team_id>', methods=['DELETE'])
+@login_required
+def delete_team(team_id):
+    conn = get_db()
+    t = conn.execute('SELECT id FROM teams WHERE id = ? AND user_id = ?', (team_id, session['user_id'])).fetchone()
+    if not t:
+        conn.close()
+        return jsonify({'error': 'Team nicht gefunden'}), 404
+    conn.execute('DELETE FROM teams WHERE id = ?', (team_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Team gelöscht'})
+
+
+# ── Players API ───────────────────────────────────────────────────────────────
+
+@app.route('/api/players', methods=['GET'])
+@login_required
+def get_players():
+    team_id = request.args.get('team_id')
+    conn    = get_db()
+    query   = '''SELECT p.*, t.name as team_name, t.sport as team_sport
+                 FROM players p LEFT JOIN teams t ON t.id = p.team_id
+                 WHERE p.user_id = ?'''
+    params  = [session['user_id']]
+    if team_id:
+        query  += ' AND p.team_id = ?'
+        params.append(int(team_id))
+    query += ' ORDER BY p.name'
+    players = [dict(r) for r in conn.execute(query, params).fetchall()]
+    conn.close()
+    return jsonify(players)
+
+
+@app.route('/api/players', methods=['POST'])
+@login_required
+def create_player():
+    data = request.get_json()
+    name     = (data.get('name') or '').strip()
+    position = (data.get('position') or 'Universal').strip()
+    number   = data.get('number')
+    notes    = (data.get('notes') or '').strip()
+    status   = (data.get('status') or 'fit').strip()
+    team_id  = data.get('team_id')
+
+    if not name:
+        return jsonify({'error': 'Name ist erforderlich'}), 400
+
+    conn = get_db()
+    cursor = conn.execute(
+        'INSERT INTO players (user_id, team_id, name, position, number, notes, status) VALUES (?,?,?,?,?,?,?)',
+        (session['user_id'], team_id if team_id else None, name, position,
+         number if number else None, notes, status)
+    )
+    conn.commit()
+    player = dict(conn.execute('SELECT * FROM players WHERE id = ?', (cursor.lastrowid,)).fetchone())
+    conn.close()
+    return jsonify(player), 201
+
+
+@app.route('/api/players/<int:player_id>', methods=['GET'])
+@login_required
+def get_player(player_id):
+    conn = get_db()
+    player = conn.execute(
+        'SELECT * FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])
+    ).fetchone()
+    conn.close()
+    if not player:
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    return jsonify(dict(player))
+
+
+@app.route('/api/players/<int:player_id>', methods=['PUT'])
+@login_required
+def update_player(player_id):
+    data = request.get_json()
+    name     = (data.get('name') or '').strip()
+    position = (data.get('position') or 'Universal').strip()
+    number   = data.get('number')
+    notes    = (data.get('notes') or '').strip()
+    status   = (data.get('status') or 'fit').strip()
+    team_id  = data.get('team_id')
+
+    if not name:
+        return jsonify({'error': 'Name ist erforderlich'}), 400
+
+    conn = get_db()
+    p = conn.execute('SELECT id FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+
+    conn.execute(
+        'UPDATE players SET name=?, position=?, number=?, notes=?, status=?, team_id=? WHERE id=?',
+        (name, position, number if number else None, notes, status,
+         team_id if team_id else None, player_id)
+    )
+    conn.commit()
+    player = dict(conn.execute('SELECT * FROM players WHERE id = ?', (player_id,)).fetchone())
+    conn.close()
+    return jsonify(player)
+
+
+@app.route('/api/players/<int:player_id>/status', methods=['PUT'])
+@login_required
+def update_player_status(player_id):
+    data   = request.get_json()
+    status = (data.get('status') or 'fit').strip()
+    if status not in ('fit', 'krank', 'verletzt'):
+        return jsonify({'error': 'Ungültiger Status'}), 400
+    conn = get_db()
+    p = conn.execute('SELECT id FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    conn.execute('UPDATE players SET status=? WHERE id=?', (status, player_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Status aktualisiert'})
+
+
+@app.route('/api/players/<int:player_id>', methods=['DELETE'])
+@login_required
+def delete_player(player_id):
+    conn = get_db()
+    p = conn.execute('SELECT id FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    conn.execute('DELETE FROM players WHERE id = ?', (player_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Spieler gelöscht'})
+
+
+# ── Attendance API ────────────────────────────────────────────────────────────
+
+@app.route('/api/trainings/<int:training_id>/attendance', methods=['GET'])
+@login_required
+def get_attendance(training_id):
+    team_id = request.args.get('team_id')
+    conn    = get_db()
+    t = conn.execute('SELECT id FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])).fetchone()
+    if not t:
+        conn.close()
+        return jsonify({'error': 'Training nicht gefunden'}), 404
+
+    query  = '''SELECT p.id, p.name, p.position, p.number, p.status, p.team_id, ta.present
+                FROM players p
+                LEFT JOIN training_attendance ta ON ta.player_id = p.id AND ta.training_id = ?
+                WHERE p.user_id = ?'''
+    params = [training_id, session['user_id']]
+    if team_id:
+        query  += ' AND p.team_id = ?'
+        params.append(int(team_id))
+    query += ' ORDER BY p.name'
+
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/api/trainings/<int:training_id>/attendance', methods=['PUT'])
+@login_required
+def set_attendance(training_id):
+    data      = request.get_json()
+    player_id = data.get('player_id')
+    present   = data.get('present')
+
+    conn = get_db()
+    t = conn.execute('SELECT id FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])).fetchone()
+    if not t:
+        conn.close()
+        return jsonify({'error': 'Training nicht gefunden'}), 404
+
+    if present is None:
+        conn.execute('DELETE FROM training_attendance WHERE training_id = ? AND player_id = ?', (training_id, player_id))
+    else:
+        conn.execute(
+            'INSERT OR REPLACE INTO training_attendance (training_id, player_id, present) VALUES (?,?,?)',
+            (training_id, player_id, 1 if present else 0)
+        )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Anwesenheit gespeichert'})
+
+
+@app.route('/api/trainings/<int:training_id>/attendance/all', methods=['PUT'])
+@login_required
+def set_all_attendance(training_id):
+    data    = request.get_json()
+    team_id = data.get('team_id')
+    present = 1 if data.get('present', True) else 0
+
+    conn = get_db()
+    t = conn.execute('SELECT id FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])).fetchone()
+    if not t:
+        conn.close()
+        return jsonify({'error': 'Training nicht gefunden'}), 404
+
+    if team_id:
+        players = conn.execute('SELECT id FROM players WHERE user_id = ? AND team_id = ?',
+                               (session['user_id'], int(team_id))).fetchall()
+    else:
+        players = conn.execute('SELECT id FROM players WHERE user_id = ?', (session['user_id'],)).fetchall()
+
+    for p in players:
+        conn.execute(
+            'INSERT OR REPLACE INTO training_attendance (training_id, player_id, present) VALUES (?,?,?)',
+            (training_id, p['id'], present)
+        )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': f'{len(players)} Spieler markiert', 'count': len(players)})
+
+
+@app.route('/api/teams/<int:team_id>/attendance-summary', methods=['GET'])
+@login_required
+def team_attendance_summary(team_id):
+    conn = get_db()
+    team = conn.execute('SELECT id, name FROM teams WHERE id = ? AND user_id = ?',
+                        (team_id, session['user_id'])).fetchone()
+    if not team:
+        conn.close()
+        return jsonify({'error': 'Team nicht gefunden'}), 404
+
+    rows = conn.execute('''
+        SELECT
+          p.id, p.name, p.position, p.status,
+          COUNT(ta.id)                                                AS marked_count,
+          COALESCE(SUM(CASE WHEN ta.present = 1 THEN 1 ELSE 0 END), 0) AS present_count,
+          COALESCE(SUM(CASE WHEN ta.present = 0 THEN 1 ELSE 0 END), 0) AS absent_count
+        FROM players p
+        LEFT JOIN training_attendance ta ON ta.player_id = p.id
+        LEFT JOIN trainings tr ON tr.id = ta.training_id AND tr.user_id = ?
+        WHERE p.user_id = ? AND p.team_id = ?
+        GROUP BY p.id, p.name, p.position, p.status
+        ORDER BY present_count DESC, p.name
+    ''', (session['user_id'], session['user_id'], team_id)).fetchall()
+
+    total_tracked = conn.execute('''
+        SELECT COUNT(DISTINCT ta.training_id)
+        FROM training_attendance ta
+        JOIN players p ON p.id = ta.player_id
+        JOIN trainings tr ON tr.id = ta.training_id AND tr.user_id = ?
+        WHERE p.team_id = ?
+    ''', (session['user_id'], team_id)).fetchone()[0]
+
+    conn.close()
+    return jsonify({
+        'team_name':     team['name'],
+        'total_tracked': total_tracked,
+        'players':       [dict(r) for r in rows]
+    })
 
 
 @app.route('/api/filter-options')

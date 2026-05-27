@@ -13,12 +13,22 @@ const SPORT_FIELD_SVG_SM = {
   'default':   `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"><circle cx="14" cy="14" r="10"/><circle cx="14" cy="14" r="4"/></svg>`,
 };
 
-let training = null;
-let notesTimer = null;
+let training    = null;
+let notesTimer  = null;
+let attTeamId   = null;
+let attTeams    = [];
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await loadTraining();
+  fetchAttTeams();
+}
+
+async function fetchAttTeams() {
+  const res = await fetch('/api/teams');
+  if (!res.ok) return;
+  attTeams = await res.json();
+  renderAttTeamSelect();
 }
 
 async function loadTraining() {
@@ -97,8 +107,31 @@ function renderPage() {
         </button>
       </div>
 
+      <!-- Anwesenheit -->
+      <div class="attendance-section" id="attendance-section">
+        <div class="section-header">
+          <span class="section-title">Anwesenheit</span>
+          <span class="section-count" id="attendance-count"></span>
+        </div>
+        <div class="att-team-row" id="att-team-row" style="display:none">
+          <select class="att-team-select" id="att-team-select" onchange="onAttTeamChange(this.value)">
+            <option value="">Alle Spieler</option>
+          </select>
+          <button class="att-all-btn" onclick="setAllPresent(true)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Ganzes Team anwesend
+          </button>
+        </div>
+        <div id="attendance-list">
+          <div style="padding:10px 0;text-align:center">
+            <div class="spinner" style="width:22px;height:22px;border-width:2px;margin:0 auto"></div>
+          </div>
+        </div>
+      </div>
+
     </div>`;
   attachDragHandlers();
+  loadAttendance();
 }
 
 function renderExerciseList() {
@@ -440,6 +473,142 @@ async function saveDragOrder() {
     body: JSON.stringify({ order })
   });
   if (!res.ok) showToast('Reihenfolge konnte nicht gespeichert werden', 'error');
+}
+
+// ── Attendance ────────────────────────────────────────────────────────────────
+const ATT_POS_COLORS = {
+  'Torwart':    '#f59e0b', 'Verteidiger': '#3b82f6', 'Mittelfeld': '#16a34a',
+  'Sturm':      '#ef4444', 'Außen':       '#f97316', 'Universal':  '#8b5cf6',
+};
+
+function renderAttTeamSelect() {
+  const sel = document.getElementById('att-team-select');
+  const row = document.getElementById('att-team-row');
+  if (!sel) return;
+  if (!attTeams.length) {
+    row.style.display = 'flex';
+    renderAttendance(null);
+    return;
+  }
+  sel.innerHTML = '<option value="">– Team auswählen –</option>' +
+    attTeams.map(t => `<option value="${t.id}">${t.name} · ${t.sport}</option>`).join('');
+  if (attTeamId) sel.value = attTeamId;
+  row.style.display = 'flex';
+  renderAttendance(null);
+}
+
+function onAttTeamChange(val) {
+  attTeamId = val ? parseInt(val) : null;
+  loadAttendance();
+}
+
+async function setAllPresent(present) {
+  if (!attTeamId) return;
+  const res = await fetch(`/api/trainings/${TRAINING_ID}/attendance/all`, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ present, team_id: attTeamId }),
+  });
+  if (res.ok) {
+    const d = await res.json();
+    showToast(d.message || 'Gespeichert', 'success');
+    loadAttendance();
+  } else {
+    showToast('Fehler', 'error');
+  }
+}
+
+async function loadAttendance() {
+  const list    = document.getElementById('attendance-list');
+  const countEl = document.getElementById('attendance-count');
+  if (!attTeamId) {
+    renderAttendance(null);
+    return;
+  }
+  const res = await fetch(`/api/trainings/${TRAINING_ID}/attendance?team_id=${attTeamId}`);
+  if (!res.ok) return;
+  const players = await res.json();
+  renderAttendance(players);
+}
+
+function renderAttendance(players) {
+  const list    = document.getElementById('attendance-list');
+  const countEl = document.getElementById('attendance-count');
+  if (!list) return;
+
+  // No team selected yet
+  if (players === null) {
+    list.innerHTML = `
+      <div class="att-no-team">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.4">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <p>${attTeams.length ? 'Wähle ein Team aus, um die Spielerliste zu sehen.' : 'Noch kein Team angelegt. <a href="/players" style="color:var(--primary);font-weight:600">Team erstellen</a>'}</p>
+      </div>`;
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  if (!players.length) {
+    list.innerHTML = `
+      <div class="att-no-team">
+        <p style="color:var(--text-muted);font-size:0.85rem">
+          Dieses Team hat noch keine Spieler. &nbsp;
+          <a href="/players" style="color:var(--primary);font-weight:600">Team verwalten</a>
+        </p>
+      </div>`;
+    if (countEl) countEl.textContent = '0 Spieler';
+    return;
+  }
+
+  const presentCount = players.filter(p => p.present === 1).length;
+  if (countEl) countEl.textContent = `${presentCount} / ${players.length} anwesend`;
+
+  list.innerHTML = players.map(p => {
+    const color    = ATT_POS_COLORS[p.position] || '#8b5cf6';
+    const initials = p.name.trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    const state    = (p.present === null || p.present === undefined) ? 'none'
+                   : (p.present === 1 ? 'present' : 'absent');
+
+    const checkSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const crossSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+    let btnInner, btnClass;
+    if (state === 'present') { btnInner = `${checkSvg} Anwesend`; btnClass = 'att-present'; }
+    else if (state === 'absent') { btnInner = `${crossSvg} Fehlt`; btnClass = 'att-absent'; }
+    else { btnInner = 'Markieren'; btnClass = 'att-none'; }
+
+    const injuryDot = p.status !== 'fit'
+      ? `<span class="att-injury-dot ${p.status === 'krank' ? 'att-dot-krank' : 'att-dot-verletzt'}" title="${p.status === 'krank' ? 'Krank' : 'Verletzt'}"></span>`
+      : '';
+
+    return `
+      <div class="attendance-row">
+        <div class="att-avatar" style="background:${color}">${initials}</div>
+        <div class="att-info">
+          <span class="att-name">${escHtml(p.name)}${injuryDot}</span>
+          <span class="att-pos">${escHtml(p.position)}${p.number ? ` · #${p.number}` : ''}</span>
+        </div>
+        <button class="att-btn ${btnClass}" onclick="toggleAttendance(${p.id},'${state}')">${btnInner}</button>
+      </div>`;
+  }).join('');
+}
+
+async function toggleAttendance(playerId, currentState) {
+  const nextPresent = currentState === 'none' ? 1
+                    : currentState === 'present' ? 0
+                    : null;
+
+  const res = await fetch(`/api/trainings/${TRAINING_ID}/attendance`, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ player_id: playerId, present: nextPresent }),
+  });
+  if (res.ok) loadAttendance();
+  else showToast('Fehler beim Speichern', 'error');
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

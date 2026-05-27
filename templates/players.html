@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Mein Team – Training Manager{% endblock %}
+
+{% block content %}
+<div class="players-page">
+
+  <!-- Page header -->
+  <div class="page-header" style="padding:0">
+    <div>
+      <h1 class="page-title">Mein Team</h1>
+      <p class="page-subtitle" id="team-subtitle">Teams verwalten</p>
+    </div>
+  </div>
+
+  <!-- Team tabs (rendered by JS) -->
+  <div class="team-tabs-row" id="team-tabs-row"></div>
+
+  <!-- Team content: header, stats, toolbar, grid (rendered by JS) -->
+  <div id="team-content">
+    <div style="padding:60px 0;text-align:center">
+      <div class="spinner" style="margin:0 auto"></div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/players.js') }}"></script>
+{% endblock %}
