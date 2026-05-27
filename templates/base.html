@@ -87,11 +87,9 @@
       {% block content %}{% endblock %}
     </div>
 
-  </div><!-- /.app-layout -->
-
-  <!-- Mobile Bottom Navigation -->
-  <div class="mobile-nav-wrap">
-  <nav class="mobile-nav" aria-label="Navigation">
+    <!-- Mobile Bottom Navigation (inside app-layout → no position:fixed needed) -->
+    <div class="mobile-nav-wrap">
+    <nav class="mobile-nav" aria-label="Navigation">
     <div class="mobile-nav-inner">
       <a href="/dashboard" class="mobile-nav-item {% if request.endpoint == 'dashboard_page' %}active{% endif %}">
         <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
@@ -118,8 +116,10 @@
         Einstellungen
       </a>
     </div>
-  </nav>
-  </div><!-- /.mobile-nav-wrap -->
+    </nav>
+    </div><!-- /.mobile-nav-wrap -->
+
+  </div><!-- /.app-layout -->
 
   <!-- Toast notifications -->
   <div id="toast-container"></div>
@@ -174,22 +174,6 @@
       if (e.target === this) closeModal();
     });
 
-    // iOS PWA: position:fixed + env(safe-area-inset-bottom) wird nach App-Switches
-    // und auf Initial-Render falsch berechnet. Ein minimaler Scroll-Impuls zwingt
-    // iOS dazu den Visual-Viewport neu zu berechnen – exakt was passiert wenn der
-    // User manuell "runter zieht".
-    (function () {
-      function _iosViewportFix() {
-        if (window.innerWidth > 640) return;
-        window.scrollTo(0, 1);
-        window.scrollTo(0, 0);
-      }
-      document.addEventListener('DOMContentLoaded', _iosViewportFix);
-      window.addEventListener('pageshow', _iosViewportFix);
-      document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) _iosViewportFix();
-      });
-    }());
   </script>
 
   {% block scripts %}{% endblock %}

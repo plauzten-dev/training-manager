@@ -842,21 +842,16 @@ textarea { resize: vertical; min-height: 90px; }
 
 /* ── Mobile Bottom Nav – Floating Compact Pill ───────────────────────────── */
 /*
- * Wrapper übernimmt position:fixed + padding-bottom:env(safe-area-inset-bottom).
- * padding-bottom ist auf iOS zuverlässiger als bottom:calc(env()+X) – letzteres
- * wird auf Initial-Render und nach App-Switches oft falsch berechnet.
+ * Wrapper sitzt als letztes Flex-Child innerhalb von .app-layout (height:100dvh).
+ * Auf Mobile wird .app-layout zur Spalte → kein position:fixed nötig → kein
+ * iOS-Viewport-Berechnungsbug mehr.
  */
 .mobile-nav-wrap {
   display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
   padding: 0 12px env(safe-area-inset-bottom, 0px);
-  z-index: 200;
-  pointer-events: none;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  width: 100%;
+  box-sizing: border-box;
 }
 .mobile-nav {
   display: flex;
@@ -870,7 +865,6 @@ textarea { resize: vertical; min-height: 90px; }
   -webkit-backdrop-filter: blur(28px) saturate(200%);
   border: 0.5px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.07);
-  pointer-events: all;
 }
 .mobile-nav-inner {
   display: flex; height: 60px; align-items: center;
@@ -914,15 +908,11 @@ textarea { resize: vertical; min-height: 90px; }
 
 /* Mobile: hide sidebar, show bottom nav, adjust layouts */
 @media (max-width: 640px) {
-  /* Nav im Flow – app-layout als Spalte */
+  /* app-layout wird zur Spalte: sidebar (hidden) + main-wrapper + nav */
+  .app-layout { flex-direction: column; }
   .sidebar { display: none; }
   .mobile-nav-wrap { display: block; }
-  /* Scrollbare Bereiche bekommen Padding so der Inhalt nicht hinter der Nav verschwindet */
-  .dash-page        { padding-bottom: 90px; }
-  .exercises-main   { padding-bottom: 90px; }
-  .my-trainings-layout { padding-bottom: 90px; }
-  .calendar-body    { padding-bottom: 90px; }
-  .players-page     { padding-bottom: 90px; }
+  /* Kein padding-bottom mehr nötig – Nav ist im Flow, kein Floating über Content */
 
   /* Page header */
   .page-header { padding: 20px 18px 0; flex-wrap: wrap; gap: 10px; }
