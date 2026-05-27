@@ -4,21 +4,23 @@
 {% block content %}
 <div class="players-page">
 
-  <!-- Page header -->
-  <div class="page-header" style="padding:0">
-    <div>
-      <h1 class="page-title">Mein Team</h1>
-      <p class="page-subtitle" id="team-subtitle">Teams verwalten</p>
+  <!-- Nicht-scrollender Bereich: Titel + Team-Tabs -->
+  <div class="players-top">
+    <div class="page-header" style="padding:0">
+      <div>
+        <h1 class="page-title">Mein Team</h1>
+        <p class="page-subtitle" id="team-subtitle">Teams verwalten</p>
+      </div>
     </div>
+    <div class="team-tabs-row" id="team-tabs-row"></div>
   </div>
 
-  <!-- Team tabs (rendered by JS) -->
-  <div class="team-tabs-row" id="team-tabs-row"></div>
-
-  <!-- Team content: header, stats, toolbar, grid (rendered by JS) -->
-  <div id="team-content">
-    <div style="padding:60px 0;text-align:center">
-      <div class="spinner" style="margin:0 auto"></div>
+  <!-- Scrollbarer Bereich: Team-Content -->
+  <div class="players-scroll">
+    <div id="team-content">
+      <div style="padding:60px 0;text-align:center">
+        <div class="spinner" style="margin:0 auto"></div>
+      </div>
     </div>
   </div>
 
