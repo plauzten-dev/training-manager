@@ -191,7 +191,7 @@ function renderContent(team) {
         <input type="text" id="player-search" class="team-search-input"
                placeholder="Spieler suchen..." oninput="applyFilters()">
       </div>
-      <div class="team-filter-row" id="pos-filter-row">
+      <div class="team-filter-row collapsed" id="pos-filter-row">
         <button class="pos-filter-btn active" onclick="setPosFilter(this,'')">Alle</button>
         ${positions.map(p =>
           `<button class="pos-filter-btn" onclick="setPosFilter(this,'${escHtml(p)}')">${escHtml(p)}</button>`
@@ -235,9 +235,17 @@ function applyFilters() {
 }
 
 function setPosFilter(btn, pos) {
+  const row = document.getElementById('pos-filter-row');
+  // Aktiven Button antippen → auf-/zuklappen
+  if (btn.classList.contains('active')) {
+    if (row) row.classList.toggle('collapsed');
+    return;
+  }
+  // Anderen Button wählen → Filter setzen + zuklappen
   activePosFilter = pos;
   document.querySelectorAll('.pos-filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  if (row) row.classList.add('collapsed');
   applyFilters();
 }
 
