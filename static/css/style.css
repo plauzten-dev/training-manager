@@ -845,7 +845,7 @@ textarea { resize: vertical; min-height: 90px; }
   display: none;
   position: fixed;
   /* env(safe-area-inset-bottom) verhindert den iOS-Sprung beim App-Switch */
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
   left: 12px;
   right: 12px;
   width: auto;

@@ -171,6 +171,34 @@
     document.getElementById('global-modal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
+
+    // iOS PWA: env(safe-area-inset-bottom) wird beim ersten Render und nach
+    // App-Switches nicht korrekt angewendet. Synchroner Reflow erzwingt Neuberechnung.
+    (function () {
+      function _fixNav() {
+        var nav = document.querySelector('.mobile-nav');
+        if (!nav) return;
+        // Element kurz aus dem Flow nehmen → synchroner Layout-Reflow → iOS liest
+        // env(safe-area-inset-bottom) neu → alles passiert vor dem nächsten Paint,
+        // kein sichtbarer Flash.
+        var saved = nav.style.cssText;
+        nav.style.cssText = saved + ';bottom:auto!important;top:-9999px!important;';
+        void nav.offsetTop; // erzwingt synchronen Reflow
+        nav.style.cssText = saved;
+      }
+      // Beim ersten Laden (zweimal: sofort + nach 200ms als Fallback)
+      document.addEventListener('DOMContentLoaded', function () {
+        _fixNav();
+        setTimeout(_fixNav, 200);
+      });
+      // pageshow: feuert wenn iOS die Seite aus dem BFCache wiederherstellt
+      // (Back-Tap, App-Switch zurück)
+      window.addEventListener('pageshow', function () { _fixNav(); });
+      // visibilitychange: feuert wenn man von einem anderen App-Tab zurückkommt
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) _fixNav();
+      });
+    }());
   </script>
 
   {% block scripts %}{% endblock %}
