@@ -90,6 +90,7 @@
   </div><!-- /.app-layout -->
 
   <!-- Mobile Bottom Navigation -->
+  <div class="mobile-nav-wrap">
   <nav class="mobile-nav" aria-label="Navigation">
     <div class="mobile-nav-inner">
       <a href="/dashboard" class="mobile-nav-item {% if request.endpoint == 'dashboard_page' %}active{% endif %}">
@@ -118,6 +119,7 @@
       </a>
     </div>
   </nav>
+  </div><!-- /.mobile-nav-wrap -->
 
   <!-- Toast notifications -->
   <div id="toast-container"></div>
@@ -172,31 +174,20 @@
       if (e.target === this) closeModal();
     });
 
-    // iOS PWA: env(safe-area-inset-bottom) wird beim ersten Render und nach
-    // App-Switches nicht korrekt angewendet. Synchroner Reflow erzwingt Neuberechnung.
+    // iOS PWA: position:fixed + env(safe-area-inset-bottom) wird nach App-Switches
+    // und auf Initial-Render falsch berechnet. Ein minimaler Scroll-Impuls zwingt
+    // iOS dazu den Visual-Viewport neu zu berechnen – exakt was passiert wenn der
+    // User manuell "runter zieht".
     (function () {
-      function _fixNav() {
-        var nav = document.querySelector('.mobile-nav');
-        if (!nav) return;
-        // Element kurz aus dem Flow nehmen → synchroner Layout-Reflow → iOS liest
-        // env(safe-area-inset-bottom) neu → alles passiert vor dem nächsten Paint,
-        // kein sichtbarer Flash.
-        var saved = nav.style.cssText;
-        nav.style.cssText = saved + ';bottom:auto!important;top:-9999px!important;';
-        void nav.offsetTop; // erzwingt synchronen Reflow
-        nav.style.cssText = saved;
+      function _iosViewportFix() {
+        if (window.innerWidth > 640) return;
+        window.scrollTo(0, 1);
+        window.scrollTo(0, 0);
       }
-      // Beim ersten Laden (zweimal: sofort + nach 200ms als Fallback)
-      document.addEventListener('DOMContentLoaded', function () {
-        _fixNav();
-        setTimeout(_fixNav, 200);
-      });
-      // pageshow: feuert wenn iOS die Seite aus dem BFCache wiederherstellt
-      // (Back-Tap, App-Switch zurück)
-      window.addEventListener('pageshow', function () { _fixNav(); });
-      // visibilitychange: feuert wenn man von einem anderen App-Tab zurückkommt
+      document.addEventListener('DOMContentLoaded', _iosViewportFix);
+      window.addEventListener('pageshow', _iosViewportFix);
       document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) _fixNav();
+        if (!document.hidden) _iosViewportFix();
       });
     }());
   </script>
