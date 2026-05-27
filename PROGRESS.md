@@ -1,274 +1,156 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 27. Mai 2026
-> Status: ✅ Version 0.22 – Anwesenheits-Übersicht + Floating Mobile Nav
+> Status: ✅ Version 0.25 – Mobile Nav + Mein Team Mobile Fixes
+
+---
+
+## v0.25 – Änderungen (27.05.2026, 9. Session)
+
+### Mobile Nav – Breite & Positionierung
+- [x] `style.css` – Nav-Breite: `width: max-content` + `left:50%/translateX(-50%)` → `left:12px; right:12px; width:auto`; Items `flex:1` für gleichmäßige Verteilung (6 Tabs passen in jeden Screen)
+- [x] `style.css` – `bottom: calc(env(safe-area-inset-bottom, 0px) + 6px)` für safe-area-Offset
+
+### Mobile Nav – Positionierungs-Bug (iOS PWA) ⚠️ NOCH OFFEN
+- Problem: Nav rendert beim App-Öffnen und Tab-Wechsel zu hoch (mitten im Content), Home-Indicator-Bereich darunter sichtbar. Nach manuellem Runterziehen korrekt positioniert.
+- Ursache: iOS berechnet `window.innerHeight` in Standalone-PWA beim ersten Render zu groß → `position:fixed; bottom:0` landet nicht am echten Screen-Rand
+- Versuchte Fixes (alle nicht ausreichend):
+  - v0.23: `void nav.offsetTop` Reflow-Trick → kein Effekt auf `env()`-Variablen
+  - v0.24: Wrapper-Ansatz (`padding-bottom: env(safe-area-inset-bottom)` + `scrollTo(0,1)`) → Wrapper-CSS korrekt, Bug bleibt
+  - v0.25: Nav in `.app-layout` als letztes Flex-Child verschoben (`flex-direction:column`), kein `position:fixed` mehr → `position:static`, korrekt laut DevTools, aber auf echtem Gerät noch nicht vollständig getestet / Bug möglicherweise noch aktiv
+- **Aktueller Stand:** Nav ist `position:static` im Flex-Flow von `.app-layout { height:100dvh; flex-direction:column }`. Kein JS-Workaround aktiv.
+
+### Mein Team – Mobile Layout Fixes
+- [x] `style.css` – `team-header-row`: `flex-direction:column` auf Mobile (Info + Actions gestapelt)
+- [x] `style.css` – `team-header-actions`: `flex-wrap:wrap`; Ghost-Buttons `flex:1 1 0` (teilen Zeile 1); Primary-Button `width:100%` (Zeile 2 allein)
+- [x] `style.css` / `players.html` – `players-page` in zwei Zonen aufgeteilt:
+  - `.players-top` (`overflow:visible`) – Titel + Team-Tabs; negative Margins auf `.team-tabs-row` greifen jetzt (kein overflow-Clipping mehr)
+  - `.players-scroll` (`overflow-y:auto`) – scrollbarer Content (Header, Stats, Grid)
+- [x] `style.css` – `team-tabs-row` auf Mobile: `margin:-16px; padding:16px` (voll-breit bis Bildschirmrand)
+
+### Mein Team – Position-Filter einklappbar (Mobile)
+- [x] `players.js` – `renderContent()`: Filter-Row bekommt Klasse `collapsed` beim Rendern
+- [x] `players.js` – `setPosFilter()`: Aktiven Button antippen → `collapsed` togglen; anderen wählen → setzen + `collapsed` setzen
+- [x] `style.css` – `.team-filter-row.collapsed .pos-filter-btn:not(.active) { display:none }` (nur Mobile)
+- [x] `style.css` – Chevron `▾`/`▴` auf aktivem Button je nach collapsed-Zustand
 
 ---
 
 ## v0.22 – Änderungen (27.05.2026, 8. Session)
 
 ### Bugfixes & UX-Verbesserungen
-- [x] `style.css` – Suchleiste Players-Page: `max-width: 300px`, Selektor auf `input.team-search-input` erhöht (behebt CSS-Spezifitätsbug: globale `input[type="text"]`-Regel überschrieb `padding-left`)
-- [x] `style.css` – `#team-content { display: flex; flex-direction: column; gap: 24px }` – gleichmäßige Abstände zwischen Header, Stats, Toolbar und Grid
-- [x] `style.css` – Attendance Summary Modal: neue `.sum-*`-Klassen (kein Konflikt mit bestehenden `.att-*`)
+- [x] `style.css` – Suchleiste Players-Page: `max-width: 300px`, Selektor auf `input.team-search-input` erhöht (behebt CSS-Spezifitätsbug)
+- [x] `style.css` – `#team-content { display: flex; flex-direction: column; gap: 24px }` – gleichmäßige Abstände
+- [x] `style.css` – Attendance Summary Modal: neue `.sum-*`-Klassen
 
 ### Anwesenheits-Übersicht (Mein Team)
-- [x] `app.py` – Neuer Endpoint `GET /api/teams/<id>/attendance-summary`: aggregiert pro Spieler Anwesend/Abwesend-Zähler + Gesamttrackings
-- [x] `players.js` – Button "Anwesenheits-Übersicht" im Team-Header (Bar-Chart-Icon)
-- [x] `players.js` – `showAttendanceSummary()`: Modal mit Fortschrittsbalken pro Spieler (grün ≥75%, orange ≥50%, rot darunter), Prozent, Zähler; sortiert nach Anwesenheit absteigend
+- [x] `app.py` – Neuer Endpoint `GET /api/teams/<id>/attendance-summary`
+- [x] `players.js` – Button "Anwesenheits-Übersicht" im Team-Header
+- [x] `players.js` – `showAttendanceSummary()`: Modal mit Fortschrittsbalken pro Spieler
 
 ### Mobile Nav – Floating Pill Redesign
-- [x] `base.html` – Icons in `<span class="nav-icon">` gewrappt für Pill-Highlight
-- [x] `style.css` – Nav-Bar komplett neu: frei schwebend (`position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%)`), `border-radius: 24px`, `overflow: hidden`, Frosted-Glass-Hintergrund, Box-Shadow
-- [x] `style.css` – Aktiver Tab: `.nav-icon` bekommt `background: rgba(37,99,235,0.12)` als Pill-Highlight (WhatsApp-Stil)
-- [x] `style.css` – `main-wrapper` padding-bottom entfernt; stattdessen je 90px direkt auf scrollbare Bereiche (`.dash-page`, `.exercises-main`, `.my-trainings-layout`, `.calendar-body`, `.players-page`) – behebt weißen Rechteck-Bug hinter der Nav
+- [x] `base.html` – Icons in `<span class="nav-icon">` gewrappt
+- [x] `style.css` – Nav-Bar neu: frei schwebend, `border-radius:24px`, Frosted-Glass, Box-Shadow
+- [x] `style.css` – Aktiver Tab: `.nav-icon` bekommt `background: rgba(37,99,235,0.12)`
 
 ---
 
 ## v0.21 – Änderungen (27.05.2026, 7. Session)
 
 ### Multi-Team + Spielerverwaltung
-- [x] `database.py` – Neue Tabellen: `teams` (id, user_id, name, sport), `players` (id, user_id, team_id, name, position, number, notes, status), `training_attendance`
-- [x] `app.py` – CRUD-Routen für Teams (`/api/teams`, `/api/teams/<id>`) + Spieler (`/api/players`, `/api/players/<id>`, `/api/players/<id>/status`)
-- [x] `app.py` – Anwesenheits-Routen: `GET/PUT /api/trainings/<id>/attendance`, `PUT /api/trainings/<id>/attendance/all`
-- [x] `templates/players.html` – Neu: dynamisches Gerüst mit `team-tabs-row` + `team-content` (vollständig JS-gesteuert)
-- [x] `static/js/players.js` – Komplett neu: Multi-Team-Tabs, Sportart-Auswahl-Grid, sportspezifische Positionen, Spieler-Karten mit direkten Status-Toggle-Buttons
-- [x] `static/css/style.css` – Neue Komponenten: `.team-tab`, `.team-header-row`, `.sport-select-grid`, `.st-btn` (Status-Toggle), `.no-team-state`, `.att-team-row`
-- [x] `templates/base.html` – "Mein Team"-Link in Sidebar + Mobile-Nav, Splash-Version `v0.21`
-- [x] `static/js/training.js` – Anwesenheitssektion: Team-Selektor-Dropdown + "Ganzes Team anwesend"-Button
-
-### Neue Features im Detail
-- **Multi-Team**: Beliebig viele Teams pro User, jedes Team hat eine Sportart (7 Sportarten)
-- **Sportspezifische Positionen**: Positionen im Spieler-Modal hängen von der Teamsportart ab
-- **Direkte Status-Buttons**: Fit / Krank / Verletzt direkt auf der Spielerkarte (optimistisches UI)
-- **Anwesenheit pro Training**: Team-Filter + Einzelmarkierung + "Ganzes Team anwesend"-Bulk-Aktion
+- [x] `database.py` – Neue Tabellen: `teams`, `players`, `training_attendance`
+- [x] `app.py` – CRUD-Routen Teams + Spieler + Anwesenheit
+- [x] `templates/players.html` + `static/js/players.js` – Komplett neu: Multi-Team-Tabs, Sportart-Auswahl-Grid, sportspezifische Positionen, Spielerkarten mit Status-Toggle
 
 ---
 
 ## v1.6 – Änderungen (26.05.2026, 6. Session)
 
 ### QoL-Verbesserungen
-- [x] `exercises.js` – Letzten Sport-Tab via `localStorage` merken + beim nächsten Seitenaufruf wiederherstellen
-- [x] `dashboard.html` – 4-Tage-Vorschau zeigt "Heute", "Morgen", "Übermorgen" statt Wochentags-Kürzel (4. Tag = Kürzel)
-- [x] Übungsanzahl auf Trainingskarten (`/my-trainings`) war bereits implementiert ✅
+- [x] `exercises.js` – Sport-Tab via `localStorage` merken
+- [x] `dashboard.html` – 4-Tage-Vorschau zeigt "Heute", "Morgen", "Übermorgen"
 
-### Play Store Vorbereitung (technische Basis)
-- [x] `static/icons/icon-192.png` + `icon-512.png` – PNG-Icons generiert (Play Store akzeptiert kein SVG)
-- [x] `static/manifest.json` – Erweitert mit `id`, `categories`, `shortcuts`, `screenshots`-Felder, `display_override`
-- [x] `static/sw.js` – Cache-Version auf v2, Offline-Fallback auf `/offline`-Seite verdrahtet
-- [x] `app.py` – Neue Routen: `/offline`, `/privacy`, `/.well-known/assetlinks.json`
-- [x] `templates/offline.html` – Offline-Seite (wird vom SW als Fallback gezeigt)
-- [x] `templates/privacy.html` – DSGVO-Datenschutzerklärung (Pflicht für Play Store)
-- [x] `base.html` – `apple-touch-icon` auf PNG umgestellt
-- [x] `static/screenshots/` – Ordner für Store-Screenshots angelegt (noch leer)
-
-### Was für den echten Play Store noch fehlt (manuell)
-1. Screenshots erstellen (390×844px) → in `static/screenshots/` ablegen
-2. [pwab.com](https://pwab.com) → Live-URL eingeben → Android AAB herunterladen
-3. Google Play Developer-Konto ($25 Einmalgebühr)
-4. SHA-256-Fingerprint aus Play Console → in `app.py` bei `assetlinks.json` eintragen
-5. Store-Listing ausfüllen (Datenschutz-URL: `https://training-manager-nwga.onrender.com/privacy`)
+### Play Store Vorbereitung
+- [x] PNG-Icons, erweitertes manifest.json, Service Worker v2, `/offline`, `/privacy`, `/.well-known/assetlinks.json`
 
 ---
 
 ## v1.5 – Änderungen (26.05.2026, 5. Session)
 
-### Statistiken-Dashboard ✅
-- [x] `app.py` – Neuer `/api/statistik` Endpunkt: Trainings der letzten 6 Monate + Top-5-Übungen nach Nutzung
-- [x] `dashboard.html` – Neue "Statistiken"-Sektion mit zwei Karten (SVG-Balkendiagramm + Horizontale Balkenliste)
-- [x] `style.css` – Styles für `.dash-stats-grid`, `.dash-chart-card`, `.top-ex-row`, responsive 1-Spalte auf Tablet/Mobile
-
-### Touch Drag & Drop ✅
-- [x] `training.js` – Touch-Events (`touchstart`/`touchmove`/`touchend`) für Drag-Handle auf Mobilgeräten
-- [x] Visueller Klon folgt dem Finger, Zielobjekt wird hervorgehoben, Drop speichert die neue Reihenfolge
-- [x] Mouse-DnD und Touch-DnD teilen sich `reorderExercises()` – keine Code-Duplizierung
+- [x] Statistiken-Dashboard (SVG-Balkendiagramm, Top-5-Übungen)
+- [x] Touch Drag & Drop für Training-Übungen auf Mobile
 
 ---
 
 ## v1.4 – Änderungen (25.05.2026, 4. Session)
 
-### PWA (Phase 2) ✅
-- [x] `static/manifest.json` – App-Name, Icons, `display: standalone`, Theme-Farbe (#0f1f35)
-- [x] `static/icons/icon-192.svg` + `icon-512.svg` – Trainer-Logo auf dunkelblauem Grund
-- [x] `static/sw.js` – Service Worker: statische Assets gecacht, API-Calls immer live
-- [x] Route `/sw.js` in app.py mit `Service-Worker-Allowed: /` Header
-- [x] `base.html` + `login.html` – Manifest-Link, Theme-Color, Apple-Meta-Tags, SW-Registrierung
-- [x] `viewport-fit=cover` für iPhone-Notch
-
-### Hosting auf Render.com (Phase 3) ✅
-- [x] `gunicorn` + `cloudinary` in requirements.txt
-- [x] `render.yaml` – Render-Deployment-Konfiguration (Free-Tier, Python 3)
-- [x] `.gitignore` – training.db, secret_key.txt, uploads/ ausgeschlossen
-- [x] `app.py` – SECRET_KEY aus Env-Var (`os.environ.get('SECRET_KEY')`)
-- [x] `app.py` – `_upload_image()` + `_delete_image()` mit Cloudinary-Integration (lokaler Fallback)
-- [x] `app.py` – `init_db()` außerhalb von `__main__` (läuft jetzt auch unter gunicorn)
-- [x] `database.py` – DB-Pfad via `DB_PATH` Env-Var konfigurierbar
-- [x] `exercises.js` + `training.js` + `training_print.html` – Bild-URLs für Cloudinary-URLs kompatibel
-- [x] GitHub-Repo: `plauzten-dev/training-manager`
-- [x] Live-URL: `https://training-manager-nwga.onrender.com`
+- [x] PWA: manifest.json, Service Worker, Icons
+- [x] Hosting: Render.com, gunicorn, Cloudinary
 
 ---
 
 ## v1.3 – Änderungen (25.05.2026, 3. Session)
 
-- [x] **7 Sportarten** – Basketball, Volleyball, Gym, Allgemein hinzugefügt (Tabs + Farben + Seed-Daten)
-- [x] **46 Seed-Übungen** – 28 neue Übungen: Basketball (7), Volleyball (6), Gym (7), Allgemein/Aufwärmen/Dehnen/Abschluss (8)
-- [x] **Dashboard** (`/dashboard`) – Personalisierte Startseite mit Tageszeit-Begrüßung, 3 Stats-Karten, 4-Tage-Kalendervorschau, 3 zufällige Übungsvorschläge (aus Allgemein), täglichem Motivationszitat
-- [x] **Mobile Navigation** – Bottom-Nav auf ≤640px (4 Tabs: Übersicht, Kalender, Übungen, Trainings)
-- [x] **Responsives Design** – Alle Seiten mobile-optimiert: Grid-Layouts stacken, Sport-Tabs scrollen horizontal, Filter-Toggle auf Mobile, Modals als Bottom-Sheet
-- [x] **Icon-only Sidebar** auf Tablet (≤900px)
-- [x] `TEMPLATES_AUTO_RELOAD = True` gesetzt – Template-Änderungen ohne Server-Neustart
-- [x] `import datetime` in app.py + `/api/dashboard` Endpunkt
+- [x] 7 Sportarten + 46 Seed-Übungen
+- [x] Dashboard, Mobile Navigation, Responsives Design
 
 ---
 
-## v1.2 – Änderungen (25.05.2026, 2. Session)
+## Nächste Schritte – Offene Features & Bugs
 
-- [x] **PDF-Export** – Druckoptimierte HTML-Seite (`/training/<id>/pdf`) mit Browser-Print
-- [x] **Übung direkt zu Training hinzufügen** – "Zu Training hinzufügen"-Button im Übungs-Detail-Modal
-- [x] **Drag & Drop Reihenfolge** – Übungen in Training per Drag & Drop sortieren (gespeichert)
-- [x] **Konto-Einstellungen** – `/settings`: Profil, Passwort (inkl. Stärkeanzeige), Konto-Info
-- [x] **Meine Trainings** – `/my-trainings`: Monatsgruppen, Stats, Suche, Wiederholen-Funktion
-
----
-
-## v1.1 – Änderungen (25.05.2026, 1. Session)
-
-- [x] Login-Bug behoben
-- [x] Emojis komplett durch inline SVG ersetzt
-- [x] Sport-Kategorien als Tabs (Fußball / Tennis / Floorball)
-
----
-
-## Alle erledigten Features (v1.3 vollständig)
-
-### Benutzer-Konto-System
-- [x] Registrierung, Login (Benutzername oder E-Mail), Logout
-- [x] Sicheres Passwort-Hashing (PBKDF2-HMAC-SHA256 + Salt)
-- [x] Flask-Sessions, Weiterleitung wenn nicht eingeloggt
-- [x] Passwort ändern, Profilname + E-Mail ändern
-
-### Übungsdatenbank
-- [x] Übungen anlegen / bearbeiten / löschen (mit Bildupload)
-- [x] Felder: Feldspieler, Torhüter, Kernkompetenz, Schwierigkeit, Spielfeldgröße, Sportart
-- [x] Filterung + Volltextsuche mit Debounce
-- [x] 7 Sport-Tabs: Alle / Fußball / Tennis / Floorball / Basketball / Volleyball / Gym / Allgemein
-- [x] Detail-Modal: Bild + Metadaten + "Zu Training hinzufügen"-Button
-- [x] 46 Seed-Übungen
-
-### Dashboard (`/dashboard`)
-- [x] Tageszeit-Begrüßung + Wochentag + Datum
-- [x] 3 Stats-Karten: Trainings diesen Monat / Trainings gesamt / Übungen verfügbar
-- [x] 4-Tage-Kalendervorschau (heute + 3 Tage) mit klickbaren Training-Pills
-- [x] 3 zufällige Übungsvorschläge aus "Allgemein" (Aufwärmen/Dehnen/Abschluss)
-- [x] Tägliches Motivationszitat (10 Quotes, rotiert per Kalendertag)
-- [x] Animierter Count-up für Stats-Zahlen
-
-### Trainingskalender
-- [x] Monatlicher Kalender, Navigation, Heute-Hervorhebung
-- [x] Tage mit Trainings grün markiert + Titel-Chip
-- [x] Training aus Kalender erstellen / öffnen
-
-### Training-Detailseite
-- [x] Titel, Datum, Notizen (Auto-Save)
-- [x] Übungsliste mit Drag & Drop Reihenfolge (gespeichert)
-- [x] Übung hinzufügen (Picker-Modal) / entfernen
-- [x] Training bearbeiten / löschen
-- [x] PDF-Export → `/training/<id>/pdf`
-
-### Meine Trainings (`/my-trainings`)
-- [x] Alle Trainings nach Monat gruppiert
-- [x] Stats-Leiste: Gesamt, Diesen Monat, Übungen gesamt
-- [x] Echtzeit-Suche nach Trainingstitel
-- [x] "Wiederholen" → kopiert Training + Übungen für neues Datum
-
-### Design & UX
-- [x] Dark-Sidebar (Desktop/Tablet), Bottom-Nav (Mobile)
-- [x] Einheitliches Design-System, kein Emoji – nur inline SVG
-- [x] Animierte Modals, Toast-Notifications, Hover-Effekte, Spinner
-- [x] Skeleton-Loader auf Dashboard
-
-### Responsives Design (Mobile-first)
-- [x] ≤900px: Icon-only Sidebar
-- [x] ≤640px: Bottom-Nav, gestackte Layouts, Filter-Toggle, horizontale Sport-Tab-Scroll
-- [x] ≤380px: Kompaktere Grid-Spalten
-
----
-
-## Nächste Schritte – Offene Features
+### Bug – Höchste Priorität
+- [ ] **iOS PWA Nav-Position** – Nav springt beim App-Öffnen/Tab-Wechsel. Aktueller Fix: Nav ist `position:static` im `flex-direction:column` `.app-layout`. Falls Bug noch aktiv: Nächster Ansatz = VisualViewport API (`window.visualViewport.height`) zur JS-Positionierung nutzen, ODER auf echtem Gerät debuggen (Safari Web Inspector via USB).
 
 ### Mittel priorisiert
 - [ ] **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
-- [ ] **Statistiken-Dashboard** – Diagramme mit SVG/Canvas (kein Chart-Framework)
-- [ ] **Spieler-Verwaltung** – Spieler anlegen, Anwesenheitsliste pro Training
-- [ ] **Touch-Drag & Drop** – Übungen auf Mobilgeräten per Touch sortieren
+- [ ] **Saison-/Wochenplanung** – Überblick über geplante Trainingswochen
 
-### Hosting-Verbesserungen (optional)
-- [ ] **Render Disk** ($0,25/Monat) für persistente SQLite-Datenbank aktivieren → `DB_PATH=/data/training.db` setzen
-- [ ] Phase 4: Native App via Capacitor (erfordert Node.js)
+### Nice-to-have
+- [ ] Admin-Modus für Übungen
+- [ ] Bild-Zuschnitt beim Upload (Canvas API)
+- [ ] Render Disk ($0,25/Monat) für persistente SQLite-DB
 
-### Deployment – Neue Version pushen
-```powershell
-git add .
-git commit -m "Beschreibung"
-git push
-```
-Render deployt automatisch nach jedem Push.
+### Play Store (wenn release-bereit)
+- [ ] Screenshots (390×844px) → `static/screenshots/`
+- [ ] [pwab.com](https://pwab.com) → AAB herunterladen
+- [ ] SHA-256-Fingerprint in `assetlinks.json` eintragen
 
 ---
 
-## Vollständige API-Übersicht
+## Vollständige Dateistruktur
 
-### Auth
-| Method | Route | Beschreibung |
-|--------|-------|-------------|
-| POST | `/api/auth/register` | Registrierung |
-| POST | `/api/auth/login` | Login |
-| POST | `/api/auth/logout` | Logout |
-| GET | `/api/auth/me` | Eingeloggter User |
-| PUT | `/api/auth/change-password` | Passwort ändern |
-| PUT | `/api/auth/change-profile` | Username + E-Mail ändern |
-
-### Übungen
-| Method | Route | Beschreibung |
-|--------|-------|-------------|
-| GET | `/api/exercises` | Liste mit Filtern (sport, field_players, goalkeepers, core_competency, difficulty, field_size, search) |
-| GET | `/api/exercises/<id>` | Einzelne Übung |
-| POST | `/api/exercises` | Neue Übung (multipart/form-data + Bild) |
-| PUT | `/api/exercises/<id>` | Bearbeiten |
-| DELETE | `/api/exercises/<id>` | Löschen |
-| GET | `/api/filter-options?sport=` | Dropdown-Optionen |
-
-### Trainings
-| Method | Route | Beschreibung |
-|--------|-------|-------------|
-| GET | `/api/trainings` | Alle eigenen Trainings (opt. ?month=YYYY-MM) |
-| POST | `/api/trainings` | Neues Training |
-| GET | `/api/trainings/<id>` | Training + zugehörige Übungen |
-| PUT | `/api/trainings/<id>` | Bearbeiten |
-| DELETE | `/api/trainings/<id>` | Löschen |
-| POST | `/api/trainings/<id>/duplicate` | Kopie für neues Datum |
-| POST | `/api/trainings/<id>/exercises` | Übung hinzufügen |
-| DELETE | `/api/trainings/<id>/exercises/<eid>` | Übung entfernen |
-| PUT | `/api/trainings/<id>/exercises/reorder` | Reihenfolge speichern (body: {order: [id,...]}) |
-
-### Dashboard & sonstiges
-| Method | Route | Beschreibung |
-|--------|-------|-------------|
-| GET | `/api/dashboard` | Stats + 4-Tage + Übungsvorschläge |
-
-### Seiten-Routen
-| Route | Template | Beschreibung |
-|-------|----------|-------------|
-| `/` | – | Redirect → Dashboard (eingeloggt) oder Login |
-| `/dashboard` | dashboard.html | Startseite mit Stats + Vorschau |
-| `/login` | login.html | Login + Registrierung (kein extends base.html!) |
-| `/calendar` | calendar.html | Trainingskalender |
-| `/exercises` | exercises.html | Übungsdatenbank |
-| `/training/<id>` | training.html | Training-Detail |
-| `/training/<id>/pdf` | training_print.html | PDF-Druck (kein extends base.html!) |
-| `/my-trainings` | my_trainings.html | Trainings-Übersicht |
-| `/settings` | settings.html | Konto-Einstellungen |
+```
+MaxiWebs/
+├── app.py              ← Flask + alle API-Routen
+├── database.py         ← Schema, Migrations, Seed-Daten
+├── requirements.txt
+├── start.bat
+├── templates/
+│   ├── base.html            ← Sidebar + Mobile-Nav (v0.25: Nav in app-layout)
+│   ├── dashboard.html
+│   ├── login.html
+│   ├── exercises.html
+│   ├── calendar.html
+│   ├── training.html
+│   ├── training_print.html
+│   ├── my_trainings.html
+│   ├── settings.html
+│   ├── players.html         ← v0.25: players-top + players-scroll Trennung
+│   ├── offline.html
+│   └── privacy.html
+├── static/
+│   ├── css/style.css        ← Gesamtes Stylesheet
+│   ├── manifest.json
+│   ├── sw.js
+│   ├── icons/
+│   └── js/
+│       ├── exercises.js
+│       ├── calendar.js
+│       ├── training.js
+│       ├── my_trainings.js
+│       └── players.js       ← v0.25: collapsed Filter, setPosFilter überarbeitet
+└── PROGRESS.md
+```
 
 ---
 
@@ -288,4 +170,4 @@ Render deployt automatisch nach jedem Push.
 ```
 python app.py
 ```
-oder `start.bat` doppelklicken → Browser: **http://localhost:5000**
+oder `start.bat` → Browser: **http://localhost:5000**

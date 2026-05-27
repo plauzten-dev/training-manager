@@ -243,7 +243,7 @@ git push
 
 ---
 
-## Was bereits vollständig funktioniert (v0.21)
+## Was bereits vollständig funktioniert (v0.25)
 
 - Benutzer-Accounts (Register, Login, Logout, Profil + Passwort ändern)
 - Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload (Cloudinary), Suche, Filter, Sport-Tabs
@@ -260,8 +260,10 @@ git push
   - Sportspezifische Positionen im Spieler-Modal (je nach Teamsport)
   - Spielerkarten mit direkten Status-Toggle-Chips (Fit/Krank/Verletzt), optimistisches UI
   - Team-Tabs mit Sportfarben, Sportart-Auswahl-Grid im Modal
-- **Anwesenheit pro Training**: Team-Selektor (Team zuerst wählen, dann Spieler sichtbar), Einzelmarkierung (Anwesend/Fehlt/Unmarkiert), "Ganzes Team anwesend"-Bulk-Button
-- **Responsives Design + Mobile-Nav**: Bottom-Nav auf Mobilgeräten (≤640px), Sidebar kollabiert auf Tablet (≤900px)
+  - Position-Filter auf Mobile: eingeklappt (nur aktiver Filter + Chevron), aufklappbar per Tap
+- **Anwesenheit pro Training**: Team-Selektor, Einzelmarkierung, "Ganzes Team anwesend"-Bulk-Button
+- **Anwesenheits-Übersicht**: Fortschrittsbalken pro Spieler im Modal (grün ≥75%, orange ≥50%, rot darunter)
+- **Responsives Design + Mobile-Nav**: Bottom-Nav (≤640px) als Floating Pill, Sidebar auf Tablet (≤900px)
 - **PWA**: manifest.json, Service Worker (Cache v2), Apple-Meta-Tags – auf iOS & Android installierbar
 - **Play Store Basis**: PNG-Icons, erweitertes Manifest, `/offline`, `/privacy`, `/.well-known/assetlinks.json`
 - **QoL**: Sport-Tab-Auswahl wird per localStorage gespeichert; Dashboard-Vorschau zeigt "Heute"/"Morgen"/"Übermorgen"
@@ -304,6 +306,11 @@ git push
 
 ## Offene To-Dos (Funktionen)
 
+### ⚠️ Bug – Höchste Priorität
+- [ ] **iOS PWA Nav-Position** – Nav springt beim App-Öffnen und Tab-Wechsel: rendert zu hoch (mitten im Content), Benutzer muss manuell runterziehen.
+  - **Aktueller Stand (v0.25):** Nav ist `position:static` als letztes Flex-Child in `.app-layout { flex-direction:column; height:100dvh }` – kein `position:fixed` mehr.
+  - **Falls Bug noch aktiv:** Nächster Ansatz = VisualViewport API: `window.visualViewport.height` auslesen und Nav via JS absolut positionieren, ODER Safari Web Inspector (USB) am echten Gerät debuggen.
+
 ### Play Store (wenn App release-bereit)
 - [ ] Screenshots erstellen (390×844px) → `static/screenshots/dashboard.png` + `exercises.png`
 - [ ] [pwab.com](https://pwab.com) → Live-URL → Android AAB herunterladen
@@ -339,3 +346,5 @@ git push
 13. **init_db() läuft beim Import**: Außerhalb von `__main__` – wird auch unter gunicorn ausgeführt.
 14. **Bildupload**: `_upload_image()` + `_delete_image()` in app.py – Cloudinary wenn Env-Vars gesetzt, sonst lokal.
 15. **image_path**: Kann lokaler Dateiname (z.B. `abc123.jpg`) ODER volle Cloudinary-URL sein – JS prüft `startsWith('http')`.
+16. **Mobile Nav Layout (v0.25)**: Nav ist KEIN `position:fixed` mehr. Sie sitzt als letztes Flex-Child in `.app-layout { flex-direction:column; height:100dvh }`. Wrapper-Klasse: `.mobile-nav-wrap { flex-shrink:0 }`. Niemals `position:fixed` auf `.mobile-nav` oder `.mobile-nav-wrap` setzen – das reintroduciert den iOS-Viewport-Bug.
+17. **Players Page Struktur (v0.25)**: `players.html` hat zwei Zonen: `.players-top` (kein overflow → Team-Tabs können voll-breit scrollen) und `.players-scroll` (overflow-y:auto → scrollbarer Content). Bei Änderungen an der Players-Page beide Zonen berücksichtigen.
