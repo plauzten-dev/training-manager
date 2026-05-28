@@ -607,27 +607,39 @@ textarea { resize: vertical; min-height: 90px; }
 /* ────────────────────────────────────────────────────────────────────────── */
 .calendar-layout {
   display: flex; gap: 20px; flex: 1; overflow: hidden;
-  padding: 20px 28px 28px;
+  padding: 16px 24px 24px;
 }
 
 .calendar-card {
-  flex: 1; background: var(--card); border-radius: var(--radius);
+  flex: 1; background: var(--card); border-radius: 16px;
   border: 1px solid var(--border); box-shadow: var(--shadow);
   overflow: hidden; display: flex; flex-direction: column;
 }
 
+/* ── Nav bar ─────────────────────────────────────────────────────────────── */
 .calendar-nav {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px; border-bottom: 1px solid var(--border);
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  gap: 10px; background: var(--card);
 }
-.cal-title { font-size: 1.1rem; font-weight: 700; }
+.cal-nav-center { display: flex; align-items: center; gap: 4px; }
+.cal-title { font-size: 1.2rem; font-weight: 800; min-width: 188px; text-align: center; }
 .cal-nav-btn {
   background: none; border: none; cursor: pointer;
-  padding: 8px; border-radius: 8px; color: var(--text-muted);
+  padding: 7px; border-radius: 8px; color: var(--text-muted);
   transition: all 0.15s; display: flex;
 }
 .cal-nav-btn:hover { background: var(--bg); color: var(--text); }
+.cal-today-btn {
+  font-size: 0.72rem; font-weight: 700; padding: 5px 12px;
+  border: 1.5px solid var(--border); border-radius: 20px;
+  background: none; cursor: pointer; color: var(--text-muted);
+  transition: all 0.15s; letter-spacing: 0.02em;
+  font-family: inherit;
+}
+.cal-today-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
 
+/* ── Grid ────────────────────────────────────────────────────────────────── */
 .calendar-grid {
   flex: 1; display: grid; grid-template-columns: repeat(7, 1fr);
   grid-auto-rows: minmax(90px, 1fr); overflow-y: auto;
@@ -635,8 +647,8 @@ textarea { resize: vertical; min-height: 90px; }
 
 .cal-day-name {
   padding: 10px 8px; text-align: center;
-  font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.07em;
   background: #f8fafc; border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 1;
 }
@@ -649,67 +661,86 @@ textarea { resize: vertical; min-height: 90px; }
   min-height: 90px;
 }
 .cal-day:hover { background: #f8fafc; }
-.cal-day.other-month { opacity: 0.35; }
+.cal-day.other-month { opacity: 0.28; pointer-events: none; }
 .cal-day.today { background: #eff6ff; }
+.cal-day.today::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; background: var(--primary);
+}
 .cal-day.selected { background: #dbeafe; }
 .cal-day.has-training { background: #f0fdf4; }
 .cal-day.today.has-training { background: #dcfce7; }
 
 .day-number {
-  font-size: 0.8rem; font-weight: 600; color: var(--text);
-  width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; margin-bottom: 4px;
+  font-size: 0.82rem; font-weight: 700; color: var(--text);
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; margin-bottom: 5px;
 }
-.cal-day.today .day-number {
-  background: var(--primary); color: #fff;
-}
-.cal-day.selected .day-number {
-  background: #60a5fa; color: #fff;
-}
+.cal-day.today .day-number { background: var(--primary); color: #fff; }
+.cal-day.selected .day-number { background: #3b82f6; color: #fff; }
 
-.cal-training-dot {
-  display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px;
-}
+/* Training chips: softer green, left border accent */
+.cal-training-dot { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
 .training-chip {
-  font-size: 0.68rem; font-weight: 600;
-  background: #16a34a; color: #fff;
-  border-radius: 4px; padding: 2px 6px;
+  display: flex; align-items: center;
+  font-size: 0.65rem; font-weight: 600;
+  background: #dcfce7; color: #15803d;
+  border-left: 2.5px solid #16a34a;
+  border-radius: 0 4px 4px 0; padding: 2px 6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 100%;
 }
 
-/* Calendar sidebar */
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
 .cal-sidebar {
-  width: 280px; flex-shrink: 0; background: var(--card);
-  border-radius: var(--radius); border: 1px solid var(--border);
-  box-shadow: var(--shadow); overflow-y: auto; padding: 18px;
+  width: 290px; flex-shrink: 0; background: var(--card);
+  border-radius: 16px; border: 1px solid var(--border);
+  box-shadow: var(--shadow); overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+
+.cal-sidebar-header {
+  padding: 16px 18px 14px; border-bottom: 1px solid var(--border);
+  background: #f8fafc; flex-shrink: 0;
 }
 
 .cal-detail-empty {
   display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 12px; padding: 40px 16px;
-  color: var(--text-muted); text-align: center; font-size: 0.875rem;
-  min-height: 200px;
+  justify-content: center; gap: 12px; padding: 48px 20px;
+  color: var(--text-muted); text-align: center; font-size: 0.85rem;
+  flex: 1;
 }
+.cal-detail-empty p { line-height: 1.5; max-width: 160px; }
 
 .cal-detail-date {
-  font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text);
+  font-size: 1rem; font-weight: 800; color: var(--text);
+  margin-bottom: 0;
 }
+.cal-detail-weekday {
+  font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-top: 1px;
+}
+
+.cal-detail-body { padding: 14px 18px; }
 
 .training-list-item {
   background: var(--bg); border-radius: 10px; padding: 12px 14px;
-  margin-bottom: 10px; border: 1px solid var(--border);
+  margin-bottom: 8px; border: 1px solid var(--border);
   cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: flex-start; gap: 10px;
 }
-.training-list-item:hover { border-color: var(--primary); background: #eff6ff; }
-.training-list-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 4px; }
-.training-list-meta { font-size: 0.75rem; color: var(--text-muted); }
+.training-list-item:hover { border-color: var(--primary); background: #eff6ff; transform: translateX(2px); }
+.cal-list-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #16a34a;
+  flex-shrink: 0; margin-top: 5px;
+}
+.training-list-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 3px; }
+.training-list-meta { font-size: 0.73rem; color: var(--text-muted); }
 
 .cal-add-btn {
-  width: 100%; margin-top: 12px; justify-content: center;
+  width: 100%; margin-top: 10px; justify-content: center;
   border: 2px dashed var(--border); background: none;
   color: var(--text-muted); padding: 10px;
-  border-radius: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600;
+  border-radius: 10px; cursor: pointer; font-size: 0.82rem; font-weight: 600;
   transition: all 0.15s; display: flex; align-items: center; gap: 6px;
 }
 .cal-add-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
@@ -717,8 +748,9 @@ textarea { resize: vertical; min-height: 90px; }
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  TRAINING DETAIL PAGE                                                      */
 /* ────────────────────────────────────────────────────────────────────────── */
+#training-page-content { height: 100%; overflow-y: auto; }
 .training-page-layout {
-  flex: 1; overflow-y: auto; padding: 28px 32px 48px;
+  padding: 28px 32px 48px;
   display: flex; flex-direction: column; gap: 24px;
 }
 
@@ -972,14 +1004,61 @@ textarea { resize: vertical; min-height: 90px; }
   .mobile-filter-btn svg { flex-shrink: 0; }
 
   /* Calendar: full-width, tighter */
-  .calendar-layout { flex-direction: column; padding: 12px 16px; gap: 16px; }
-  .cal-sidebar { width: 100%; }
-  .cal-grid-header, .cal-grid { font-size: 0.8rem; }
-  .cal-day { min-height: 52px; padding: 4px; }
-  .cal-day-num { font-size: 0.8rem; }
-  .cal-event { font-size: 0.7rem; padding: 2px 4px; }
+  .calendar-layout { flex-direction: column; padding: 10px 12px 80px; gap: 12px; }
+  .cal-sidebar { width: 100%; border-radius: 14px; }
+  .calendar-card { border-radius: 14px; }
+  .calendar-nav { padding: 10px 14px; gap: 6px; }
+  .cal-title { font-size: 1rem; min-width: 140px; }
+  .cal-today-btn { font-size: 0.68rem; padding: 4px 10px; }
+  .cal-day-name { padding: 7px 4px; font-size: 0.6rem; }
+  .cal-day { min-height: 52px; padding: 5px 4px; }
+  .day-number { width: 22px; height: 22px; font-size: 0.72rem; margin-bottom: 3px; }
+  .training-chip { font-size: 0.58rem; padding: 1px 4px; }
+  .cal-detail-empty { padding: 28px 16px; }
+  .cal-detail-body { padding: 12px 14px; }
+  .cal-sidebar-header { padding: 12px 14px 10px; }
 
-  /* Training detail */
+  /* Training detail – complete mobile redesign */
+  .training-page-layout { padding: 12px 14px 72px; gap: 12px; }
+
+  /* Header: stack title above action buttons */
+  .training-header-card { flex-direction: column; padding: 16px; gap: 12px; }
+  .training-title-block h1 { font-size: 1.2rem; line-height: 1.25; }
+  .training-date-badge { font-size: 0.8rem; }
+
+  /* Action buttons: 2-column grid so all 4 fit neatly */
+  .training-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 100%;
+  }
+  .training-actions .btn {
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+  /* Delete (icon-only): don't stretch to full grid cell width */
+  .training-actions .btn-danger {
+    justify-self: start;
+    padding: 8px 14px;
+  }
+
+  /* Cards: tighter padding */
+  .training-notes-card { padding: 16px; }
+  .exercises-section   { padding: 16px; }
+  .attendance-section  { padding: 16px; }
+
+  /* Exercise items: compact */
+  .exercise-list-item { gap: 10px; padding: 12px; }
+  .exercise-list-thumb { width: 46px; height: 46px; }
+  .exercise-list-title { font-size: 0.82rem; }
+  .exercise-list-meta { flex-wrap: wrap; gap: 4px 8px; font-size: 0.7rem; }
+  .drag-handle { display: none; }
+
+  /* Attendance: team row stacks on very small screens */
+  .att-team-select { max-width: 100%; }
+
   .training-layout { flex-direction: column; padding: 12px 16px; }
   .training-sidebar { width: 100%; position: static; }
   .training-exercise-item { touch-action: none; }
@@ -989,7 +1068,7 @@ textarea { resize: vertical; min-height: 90px; }
   .mt-stats { gap: 20px; }
   .mt-card-title { font-size: 0.88rem; }
   .mt-desktop-btn { display: none; }
-  .mt-fab { display: flex; }
+  .mt-fab { display: flex !important; }
 
   /* Settings */
   .settings-layout { padding: 0 16px 40px; }
@@ -1088,11 +1167,27 @@ textarea { resize: vertical; min-height: 90px; }
 .info-value { font-size: 0.85rem; font-weight: 600; }
 
 /* ── My Trainings Page ───────────────────────────────────────────────────── */
+.mt-page { overflow-y: auto; height: 100%; }
 .my-trainings-layout {
   padding: 0 24px 40px;
   max-width: 720px;
   display: flex; flex-direction: column;
 }
+
+/* FAB – nur auf Mobile sichtbar (muss VOR dem @media-Block stehen, damit mobile display:flex gewinnt) */
+.mt-fab {
+  display: none;
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 72px);
+  right: 20px;
+  width: 54px; height: 54px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.2);
+  border: none; cursor: pointer; z-index: 190;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.mt-fab:active { transform: scale(0.93); }
 
 /* Search bar */
 .mt-search-bar {
@@ -1198,21 +1293,6 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .mt-empty-title { font-size: 1rem; font-weight: 700; color: var(--text); }
 .mt-empty-text { font-size: 0.82rem; color: var(--text-muted); max-width: 220px; line-height: 1.5; }
-
-/* FAB – nur auf Mobile sichtbar */
-.mt-fab {
-  display: none;
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 72px);
-  right: 20px;
-  width: 54px; height: 54px; border-radius: 50%;
-  background: var(--primary); color: #fff;
-  align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.45), 0 2px 8px rgba(0,0,0,0.2);
-  border: none; cursor: pointer; z-index: 190;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.mt-fab:active { transform: scale(0.93); }
 
 /* ── Splash Version ──────────────────────────────────────────────────────── */
 .splash-version {

@@ -2,34 +2,36 @@
 {% block title %}Meine Trainings – Training Manager{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div>
-    <h1 class="page-title">Meine Trainings</h1>
-    <p class="page-subtitle">Alle Trainingseinheiten im Überblick</p>
-  </div>
-  <button class="btn btn-primary mt-desktop-btn" onclick="showCreateModal()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Neues Training
-  </button>
-</div>
-
-<div class="my-trainings-layout">
-  <!-- Search bar -->
-  <div class="mt-search-bar">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="mt-search" placeholder="Training suchen…" oninput="filterList()" autocomplete="off">
+<div class="mt-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Meine Trainings</h1>
+      <p class="page-subtitle">Alle Trainingseinheiten im Überblick</p>
+    </div>
+    <button class="btn btn-primary mt-desktop-btn" onclick="showCreateModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Neues Training
+    </button>
   </div>
 
-  <!-- List -->
-  <div id="mt-list">
-    <div class="loading-spinner" style="margin-top:60px">
-      <div class="spinner"></div>
-      <p>Trainings werden geladen…</p>
+  <div class="my-trainings-layout">
+    <!-- Search bar -->
+    <div class="mt-search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="mt-search" placeholder="Training suchen…" oninput="filterList()" autocomplete="off">
+    </div>
+
+    <!-- List -->
+    <div id="mt-list">
+      <div class="loading-spinner" style="margin-top:60px">
+        <div class="spinner"></div>
+        <p>Trainings werden geladen…</p>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Mobile FAB -->
+<!-- Mobile FAB (position:fixed – außerhalb des Scroll-Wrappers) -->
 <button class="mt-fab" onclick="showCreateModal()">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>

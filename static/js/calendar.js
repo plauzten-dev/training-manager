@@ -112,38 +112,55 @@ function selectDay(dateStr) {
   renderSidebar(dateStr);
 }
 
+const WEEKDAYS_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
 function renderSidebar(dateStr) {
   const sidebar = document.getElementById('cal-detail');
   const trainings = trainingsMap[dateStr] || [];
   const [y, m, d] = dateStr.split('-');
-  const displayDate = `${d}. ${MONTHS_DE[parseInt(m)-1]} ${y}`;
+  const dateObj = new Date(`${y}-${m}-${d}T00:00:00`);
+  const weekday = WEEKDAYS_DE[dateObj.getDay()];
+  const displayDate = `${parseInt(d)}. ${MONTHS_DE[parseInt(m)-1]} ${y}`;
 
-  let html = `<div class="cal-detail-date">${displayDate}</div>`;
-
-  if (trainings.length === 0) {
-    html += `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:20px 0">Kein Training an diesem Tag</p>`;
-  } else {
-    trainings.forEach(t => {
-      html += `
+  const itemsHTML = trainings.length === 0
+    ? `<p style="color:var(--text-muted);font-size:0.83rem;text-align:center;padding:18px 0 10px">Kein Training an diesem Tag</p>`
+    : trainings.map(t => `
         <div class="training-list-item" onclick="window.location.href='/training/${t.id}'">
-          <div class="training-list-title">${escHtml(t.title)}</div>
-          <div class="training-list-meta">
-            📋 ${t.exercise_count || 0} Übung${t.exercise_count !== 1 ? 'en' : ''}
+          <div class="cal-list-dot"></div>
+          <div>
+            <div class="training-list-title">${escHtml(t.title)}</div>
+            <div class="training-list-meta">${t.exercise_count || 0} Übung${t.exercise_count !== 1 ? 'en' : ''}</div>
           </div>
-        </div>`;
-    });
-  }
+        </div>`).join('');
 
-  html += `
-    <button class="cal-add-btn" onclick="showCreateTrainingModal('${dateStr}')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Training hinzufügen
-    </button>`;
-
-  sidebar.innerHTML = html;
+  sidebar.innerHTML = `
+    <div class="cal-sidebar-header">
+      <div class="cal-detail-date">${displayDate}</div>
+      <div class="cal-detail-weekday">${weekday}</div>
+    </div>
+    <div class="cal-detail-body">
+      ${itemsHTML}
+      <button class="cal-add-btn" onclick="showCreateTrainingModal('${dateStr}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Training hinzufügen
+      </button>
+    </div>`;
 }
 
 // ── Month navigation ──────────────────────────────────────────────────────────
+function goToToday() {
+  const now = new Date();
+  currentYear  = now.getFullYear();
+  currentMonth = now.getMonth();
+  selectedDate = null;
+  document.getElementById('cal-detail').innerHTML = `
+    <div class="cal-detail-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <p>Klicke auf einen Tag um Trainings zu sehen</p>
+    </div>`;
+  renderCalendar();
+}
+
 function changeMonth(dir) {
   currentMonth += dir;
   if (currentMonth > 11) { currentMonth = 0;  currentYear++; }
