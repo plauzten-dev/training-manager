@@ -901,21 +901,11 @@ textarea { resize: vertical; min-height: 90px; }
 .mobile-nav-wrap {
   display: none;
   position: fixed;
-  bottom: 0;
+  bottom: calc(env(safe-area-inset-bottom, 8px) + 6px);
   left: 12px;
   right: 12px;
-  padding-bottom: env(safe-area-inset-bottom, 8px);
-  box-sizing: border-box;
   z-index: 100;
   pointer-events: none;
-  /* Frosted glass auf dem Wrapper – deckt Home-Indicator-Zone ab (kein weißer Block) */
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border: 0.5px solid rgba(0, 0, 0, 0.08);
-  border-bottom: none;
-  box-shadow: 0 -2px 20px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.14);
-  border-radius: 24px 24px 0 0;
 }
 .mobile-nav {
   display: flex;
@@ -923,13 +913,13 @@ textarea { resize: vertical; min-height: 90px; }
   pointer-events: all;
   margin-bottom: 0;
   width: 100%;
-  border-radius: 0;
+  border-radius: 24px;
   overflow: hidden;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: none;
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.07);
 }
 .mobile-nav-inner {
   display: flex; height: 60px; align-items: center;
@@ -977,10 +967,17 @@ textarea { resize: vertical; min-height: 90px; }
   .sidebar { display: none; }
   .mobile-nav-wrap { display: block; }
 
-  /* Scroll-Container: Abstand damit Inhalt nicht hinter der fixed Nav verschwindet */
-  .dash-page, .mt-page, .settings-page, #training-page-content,
-  .players-scroll, .exercises-scroll, .cal-sidebar {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 82px);
+  /* Scroll-Spacer via ::after – zuverlässiger als padding-bottom auf iOS Safari */
+  .dash-page::after,
+  .mt-page::after,
+  .settings-page::after,
+  #training-page-content::after,
+  .players-scroll::after,
+  .exercises-main::after {
+    content: '';
+    display: block;
+    height: calc(env(safe-area-inset-bottom, 8px) + 82px);
+    flex-shrink: 0;
   }
 
   /* Page header */
