@@ -900,11 +900,8 @@ textarea { resize: vertical; min-height: 90px; }
  */
 .mobile-nav-wrap {
   display: none;
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 8px) + 6px);
-  left: 12px;
-  right: 12px;
-  z-index: 100;
+  flex-shrink: 0;
+  padding: 8px 12px calc(env(safe-area-inset-bottom, 8px) + 8px);
   pointer-events: none;
 }
 .mobile-nav {
@@ -965,20 +962,7 @@ textarea { resize: vertical; min-height: 90px; }
 @media (max-width: 640px) {
   .app-layout { flex-direction: column; }
   .sidebar { display: none; }
-  .mobile-nav-wrap { display: block; }
-
-  /* Scroll-Spacer via ::after – zuverlässiger als padding-bottom auf iOS Safari */
-  .dash-page::after,
-  .mt-page::after,
-  .settings-page::after,
-  #training-page-content::after,
-  .players-scroll::after,
-  .exercises-main::after {
-    content: '';
-    display: block;
-    height: calc(env(safe-area-inset-bottom, 8px) + 82px);
-    flex-shrink: 0;
-  }
+  .mobile-nav-wrap { display: flex; }
 
   /* Page header */
   .page-header { padding: 20px 18px 0; flex-wrap: wrap; gap: 10px; }
