@@ -1089,7 +1089,7 @@ textarea { resize: vertical; min-height: 90px; }
   .mt-fab { display: flex !important; }
 
   /* Settings */
-  .settings-layout { padding: 0 16px 40px; }
+  .settings-detail-grid { padding: 0 16px 40px; }
 
   /* Modals: full-screen on mobile */
   .modal-box { width: 100% !important; max-width: 100% !important; height: 100dvh; border-radius: 0; margin: 0; }
@@ -1109,7 +1109,7 @@ textarea { resize: vertical; min-height: 90px; }
 
 /* ── Settings Page ───────────────────────────────────────────────────────── */
 .settings-page { overflow-y: auto; height: 100%; }
-.settings-layout {
+.settings-detail-grid {
   max-width: 600px;
   display: flex;
   flex-direction: column;
@@ -1183,6 +1183,89 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .info-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
 .info-value { font-size: 0.85rem; font-weight: 600; }
+
+/* Settings: detail back button + content helpers */
+.settings-detail-back {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+  user-select: none;
+}
+.settings-placeholder {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 24px 0 8px; text-align: center;
+  color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;
+}
+.settings-help-items { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.settings-help-item {
+  padding: 14px;
+  background: var(--bg); border-radius: 10px; border: 1px solid var(--border);
+}
+.settings-help-q { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+.settings-help-a { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+/* Settings: mobile-only panels hidden on desktop */
+.settings-mob-only { display: none; }
+/* Settings: mobile home nav hidden on desktop */
+.settings-mob-home { display: none; }
+
+@media (max-width: 640px) {
+  .settings-mob-only { display: block; }
+  .settings-mob-home {
+    display: block;
+    padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 82px + 16px);
+  }
+  .settings-detail-grid { display: none; padding: 0 16px 48px; }
+  .settings-detail-grid.mob-active { display: flex; }
+  .settings-detail { display: none; }
+  .settings-detail.mob-active { display: block; }
+  .settings-detail-back { display: flex; }
+
+  .settings-mob-section-label {
+    font-size: 0.68rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-muted);
+    padding: 20px 4px 8px;
+  }
+  .settings-mob-group {
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .settings-mob-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .settings-mob-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .settings-mob-row:active { background: var(--bg); }
+  .settings-mob-row-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .settings-mob-row-icon.blue   { background: rgba(37,99,235,0.12);  color: #2563eb; }
+  .settings-mob-row-icon.green  { background: rgba(22,163,74,0.12);  color: #16a34a; }
+  .settings-mob-row-icon.orange { background: rgba(234,88,12,0.12);  color: #ea580c; }
+  .settings-mob-row-icon.gray   { background: rgba(100,116,139,0.12); color: #64748b; }
+  .settings-mob-row-icon.red    { background: rgba(220,38,38,0.12);  color: #dc2626; }
+  .settings-mob-row-icon.purple { background: rgba(124,58,237,0.12); color: #7c3aed; }
+  .settings-mob-row-text { flex: 1; min-width: 0; }
+  .settings-mob-row-title { font-size: 0.92rem; font-weight: 500; color: var(--text); }
+  .settings-mob-row-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 1px; }
+  .settings-mob-chevron { color: #cbd5e1; flex-shrink: 0; }
+  .settings-mob-row.danger .settings-mob-row-title { color: var(--danger); }
+  .settings-mob-logout-group { margin-top: 16px; }
+}
 
 /* ── My Trainings Page ───────────────────────────────────────────────────── */
 .mt-page { overflow-y: auto; height: 100%; }
