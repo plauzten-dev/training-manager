@@ -24,16 +24,12 @@
     (function () {
       var root = document.documentElement;
       function setAppHeight() {
-        var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-        root.style.setProperty('--app-height', Math.round(h) + 'px');
+        root.style.setProperty('--app-height', window.innerHeight + 'px');
       }
       setAppHeight();
       window.addEventListener('resize', setAppHeight);
-      window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 120); });
+      window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 150); });
       window.addEventListener('pageshow', setAppHeight);
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', setAppHeight);
-      }
     })();
   </script>
 </head>
