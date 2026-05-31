@@ -891,22 +891,28 @@ textarea { resize: vertical; min-height: 90px; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* ── Mobile Bottom Nav – Floating Compact Pill ───────────────────────────── */
+/* ── Mobile Bottom Nav – Floating Pill (position:fixed) ──────────────────── */
 /*
- * Wrapper sitzt als letztes Flex-Child innerhalb von .app-layout (height:100dvh).
- * Auf Mobile wird .app-layout zur Spalte → kein position:fixed nötig → kein
- * iOS-Viewport-Berechnungsbug mehr.
+ * position:fixed → Nav schwebt immer am unteren Bildschirmrand, unabhängig
+ * von window.innerHeight-Berechnungen. pointer-events:none auf dem Wrapper
+ * damit Klicks neben der Pill durchgehen. Scroll-Container bekommen
+ * padding-bottom damit Inhalte nicht hinter der Nav verschwinden.
  */
 .mobile-nav-wrap {
   display: none;
-  flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 0 12px env(safe-area-inset-bottom, 0px);
-  width: 100%;
   box-sizing: border-box;
+  z-index: 100;
+  pointer-events: none;
 }
 .mobile-nav {
   display: flex;
   position: relative;
+  pointer-events: all;
   margin-bottom: 6px;
   width: 100%;
   border-radius: 24px;
@@ -959,11 +965,15 @@ textarea { resize: vertical; min-height: 90px; }
 
 /* Mobile: hide sidebar, show bottom nav, adjust layouts */
 @media (max-width: 640px) {
-  /* app-layout wird zur Spalte: sidebar (hidden) + main-wrapper + nav */
   .app-layout { flex-direction: column; }
   .sidebar { display: none; }
   .mobile-nav-wrap { display: block; }
-  /* Kein padding-bottom mehr nötig – Nav ist im Flow, kein Floating über Content */
+
+  /* Scroll-Container: Abstand damit Inhalt nicht hinter der fixed Nav verschwindet */
+  .dash-page, .mt-page, .settings-page, #training-page-content,
+  .players-scroll, .exercises-scroll, .cal-sidebar {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 82px);
+  }
 
   /* Page header */
   .page-header { padding: 20px 18px 0; flex-wrap: wrap; gap: 10px; }
