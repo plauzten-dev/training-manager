@@ -17,6 +17,25 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- iOS-PWA Viewport-Höhe: setzt --app-height auf das echte sichtbare Viewport.
+       Behebt den weißen Bereich unter der Nav (100dvh-Fehlberechnung im Standalone). -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      function setAppHeight() {
+        var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        root.style.setProperty('--app-height', Math.round(h) + 'px');
+      }
+      setAppHeight();
+      window.addEventListener('resize', setAppHeight);
+      window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 120); });
+      window.addEventListener('pageshow', setAppHeight);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setAppHeight);
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- PWA Splash Screen -->

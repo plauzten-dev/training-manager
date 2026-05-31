@@ -306,10 +306,9 @@ git push
 
 ## Offene To-Dos (Funktionen)
 
-### ⚠️ Bug – Höchste Priorität
-- [ ] **iOS PWA Nav-Position** – Nav springt beim App-Öffnen und Tab-Wechsel: rendert zu hoch (mitten im Content), Benutzer muss manuell runterziehen.
-  - **Aktueller Stand (v0.25):** Nav ist `position:static` als letztes Flex-Child in `.app-layout { flex-direction:column; height:100dvh }` – kein `position:fixed` mehr.
-  - **Falls Bug noch aktiv:** Nächster Ansatz = VisualViewport API: `window.visualViewport.height` auslesen und Nav via JS absolut positionieren, ODER Safari Web Inspector (USB) am echten Gerät debuggen.
+### ✅ Bug behoben (B.0.27) – iOS PWA weißer Bereich unter der Nav
+- [x] **iOS PWA Viewport-Bug** – Beim App-Öffnen und Tab-Wechsel entstand unter der Nav ein weißer Bereich (iPhone) bzw. ein wegwischbarer Bereich (iPad), weil `100dvh` im Standalone-Modus größer als das echte Viewport berechnet wurde → `.app-layout` überragte den Bildschirm → `<body>` wurde scrollbar.
+  - **Lösung:** Inline-JS in `base.html` (`<head>`) misst `visualViewport.height || innerHeight` und setzt CSS-Var `--app-height`, aktualisiert bei `resize`/`orientationchange`/`pageshow`/`visualViewport.resize`. `.app-layout { height: var(--app-height, 100dvh) }`. Zusätzlich `body { position:fixed; inset:0; overflow:hidden; overscroll-behavior:none }` als App-Shell-Lock (Login per `.login-body` ausgenommen → bleibt scrollbar).
 
 ### Play Store (wenn App release-bereit)
 - [ ] Screenshots erstellen (390×844px) → `static/screenshots/dashboard.png` + `exercises.png`
@@ -346,5 +345,5 @@ git push
 13. **init_db() läuft beim Import**: Außerhalb von `__main__` – wird auch unter gunicorn ausgeführt.
 14. **Bildupload**: `_upload_image()` + `_delete_image()` in app.py – Cloudinary wenn Env-Vars gesetzt, sonst lokal.
 15. **image_path**: Kann lokaler Dateiname (z.B. `abc123.jpg`) ODER volle Cloudinary-URL sein – JS prüft `startsWith('http')`.
-16. **Mobile Nav Layout (v0.25)**: Nav ist KEIN `position:fixed` mehr. Sie sitzt als letztes Flex-Child in `.app-layout { flex-direction:column; height:100dvh }`. Wrapper-Klasse: `.mobile-nav-wrap { flex-shrink:0 }`. Niemals `position:fixed` auf `.mobile-nav` oder `.mobile-nav-wrap` setzen – das reintroduciert den iOS-Viewport-Bug.
+16. **Mobile Nav Layout + iOS-Viewport (B.0.27)**: Nav ist KEIN `position:fixed` – sitzt als letztes Flex-Child in `.app-layout { flex-direction:column; height:var(--app-height,100dvh) }`. Wrapper: `.mobile-nav-wrap { flex-shrink:0 }`. Niemals `position:fixed` auf `.mobile-nav`/`.mobile-nav-wrap`. `--app-height` wird per Inline-JS im `<head>` von `base.html` aus `visualViewport.height||innerHeight` gesetzt – NICHT entfernen, sonst kehrt der weiße Bereich unter der Nav zurück. `<body>` ist als App-Shell gesperrt (`position:fixed; overflow:hidden`); neue Vollbild-Seiten ohne `base.html` brauchen wie `.login-body` ein `position:static; overflow-y:auto` Override.
 17. **Players Page Struktur (v0.25)**: `players.html` hat zwei Zonen: `.players-top` (kein overflow → Team-Tabs können voll-breit scrollen) und `.players-scroll` (overflow-y:auto → scrollbarer Content). Bei Änderungen an der Players-Page beide Zonen berücksichtigen.
