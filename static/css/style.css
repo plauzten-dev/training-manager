@@ -901,7 +901,7 @@ textarea { resize: vertical; min-height: 90px; }
 .mobile-nav-wrap {
   display: none;
   flex-shrink: 0;
-  padding: 6px 10px max(8px, calc(env(safe-area-inset-bottom, 8px) - 22px));
+  padding: 6px 10px max(4px, calc(env(safe-area-inset-bottom, 8px) - 30px));
   pointer-events: none;
 }
 .mobile-nav {

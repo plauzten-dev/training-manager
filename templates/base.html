@@ -194,58 +194,6 @@
 
   {% block scripts %}{% endblock %}
 
-  <!-- TODO: DEBUG-OVERLAY – NACH iOS-NAV-FIX WIEDER ENTFERNEN -->
-  <script>
-    (function () {
-      var isStandalone = window.navigator.standalone === true ||
-                         window.matchMedia('(display-mode: standalone)').matches;
-      if (!isStandalone) return;
-
-      var box = document.createElement('div');
-      box.style.cssText = 'position:fixed;top:env(safe-area-inset-top,8px);left:8px;right:8px;z-index:99999;' +
-        'background:rgba(0,0,0,0.85);color:#0f0;font:11px/1.4 monospace;padding:8px 10px;border-radius:8px;' +
-        'white-space:pre;pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,0.5)';
-      box.addEventListener('click', function () { box.remove(); });
-      document.body.appendChild(box);
-
-      function probe(cssVal) {
-        var p = document.createElement('div');
-        p.style.cssText = 'position:fixed;left:-9999px;top:0;height:' + cssVal;
-        document.body.appendChild(p);
-        var h = p.getBoundingClientRect().height;
-        p.remove();
-        return Math.round(h);
-      }
-
-      function read() {
-        var vv = window.visualViewport;
-        var layout = document.querySelector('.app-layout');
-        var nav = document.querySelector('.mobile-nav');
-        var lr = layout ? layout.getBoundingClientRect() : null;
-        var nr = nav ? nav.getBoundingClientRect() : null;
-        var lines = [
-          'TIPPEN zum Schließen',
-          'innerHeight:      ' + window.innerHeight,
-          'visualVP.height:  ' + (vv ? Math.round(vv.height) : 'n/a'),
-          'docEl.clientH:    ' + document.documentElement.clientHeight,
-          'screen.height:    ' + window.screen.height,
-          '100dvh:           ' + probe('100dvh'),
-          '100vh:            ' + probe('100vh'),
-          'safe-bottom:      ' + probe('env(safe-area-inset-bottom)'),
-          'safe-top:         ' + probe('env(safe-area-inset-top)'),
-          '--app-height:     ' + getComputedStyle(document.documentElement).getPropertyValue('--app-height').trim(),
-          'appLayout.bottom: ' + (lr ? Math.round(lr.bottom) : 'n/a'),
-          'nav.bottom:       ' + (nr ? Math.round(nr.bottom) : 'n/a'),
-          'GAP unter Layout: ' + (lr ? Math.round(window.innerHeight - lr.bottom) : 'n/a')
-        ];
-        box.textContent = lines.join('\n');
-      }
-      read();
-      window.addEventListener('resize', read);
-      if (window.visualViewport) window.visualViewport.addEventListener('resize', read);
-    })();
-  </script>
-
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' });
