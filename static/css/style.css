@@ -901,11 +901,9 @@ textarea { resize: vertical; min-height: 90px; }
 .mobile-nav-wrap {
   display: none;
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0 12px env(safe-area-inset-bottom, 0px);
-  box-sizing: border-box;
+  bottom: calc(env(safe-area-inset-bottom, 8px) + 6px);
+  left: 12px;
+  right: 12px;
   z-index: 100;
   pointer-events: none;
 }
@@ -913,7 +911,7 @@ textarea { resize: vertical; min-height: 90px; }
   display: flex;
   position: relative;
   pointer-events: all;
-  margin-bottom: 6px;
+  margin-bottom: 0;
   width: 100%;
   border-radius: 24px;
   overflow: hidden;
