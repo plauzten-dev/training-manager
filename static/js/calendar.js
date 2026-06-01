@@ -31,6 +31,9 @@ function setCalView(view) {
   document.getElementById('cal-month-grid').classList.toggle('hidden', view !== 'month');
   document.getElementById('cal-week').classList.toggle('hidden', view !== 'week');
 
+  // In der Wochenansicht ist die Tages-Sidebar überflüssig → ausblenden, Card volle Breite
+  document.querySelector('.calendar-layout').classList.toggle('week-mode', view === 'week');
+
   if (view === 'week') {
     renderWeek();
   } else {
@@ -229,27 +232,24 @@ async function renderWeek() {
     const trainings = trainingsMap[dateStr] || [];
     const isToday = dateStr === todayStr;
 
-    const itemsHTML = trainings.length === 0
-      ? `<p class="cal-week-empty">Kein Training</p>`
+    const bodyHTML = trainings.length === 0
+      ? `<span class="cal-wk-empty">Frei</span>`
       : trainings.map(t => `
-          <div class="training-list-item" onclick="window.location.href='/training/${t.id}'">
-            <div class="cal-list-dot"></div>
-            <div>
-              <div class="training-list-title">${escHtml(t.title)}</div>
-              <div class="training-list-meta">${t.exercise_count || 0} Übung${t.exercise_count !== 1 ? 'en' : ''}</div>
-            </div>
+          <div class="cal-wk-item" onclick="window.location.href='/training/${t.id}'">
+            <div class="cal-wk-item-title">${escHtml(t.title)}</div>
+            <div class="cal-wk-item-meta">${t.exercise_count || 0} Übung${t.exercise_count !== 1 ? 'en' : ''}</div>
           </div>`).join('');
 
     return `
       <div class="cal-week-day${isToday ? ' today' : ''}">
         <div class="cal-week-day-head">
           <span class="cal-week-wd">${WEEKDAYS_SHORT_DE[i]}</span>
-          <span class="cal-week-date">${d.getDate()}. ${MONTHS_SHORT_DE[d.getMonth()]}</span>
+          <span class="cal-week-date">${d.getDate()}</span>
         </div>
         <div class="cal-week-body">
-          ${itemsHTML}
-          <button class="cal-add-btn cal-week-add" onclick="showCreateTrainingModal('${dateStr}')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          ${bodyHTML}
+          <button class="cal-wk-add" onclick="showCreateTrainingModal('${dateStr}')" aria-label="Training hinzufügen" title="Training hinzufügen">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
         </div>
       </div>`;
