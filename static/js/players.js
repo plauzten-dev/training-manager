@@ -293,6 +293,9 @@ function playerCardHTML(p) {
   const numBadge = p.number ? `<span class="player-num-badge">#${p.number}</span>` : '';
   const notesHTML = p.notes
     ? `<p class="player-card-notes">${escHtml(p.notes)}</p>` : '';
+  const avatarInner = p.avatar_path
+    ? `<img src="${p.avatar_path.startsWith('http') ? p.avatar_path : '/uploads/' + p.avatar_path}" alt="">`
+    : initials;
 
   return `
     <div class="player-card" id="pcard-${p.id}">
@@ -301,7 +304,7 @@ function playerCardHTML(p) {
         <span class="player-pos-tag">${escHtml(p.position)}</span>
       </div>
       <div class="player-card-body">
-        <div class="player-avatar" style="background:${color}">${initials}</div>
+        <div class="player-avatar" style="background:${color}">${avatarInner}</div>
         <div class="player-card-name">${escHtml(p.name)}</div>
         ${notesHTML}
 
@@ -481,6 +484,8 @@ async function doDeleteTeam(id) {
 }
 
 // ── Add / Edit Player Modal ───────────────────────────────────────────────────
+let pendingAvatarFile = null;        // gewähltes Bild für noch nicht angelegten Spieler
+
 function showPlayerModal(id = null, teamId = null) {
   const p     = id ? allPlayers.find(x => x.id === id) : null;
   const tId   = p?.team_id ?? teamId ?? currentTeamId;
@@ -488,8 +493,28 @@ function showPlayerModal(id = null, teamId = null) {
   const positions = team ? (SPORT_POSITIONS[team.sport] || ['Universal']) : ['Universal'];
   const title = p ? 'Spieler bearbeiten' : 'Spieler hinzufügen';
 
+  pendingAvatarFile = null;
+  const initials   = (p?.name || '').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?';
+  const avColor    = posColor(p?.position || 'Universal');
+  const avatarInner = p?.avatar_path
+    ? `<img src="${p.avatar_path.startsWith('http') ? p.avatar_path : '/uploads/' + p.avatar_path}" alt="">`
+    : initials;
+
   openModal(title, `
     <form id="player-form" onsubmit="submitPlayerForm(event,${id ?? 'null'},${tId ?? 'null'})">
+      <div class="player-avatar-edit">
+        <div class="player-avatar-edit-preview" id="player-avatar-preview" style="background:${avColor}">${avatarInner}</div>
+        <div>
+          <div class="player-avatar-edit-actions">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('player-avatar-input').click()">Bild wählen</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="player-avatar-remove"
+                    style="color:#dc2626;${p?.avatar_path ? '' : 'display:none'}"
+                    onclick="removePlayerAvatar(${id ?? 'null'})">Entfernen</button>
+          </div>
+        </div>
+        <input type="file" id="player-avatar-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden
+               onchange="onPlayerAvatarPick(this,${id ?? 'null'})">
+      </div>
       <div class="form-group">
         <label>Name *</label>
         <input type="text" name="name" value="${escHtml(p?.name || '')}" required placeholder="Vorname Nachname">
@@ -536,6 +561,59 @@ function showPlayerModal(id = null, teamId = null) {
     </form>`);
 }
 
+// Bild gewählt: bei vorhandenem Spieler sofort hochladen, sonst lokal vormerken
+async function onPlayerAvatarPick(input, id) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 16 * 1024 * 1024) { showToast('Bild ist zu groß (max. 16 MB)', 'error'); input.value = ''; return; }
+
+  // Sofort-Vorschau
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const prev = document.getElementById('player-avatar-preview');
+    if (prev) prev.innerHTML = `<img src="${ev.target.result}" alt="">`;
+  };
+  reader.readAsDataURL(file);
+
+  if (id) {
+    const fd = new FormData();
+    fd.append('image', file);
+    const res = await fetch(`/api/players/${id}/avatar`, { method: 'POST', body: fd });
+    if (res.ok) {
+      const p = allPlayers.find(x => x.id === id);
+      if (p) p.avatar_path = (await res.json()).avatar_path;
+      const rm = document.getElementById('player-avatar-remove');
+      if (rm) rm.style.display = '';
+      showToast('Bild gespeichert', 'success');
+    } else {
+      showToast('Fehler beim Hochladen', 'error');
+    }
+  } else {
+    pendingAvatarFile = file;
+    const rm = document.getElementById('player-avatar-remove');
+    if (rm) rm.style.display = '';
+  }
+  input.value = '';
+}
+
+async function removePlayerAvatar(id) {
+  pendingAvatarFile = null;
+  document.getElementById('player-avatar-input').value = '';
+  const prev = document.getElementById('player-avatar-preview');
+  const nameInput = document.querySelector('#player-form [name="name"]');
+  const initials = (nameInput?.value || '').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?';
+  if (prev) prev.innerHTML = initials;
+  const rm = document.getElementById('player-avatar-remove');
+  if (rm) rm.style.display = 'none';
+  if (id) {
+    const res = await fetch(`/api/players/${id}/avatar`, { method: 'DELETE' });
+    if (res.ok) {
+      const p = allPlayers.find(x => x.id === id);
+      if (p) p.avatar_path = null;
+    }
+  }
+}
+
 async function submitPlayerForm(e, id, teamId) {
   e.preventDefault();
   const form = e.target;
@@ -556,13 +634,22 @@ async function submitPlayerForm(e, id, teamId) {
   const res = await fetch(url, {
     method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
   });
-  btn.disabled = false;
 
   if (res.ok) {
+    // Bei neuem Spieler: vorgemerktes Bild jetzt hochladen
+    if (!id && pendingAvatarFile) {
+      const created = await res.json();
+      const fd = new FormData();
+      fd.append('image', pendingAvatarFile);
+      await fetch(`/api/players/${created.id}/avatar`, { method: 'POST', body: fd });
+    }
+    pendingAvatarFile = null;
+    btn.disabled = false;
     closeModal();
     showToast(id ? 'Spieler aktualisiert!' : 'Spieler hinzugefügt!', 'success');
     await loadPlayers(currentTeamId);
   } else {
+    btn.disabled = false;
     const d = await res.json();
     showToast(d.error || 'Fehler', 'error');
   }

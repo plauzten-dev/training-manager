@@ -13,6 +13,21 @@
 <!-- ── Mobile: WhatsApp-style nav list (nur ≤640px) ──────────────────────── -->
 <div class="settings-mob-home" id="settings-mob-home">
 
+  <div class="settings-mob-profile" onclick="showSettingDetail('detail-profil','Profil bearbeiten','Benutzername und E-Mail')">
+    <div class="settings-mob-profile-avatar" id="mob-profile-avatar">
+      {% if user.avatar_path %}
+        <img src="{{ user.avatar_path if user.avatar_path.startswith('http') else '/uploads/' + user.avatar_path }}" alt="">
+      {% else %}
+        <span>{{ (user.username[:2] if user.username else '?')|upper }}</span>
+      {% endif %}
+    </div>
+    <div class="settings-mob-profile-text">
+      <div class="settings-mob-profile-name">{{ user.username }}</div>
+      <div class="settings-mob-profile-sub">{{ user.email }}</div>
+    </div>
+    <div class="settings-mob-chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+  </div>
+
   <div class="settings-mob-section-label">Konto</div>
   <div class="settings-mob-group">
     <div class="settings-mob-row" onclick="showSettingDetail('detail-profil','Profil bearbeiten','Benutzername und E-Mail')">
@@ -68,7 +83,7 @@
     </div>
     <div class="settings-mob-row" onclick="showSettingDetail('detail-hilfe','Hilfe','')">
       <div class="settings-mob-row-icon green">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.8-2.7 2.3-2.7 2.3"/><line x1="12" y1="16.5" x2="12.01" y2="16.5"/></svg>
       </div>
       <div class="settings-mob-row-text">
         <div class="settings-mob-row-title">Hilfe</div>
@@ -117,6 +132,23 @@
           <div class="settings-card-title">Profil</div>
           <div class="settings-card-sub">Benutzername und E-Mail-Adresse</div>
         </div>
+      </div>
+      <div class="avatar-edit">
+        <div class="avatar-edit-preview" id="user-avatar-preview">
+          {% if user.avatar_path %}
+            <img src="{{ user.avatar_path if user.avatar_path.startswith('http') else '/uploads/' + user.avatar_path }}" alt="">
+          {% else %}
+            <span>{{ (user.username[:2] if user.username else '?')|upper }}</span>
+          {% endif %}
+        </div>
+        <div class="avatar-edit-side">
+          <div class="avatar-edit-label">Profilbild</div>
+          <div class="avatar-edit-actions">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('user-avatar-input').click()">Bild wählen</button>
+            <button type="button" class="btn btn-ghost btn-sm avatar-remove-btn" id="user-avatar-remove" onclick="removeUserAvatar()" {% if not user.avatar_path %}style="display:none"{% endif %}>Entfernen</button>
+          </div>
+        </div>
+        <input type="file" id="user-avatar-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden onchange="uploadUserAvatar(this)">
       </div>
       <form id="profile-form" onsubmit="submitProfile(event)">
         <div class="form-group">
@@ -232,7 +264,7 @@
     <div class="settings-card">
       <div class="settings-card-header">
         <div class="settings-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.8-2.7 2.3-2.7 2.3"/><line x1="12" y1="16.5" x2="12.01" y2="16.5"/></svg>
         </div>
         <div>
           <div class="settings-card-title">Hilfe</div>
@@ -242,7 +274,7 @@
       <div class="info-grid">
         <div class="info-row">
           <span class="info-label">App-Version</span>
-          <span class="info-value">B.0.36</span>
+          <span class="info-value">B.0.37</span>
         </div>
         <div class="info-row">
           <span class="info-label">Plattform</span>
@@ -341,6 +373,47 @@ function hideSettingDetail() {
   document.getElementById('settings-mob-home').style.display = '';
   document.getElementById('settings-page-title').textContent = 'Einstellungen';
   document.getElementById('settings-page-sub').textContent = 'Konto und App verwalten';
+}
+
+// ── Profilbild ────────────────────────────────────────────────────────────────
+function renderAvatar(path) {
+  const initials = '{{ (user.username[:2] if user.username else "?")|upper }}';
+  const src = path ? (path.startsWith('http') ? path : '/uploads/' + path) : null;
+  const inner = src ? '<img src="' + src + '" alt="">' : '<span>' + initials + '</span>';
+  const preview = document.getElementById('user-avatar-preview');
+  const mob     = document.getElementById('mob-profile-avatar');
+  if (preview) preview.innerHTML = inner;
+  if (mob)     mob.innerHTML = inner;
+  const removeBtn = document.getElementById('user-avatar-remove');
+  if (removeBtn) removeBtn.style.display = path ? '' : 'none';
+}
+
+async function uploadUserAvatar(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 16 * 1024 * 1024) { showToast('Bild ist zu groß (max. 16 MB)', 'error'); input.value = ''; return; }
+  const fd = new FormData();
+  fd.append('image', file);
+  const res = await fetch('/api/auth/avatar', { method: 'POST', body: fd });
+  input.value = '';
+  if (res.ok) {
+    const data = await res.json();
+    renderAvatar(data.avatar_path);
+    showToast('Profilbild aktualisiert', 'success');
+  } else {
+    const d = await res.json().catch(() => ({}));
+    showToast(d.error || 'Fehler beim Hochladen', 'error');
+  }
+}
+
+async function removeUserAvatar() {
+  const res = await fetch('/api/auth/avatar', { method: 'DELETE' });
+  if (res.ok) {
+    renderAvatar(null);
+    showToast('Profilbild entfernt', 'info');
+  } else {
+    showToast('Fehler', 'error');
+  }
 }
 
 // ── Profil ────────────────────────────────────────────────────────────────────

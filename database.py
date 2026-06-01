@@ -107,6 +107,20 @@ def init_db():
     except Exception:
         pass
 
+    # Migration: add avatar_path to users (Profilbild)
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN avatar_path TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: add avatar_path to players (Spieler-Profilbild)
+    try:
+        conn.execute("ALTER TABLE players ADD COLUMN avatar_path TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
     # Mark any pre-existing exercises without sport tag
     conn.execute("UPDATE exercises SET sport='Fußball' WHERE sport IS NULL OR sport=''")
     conn.commit()

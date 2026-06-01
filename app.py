@@ -153,7 +153,7 @@ def players_page():
 @login_required
 def settings_page():
     conn = get_db()
-    user = conn.execute('SELECT id, username, email, created_at FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    user = conn.execute('SELECT id, username, email, created_at, avatar_path FROM users WHERE id = ?', (session['user_id'],)).fetchone()
     conn.close()
     return render_template('settings.html', username=session.get('username'), user=dict(user))
 
@@ -355,6 +355,40 @@ def me():
     if 'user_id' not in session:
         return jsonify({'authenticated': False}), 401
     return jsonify({'authenticated': True, 'username': session['username'], 'user_id': session['user_id']})
+
+
+@app.route('/api/auth/avatar', methods=['POST'])
+@login_required
+def upload_user_avatar():
+    if 'image' not in request.files:
+        return jsonify({'error': 'Kein Bild übermittelt'}), 400
+    file = request.files['image']
+    if not file or not file.filename:
+        return jsonify({'error': 'Kein Bild übermittelt'}), 400
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'Ungültiges Dateiformat'}), 400
+    conn = get_db()
+    old = conn.execute('SELECT avatar_path FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    new_path = _upload_image(file)
+    conn.execute('UPDATE users SET avatar_path = ? WHERE id = ?', (new_path, session['user_id']))
+    conn.commit()
+    conn.close()
+    if old and old['avatar_path']:
+        _delete_image(old['avatar_path'])
+    return jsonify({'avatar_path': new_path})
+
+
+@app.route('/api/auth/avatar', methods=['DELETE'])
+@login_required
+def delete_user_avatar():
+    conn = get_db()
+    old = conn.execute('SELECT avatar_path FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    conn.execute('UPDATE users SET avatar_path = NULL WHERE id = ?', (session['user_id'],))
+    conn.commit()
+    conn.close()
+    if old and old['avatar_path']:
+        _delete_image(old['avatar_path'])
+    return jsonify({'message': 'Profilbild entfernt'})
 
 
 # ── Exercises API ─────────────────────────────────────────────────────────────
@@ -988,14 +1022,61 @@ def update_player_status(player_id):
 @login_required
 def delete_player(player_id):
     conn = get_db()
-    p = conn.execute('SELECT id FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone()
+    p = conn.execute('SELECT id, avatar_path FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone()
     if not p:
         conn.close()
         return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    avatar = p['avatar_path']
     conn.execute('DELETE FROM players WHERE id = ?', (player_id,))
     conn.commit()
     conn.close()
+    if avatar:
+        _delete_image(avatar)
     return jsonify({'message': 'Spieler gelöscht'})
+
+
+@app.route('/api/players/<int:player_id>/avatar', methods=['POST'])
+@login_required
+def upload_player_avatar(player_id):
+    conn = get_db()
+    p = conn.execute('SELECT id, avatar_path FROM players WHERE id = ? AND user_id = ?',
+                     (player_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    if 'image' not in request.files:
+        conn.close()
+        return jsonify({'error': 'Kein Bild übermittelt'}), 400
+    file = request.files['image']
+    if not file or not file.filename or not allowed_file(file.filename):
+        conn.close()
+        return jsonify({'error': 'Ungültiges Dateiformat'}), 400
+    old = p['avatar_path']
+    new_path = _upload_image(file)
+    conn.execute('UPDATE players SET avatar_path = ? WHERE id = ?', (new_path, player_id))
+    conn.commit()
+    conn.close()
+    if old:
+        _delete_image(old)
+    return jsonify({'avatar_path': new_path})
+
+
+@app.route('/api/players/<int:player_id>/avatar', methods=['DELETE'])
+@login_required
+def delete_player_avatar(player_id):
+    conn = get_db()
+    p = conn.execute('SELECT avatar_path FROM players WHERE id = ? AND user_id = ?',
+                     (player_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    old = p['avatar_path']
+    conn.execute('UPDATE players SET avatar_path = NULL WHERE id = ?', (player_id,))
+    conn.commit()
+    conn.close()
+    if old:
+        _delete_image(old)
+    return jsonify({'message': 'Profilbild entfernt'})
 
 
 # ── Attendance API ────────────────────────────────────────────────────────────
