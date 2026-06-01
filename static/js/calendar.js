@@ -1,30 +1,70 @@
 /* ── calendar.js ──────────────────────────────────────────────────────────── */
 
 const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MONTHS_SHORT_DE = ['Jan.','Feb.','März','Apr.','Mai','Juni','Juli','Aug.','Sep.','Okt.','Nov.','Dez.'];
 let currentYear, currentMonth, trainingsMap = {}, selectedDate = null;
+let currentView = 'month';   // 'month' | 'week'
+let weekStart = null;        // Date = Montag der aktiven Woche
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
   const now = new Date();
   currentYear  = now.getFullYear();
   currentMonth = now.getMonth(); // 0-based
-  renderCalendar();
+  weekStart    = getMonday(now);
+
+  const saved = localStorage.getItem('calView');
+  if (saved === 'week') {
+    setCalView('week');
+  } else {
+    renderCalendar();
+  }
 }
+
+// ── View-Umschaltung ────────────────────────────────────────────────────────
+function setCalView(view) {
+  currentView = view;
+  localStorage.setItem('calView', view);
+
+  document.getElementById('cal-view-month').classList.toggle('active', view === 'month');
+  document.getElementById('cal-view-week').classList.toggle('active', view === 'week');
+  document.getElementById('cal-month-grid').classList.toggle('hidden', view !== 'month');
+  document.getElementById('cal-week').classList.toggle('hidden', view !== 'week');
+
+  if (view === 'week') {
+    renderWeek();
+  } else {
+    renderCalendar();
+  }
+}
+
+// Nav-Pfeile delegieren je nach View
+function navPrev() { currentView === 'week' ? changeWeek(-1) : changeMonth(-1); }
+function navNext() { currentView === 'week' ? changeWeek(1)  : changeMonth(1);  }
 
 async function renderCalendar() {
   document.getElementById('cal-month-title').textContent =
     `${MONTHS_DE[currentMonth]} ${currentYear}`;
 
   const monthStr = `${currentYear}-${String(currentMonth + 1).padStart(2,'0')}`;
-  await fetchTrainings(monthStr);
+  await loadMonths([monthStr]);
   renderDays();
 }
 
+// Lädt eine Liste von Monaten ('YYYY-MM') und füllt trainingsMap neu.
+async function loadMonths(monthStrs) {
+  trainingsMap = {};
+  // Duplikate entfernen (Woche kann denselben Monat zweimal liefern)
+  for (const m of [...new Set(monthStrs)]) {
+    await fetchTrainings(m);
+  }
+}
+
+// Hängt die Trainings eines Monats an trainingsMap an (ohne zu leeren).
 async function fetchTrainings(monthStr) {
   const res = await fetch(`/api/trainings?month=${monthStr}`);
   if (!res.ok) return;
   const trainings = await res.json();
-  trainingsMap = {};
   trainings.forEach(t => {
     const day = t.date; // YYYY-MM-DD
     if (!trainingsMap[day]) trainingsMap[day] = [];
@@ -147,12 +187,90 @@ function renderSidebar(dateStr) {
     </div>`;
 }
 
+// ── Wochenansicht ───────────────────────────────────────────────────────────
+const WEEKDAYS_SHORT_DE = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+// Montag der Woche zu einem beliebigen Datum (lokal, ohne Zeitanteil).
+function getMonday(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  let day = d.getDay();          // So=0 ... Sa=6
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+async function renderWeek() {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+    days.push(d);
+  }
+  const end = days[6];
+
+  // Titel: "5. – 11. Mai 2026" bzw. mit Monats-/Jahreswechsel
+  let title;
+  if (weekStart.getMonth() === end.getMonth()) {
+    title = `${weekStart.getDate()}. – ${end.getDate()}. ${MONTHS_DE[end.getMonth()]} ${end.getFullYear()}`;
+  } else if (weekStart.getFullYear() === end.getFullYear()) {
+    title = `${weekStart.getDate()}. ${MONTHS_SHORT_DE[weekStart.getMonth()]} – ${end.getDate()}. ${MONTHS_SHORT_DE[end.getMonth()]} ${end.getFullYear()}`;
+  } else {
+    title = `${weekStart.getDate()}. ${MONTHS_SHORT_DE[weekStart.getMonth()]} ${weekStart.getFullYear()} – ${end.getDate()}. ${MONTHS_SHORT_DE[end.getMonth()]} ${end.getFullYear()}`;
+  }
+  document.getElementById('cal-month-title').textContent = title;
+
+  // Trainings der berührten Monate laden (max. 2)
+  const months = days.map(d => `${d.getFullYear()}-${pad(d.getMonth()+1)}`);
+  await loadMonths(months);
+
+  const todayStr = toDateStr(new Date());
+  const container = document.getElementById('cal-week');
+  container.innerHTML = days.map((d, i) => {
+    const dateStr = toDateStr(d);
+    const trainings = trainingsMap[dateStr] || [];
+    const isToday = dateStr === todayStr;
+
+    const itemsHTML = trainings.length === 0
+      ? `<p class="cal-week-empty">Kein Training</p>`
+      : trainings.map(t => `
+          <div class="training-list-item" onclick="window.location.href='/training/${t.id}'">
+            <div class="cal-list-dot"></div>
+            <div>
+              <div class="training-list-title">${escHtml(t.title)}</div>
+              <div class="training-list-meta">${t.exercise_count || 0} Übung${t.exercise_count !== 1 ? 'en' : ''}</div>
+            </div>
+          </div>`).join('');
+
+    return `
+      <div class="cal-week-day${isToday ? ' today' : ''}">
+        <div class="cal-week-day-head">
+          <span class="cal-week-wd">${WEEKDAYS_SHORT_DE[i]}</span>
+          <span class="cal-week-date">${d.getDate()}. ${MONTHS_SHORT_DE[d.getMonth()]}</span>
+        </div>
+        <div class="cal-week-body">
+          ${itemsHTML}
+          <button class="cal-add-btn cal-week-add" onclick="showCreateTrainingModal('${dateStr}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function changeWeek(dir) {
+  weekStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + dir * 7);
+  renderWeek();
+}
+
 // ── Month navigation ──────────────────────────────────────────────────────────
 function goToToday() {
   const now = new Date();
   currentYear  = now.getFullYear();
   currentMonth = now.getMonth();
+  weekStart    = getMonday(now);
   selectedDate = null;
+
+  if (currentView === 'week') { renderWeek(); return; }
+
   document.getElementById('cal-detail').innerHTML = `
     <div class="cal-detail-empty">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -215,8 +333,12 @@ async function submitCreateTraining(e) {
     const t = await res.json();
     closeModal();
     showToast('Training erstellt!', 'success');
-    await renderCalendar();
-    selectDay(data.date);
+    if (currentView === 'week') {
+      await renderWeek();
+    } else {
+      await renderCalendar();
+      selectDay(data.date);
+    }
     // Navigate to training detail
     window.location.href = `/training/${t.id}`;
   } else {
