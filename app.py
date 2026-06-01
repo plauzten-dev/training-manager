@@ -94,6 +94,17 @@ def login_required(f):
     return decorated
 
 
+@app.context_processor
+def inject_current_avatar():
+    """Stellt das Profilbild des eingeloggten Users allen Templates bereit (für Sidebar-Avatar)."""
+    if 'user_id' not in session:
+        return {}
+    conn = get_db()
+    row = conn.execute('SELECT avatar_path FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    conn.close()
+    return {'current_avatar': row['avatar_path'] if row else None}
+
+
 # ── PWA ──────────────────────────────────────────────────────────────────────
 
 @app.route('/sw.js')

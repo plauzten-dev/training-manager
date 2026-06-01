@@ -274,7 +274,7 @@
       <div class="info-grid">
         <div class="info-row">
           <span class="info-label">App-Version</span>
-          <span class="info-value">B.0.39</span>
+          <span class="info-value">B.0.41</span>
         </div>
         <div class="info-row">
           <span class="info-label">Plattform</span>
@@ -311,12 +311,21 @@
         </div>
         <div>
           <div class="settings-card-title">Benachrichtigungen</div>
-          <div class="settings-card-sub">Push-Mitteilungen und Erinnerungen</div>
+          <div class="settings-card-sub">Mitteilungen und Erinnerungen</div>
         </div>
       </div>
-      <div class="settings-placeholder">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <p>Push-Benachrichtigungen sind in dieser Version noch nicht verfügbar.</p>
+      <div class="notif-panel">
+        <div class="notif-status">
+          <span class="notif-pill" id="notif-pill">…</span>
+          <span class="notif-status-text" id="notif-status-text"></span>
+        </div>
+        <button id="notif-enable-btn" class="btn btn-primary btn-full btn-sm" onclick="requestNotifications()" style="display:none">
+          Benachrichtigungen aktivieren
+        </button>
+        <button id="notif-test-btn" class="btn btn-ghost btn-full btn-sm" onclick="sendTestNotification()" style="display:none">
+          Test-Benachrichtigung senden
+        </button>
+        <p class="notif-hint" id="notif-hint"></p>
       </div>
     </div>
   </div>
@@ -363,6 +372,7 @@ function showSettingDetail(id, title, sub) {
   document.getElementById('settings-mob-home').style.display = 'none';
   document.getElementById('settings-page-title').textContent = title;
   document.getElementById('settings-page-sub').textContent = sub || '';
+  if (id === 'detail-notifications') initNotifications();
 }
 function hideSettingDetail() {
   var grid = document.getElementById('settings-detail-grid');
@@ -525,5 +535,89 @@ async function submitPassword(e) {
     status.className = 'settings-status status-err';
   }
 }
+
+// ── Benachrichtigungen ──────────────────────────────────────────────────────
+function isiOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function isStandalone() {
+  return window.navigator.standalone === true ||
+         window.matchMedia('(display-mode: standalone)').matches;
+}
+
+function initNotifications() {
+  const pill = document.getElementById('notif-pill');
+  if (!pill) return;
+  const text      = document.getElementById('notif-status-text');
+  const enableBtn = document.getElementById('notif-enable-btn');
+  const testBtn   = document.getElementById('notif-test-btn');
+  const hint      = document.getElementById('notif-hint');
+
+  enableBtn.style.display = 'none';
+  testBtn.style.display = 'none';
+  hint.textContent = '';
+
+  const supported = 'Notification' in window && 'serviceWorker' in navigator;
+  if (!supported) {
+    pill.className = 'notif-pill off';
+    pill.textContent = 'Nicht verfügbar';
+    text.textContent = 'Dieses Gerät unterstützt keine Benachrichtigungen.';
+    if (isiOS() && !isStandalone()) {
+      hint.textContent = 'Auf dem iPhone: Teilen-Symbol → „Zum Home-Bildschirm". Danach sind Benachrichtigungen verfügbar (iOS 16.4 oder neuer).';
+    }
+    return;
+  }
+
+  const perm = Notification.permission;
+  if (perm === 'granted') {
+    pill.className = 'notif-pill on';
+    pill.textContent = 'Aktiviert';
+    text.textContent = 'Du erhältst Benachrichtigungen von Training Manager.';
+    testBtn.style.display = '';
+  } else if (perm === 'denied') {
+    pill.className = 'notif-pill off';
+    pill.textContent = 'Blockiert';
+    text.textContent = 'Benachrichtigungen sind aktuell blockiert.';
+    hint.textContent = 'Erlaube sie wieder in den System- bzw. Browser-Einstellungen für diese App.';
+  } else {
+    pill.className = 'notif-pill';
+    pill.textContent = 'Aus';
+    text.textContent = 'Aktiviere Benachrichtigungen, um auf dem Laufenden zu bleiben.';
+    enableBtn.style.display = '';
+  }
+}
+
+async function requestNotifications() {
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted')      showToast('Benachrichtigungen aktiviert', 'success');
+    else if (perm === 'denied')  showToast('Benachrichtigungen blockiert', 'error');
+  } catch (e) {
+    showToast('Berechtigung konnte nicht angefordert werden', 'error');
+  }
+  initNotifications();
+}
+
+async function sendTestNotification() {
+  if (Notification.permission !== 'granted') { initNotifications(); return; }
+  const title = 'Training Manager';
+  const opts = {
+    body: 'Das ist eine Test-Benachrichtigung – alles funktioniert!',
+    icon: '/static/icons/icon-192.png',
+    badge: '/static/icons/icon-192.png',
+    tag: 'tm-test'
+  };
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification(title, opts);
+    showToast('Test-Benachrichtigung gesendet', 'success');
+  } catch (e) {
+    try { new Notification(title, opts); showToast('Test-Benachrichtigung gesendet', 'success'); }
+    catch (e2) { showToast('Benachrichtigung konnte nicht gesendet werden', 'error'); }
+  }
+}
+
+initNotifications();
 </script>
 {% endblock %}

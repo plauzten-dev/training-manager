@@ -1,4 +1,4 @@
-const CACHE = 'training-manager-v8';
+const CACHE = 'training-manager-v9';
 
 const PRECACHE = [
   '/static/css/style.css',
@@ -25,6 +25,39 @@ self.addEventListener('activate', event => {
     )
   );
   self.clients.claim();
+});
+
+// ── Benachrichtigungen ──────────────────────────────────────────────────────
+// Klick auf eine Benachrichtigung: bestehendes App-Fenster fokussieren oder öffnen
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/dashboard';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if ('focus' in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
+  );
+});
+
+// Push-Event (für späteren Server-Push vorbereitet – aktuell ungenutzt)
+self.addEventListener('push', event => {
+  let data = { title: 'Training Manager', body: '' };
+  try {
+    if (event.data) data = Object.assign(data, event.data.json());
+  } catch (e) {
+    if (event.data) data.body = event.data.text();
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/static/icons/icon-192.png',
+      badge: '/static/icons/icon-192.png',
+      data: { url: data.url || '/dashboard' }
+    })
+  );
 });
 
 self.addEventListener('fetch', event => {
