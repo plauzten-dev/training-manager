@@ -558,6 +558,15 @@ function initNotifications() {
   testBtn.style.display = 'none';
   hint.textContent = '';
 
+  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!isMobileDevice) {
+    pill.className = 'notif-pill off';
+    pill.textContent = 'Nicht verfügbar';
+    text.textContent = 'Benachrichtigungen sind nur in der mobilen Version verfügbar.';
+    return;
+  }
+
   const supported = 'Notification' in window && 'serviceWorker' in navigator;
   if (!supported) {
     pill.className = 'notif-pill off';
