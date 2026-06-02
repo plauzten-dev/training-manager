@@ -1029,7 +1029,15 @@ textarea { resize: vertical; min-height: 90px; }
 @media (max-width: 640px) {
   .app-layout { flex-direction: column; }
   .sidebar { display: none; }
-  .mobile-nav-wrap { display: flex; }
+  .mobile-nav-wrap {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 6px 10px env(safe-area-inset-bottom, 8px);
+    z-index: 100;
+  }
 
   /* Page header */
   .page-header { padding: 20px 18px 0; flex-wrap: wrap; gap: 10px; }

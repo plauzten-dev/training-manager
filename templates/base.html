@@ -19,17 +19,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- iOS-PWA Viewport-Höhe: setzt --app-height auf das echte sichtbare Viewport.
-       Behebt den weißen Bereich unter der Nav (100dvh-Fehlberechnung im Standalone). -->
+       Behebt den weißen Bereich unter der Nav (100dvh-Fehlberechnung im Standalone).
+       visualViewport.height gibt die wirklich sichtbare Fläche zurück (exkl. Safe-Area unten),
+       window.innerHeight schließt die Safe-Area fälschlicherweise ein. -->
   <script>
     (function () {
       var root = document.documentElement;
       function setAppHeight() {
-        root.style.setProperty('--app-height', window.innerHeight + 'px');
+        var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+        root.style.setProperty('--app-height', h + 'px');
       }
       setAppHeight();
       window.addEventListener('resize', setAppHeight);
       window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 150); });
       window.addEventListener('pageshow', setAppHeight);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setAppHeight);
+        window.visualViewport.addEventListener('scroll', setAppHeight);
+      }
     })();
   </script>
 </head>
