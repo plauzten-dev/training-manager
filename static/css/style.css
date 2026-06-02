@@ -74,7 +74,10 @@ a { text-decoration: none; color: inherit; }
   display: flex; align-items: center; gap: 10px;
   padding: 22px 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+  text-decoration: none; cursor: pointer;
+  transition: opacity 0.15s;
 }
+.sidebar-logo:hover { opacity: 0.8; }
 .logo-icon { font-size: 1.5rem; }
 .logo-text { color: #fff; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.01em; }
 
@@ -324,6 +327,43 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .btn-test-login:hover { background: #fef9c3; }
 .btn-test-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* OAuth – Angemeldet-Hinweis in Einstellungen */
+.oauth-login-info {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 20px; background: var(--bg);
+  border-radius: 10px; border: 1px solid var(--border);
+}
+.oauth-login-badge {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.92rem; font-weight: 600; color: var(--text);
+}
+.oauth-login-hint {
+  font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin: 0;
+}
+
+/* OAuth Social Login */
+.oauth-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0 16px; color: var(--text-muted); font-size: 0.78rem;
+}
+.oauth-divider::before,
+.oauth-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.oauth-buttons { display: flex; flex-direction: column; gap: 10px; }
+.oauth-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 11px 16px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 0.88rem; font-weight: 500; color: var(--text);
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.oauth-btn:hover {
+  background: var(--bg); border-color: #94a3b8;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  SPORT TABS                                                                */
@@ -1412,6 +1452,65 @@ textarea { resize: vertical; min-height: 90px; }
   .settings-mob-home { padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 82px + 16px); }
   .settings-detail-grid { padding: 0 16px 48px; }
 }
+
+/* ── Roadmap ──────────────────────────────────────────────────────────────── */
+.roadmap-section { margin-bottom: 28px; }
+.roadmap-section:last-child { margin-bottom: 0; }
+.roadmap-section-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  padding-bottom: 10px; margin-bottom: 12px;
+  border-bottom: 2px solid;
+}
+.roadmap-section-label.inprogress { color: #ea580c; border-color: rgba(234,88,12,0.2); }
+.roadmap-section-label.ideas      { color: #7c3aed; border-color: rgba(124,58,237,0.2); }
+.roadmap-section-label.done       { color: #16a34a; border-color: rgba(22,163,74,0.2); }
+.roadmap-section-label.next       { color: #2563eb; border-color: rgba(37,99,235,0.2); }
+
+.roadmap-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0;
+  animation: roadmap-pulse 1.6s ease-in-out infinite;
+}
+@keyframes roadmap-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+.roadmap-items { display: flex; flex-direction: column; gap: 8px; }
+.roadmap-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; background: var(--bg);
+  border-radius: 10px; border: 1px solid var(--border);
+}
+.roadmap-item-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.roadmap-item-body { flex: 1; min-width: 0; padding-top: 1px; }
+.roadmap-item-title { font-size: 0.87rem; font-weight: 600; line-height: 1.35; color: var(--text); }
+.roadmap-item-desc  { font-size: 0.77rem; color: var(--text-muted); margin-top: 3px; line-height: 1.45; }
+.roadmap-item.done .roadmap-item-title { color: var(--text-muted); }
+.roadmap-item-credit {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.7rem; color: var(--primary); margin-top: 6px;
+  background: rgba(37,99,235,0.08); padding: 2px 9px;
+  border-radius: 99px; font-weight: 500;
+}
+.roadmap-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #dcfce7; border: 1px solid #bbf7d0;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 5px;
+}
+.roadmap-store-badge {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.roadmap-store-badge.play  { background: #f0faf0; border: 1px solid rgba(52,168,83,0.2); }
+.roadmap-store-badge.apple { background: #1c1c1e; }
 
 /* ── My Trainings Page ───────────────────────────────────────────────────── */
 .mt-page { overflow-y: auto; height: 100%; }

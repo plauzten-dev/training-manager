@@ -4,7 +4,9 @@ import os
 import datetime
 import uuid
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 from functools import wraps
+from authlib.integrations.flask_client import OAuth
 from database import get_db, init_db, hash_password, verify_password
 import secrets
 
@@ -30,6 +32,36 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# HTTPS-Proxy-Fix für Render/gunicorn (damit OAuth-Callbacks mit https:// generiert werden)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Lokale Entwicklung: OAuth erlaubt HTTP (kein SECRET_KEY in env = nicht auf Render)
+if not os.environ.get('SECRET_KEY'):
+    os.environ.setdefault('AUTHLIB_INSECURE_TRANSPORT', '1')
+
+# OAuth-Manager
+_oauth = OAuth(app)
+_google_enabled    = bool(os.environ.get('GOOGLE_CLIENT_ID'))
+_microsoft_enabled = bool(os.environ.get('MICROSOFT_CLIENT_ID'))
+
+if _google_enabled:
+    _oauth.register(
+        name='google',
+        client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+        client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'},
+    )
+
+if _microsoft_enabled:
+    _oauth.register(
+        name='microsoft',
+        client_id=os.environ.get('MICROSOFT_CLIENT_ID'),
+        client_secret=os.environ.get('MICROSOFT_CLIENT_SECRET'),
+        server_metadata_url='https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'},
+    )
 
 # Cloudinary – nur aktiv wenn alle drei Env-Vars gesetzt sind
 _cloudinary_enabled = all([
@@ -133,7 +165,102 @@ def dashboard_page():
 def login_page():
     if 'user_id' in session:
         return redirect(url_for('dashboard_page'))
-    return render_template('login.html')
+    oauth_error = request.args.get('oauth_error')
+    return render_template('login.html',
+                           google_enabled=_google_enabled,
+                           microsoft_enabled=_microsoft_enabled,
+                           oauth_error=oauth_error)
+
+
+# ── OAuth-Hilfsfunktion ───────────────────────────────────────────────────────
+def _oauth_finish(provider, oauth_id, email, display_name):
+    conn = get_db()
+    try:
+        user = conn.execute(
+            'SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ?',
+            (provider, str(oauth_id))
+        ).fetchone()
+
+        if not user and email:
+            # E-Mail bereits registriert → OAuth-Konto verknüpfen
+            user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+            if user:
+                conn.execute(
+                    'UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?',
+                    (provider, str(oauth_id), user['id'])
+                )
+                conn.commit()
+
+        if not user:
+            # Neues Konto erstellen
+            base = (display_name or (email.split('@')[0] if email else 'user'))[:20]
+            base = ''.join(c for c in base if c.isalnum() or c == '_') or 'user'
+            username = base
+            n = 1
+            while conn.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone():
+                username = f"{base}{n}"
+                n += 1
+            conn.execute(
+                'INSERT INTO users (username, email, password_hash, oauth_provider, oauth_id)'
+                ' VALUES (?, ?, ?, ?, ?)',
+                (username, email or '', '', provider, str(oauth_id))
+            )
+            conn.commit()
+            user = conn.execute(
+                'SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ?',
+                (provider, str(oauth_id))
+            ).fetchone()
+
+        session['user_id'] = user['id']
+        session['username'] = user['username']
+        return redirect('/dashboard')
+    except Exception:
+        return redirect('/login?oauth_error=1')
+    finally:
+        conn.close()
+
+
+# ── Google OAuth ─────────────────────────────────────────────────────────────
+@app.route('/auth/google')
+def auth_google():
+    if not _google_enabled:
+        return redirect('/login?oauth_error=1')
+    redirect_uri = url_for('auth_google_callback', _external=True)
+    return _oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    if not _google_enabled:
+        return redirect('/login?oauth_error=1')
+    try:
+        token = _oauth.google.authorize_access_token()
+        info  = token.get('userinfo') or {}
+        return _oauth_finish('google', info.get('sub', ''), info.get('email', ''), info.get('name', ''))
+    except Exception:
+        return redirect('/login?oauth_error=1')
+
+
+# ── Microsoft OAuth ───────────────────────────────────────────────────────────
+@app.route('/auth/microsoft')
+def auth_microsoft():
+    if not _microsoft_enabled:
+        return redirect('/login?oauth_error=1')
+    redirect_uri = url_for('auth_microsoft_callback', _external=True)
+    return _oauth.microsoft.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/microsoft/callback')
+def auth_microsoft_callback():
+    if not _microsoft_enabled:
+        return redirect('/login?oauth_error=1')
+    try:
+        token = _oauth.microsoft.authorize_access_token()
+        info  = token.get('userinfo') or {}
+        name  = info.get('name') or info.get('preferred_username', '')
+        return _oauth_finish('microsoft', info.get('sub', ''), info.get('email', ''), name)
+    except Exception:
+        return redirect('/login?oauth_error=1')
 
 
 @app.route('/exercises')
@@ -164,7 +291,7 @@ def players_page():
 @login_required
 def settings_page():
     conn = get_db()
-    user = conn.execute('SELECT id, username, email, created_at, avatar_path FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    user = conn.execute('SELECT id, username, email, created_at, avatar_path, oauth_provider FROM users WHERE id = ?', (session['user_id'],)).fetchone()
     conn.close()
     return render_template('settings.html', username=session.get('username'), user=dict(user))
 
@@ -323,6 +450,9 @@ def change_password():
 
     conn = get_db()
     user = conn.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    if not user['password_hash']:
+        conn.close()
+        return jsonify({'error': 'Dieses Konto nutzt einen externen Anbieter (Google/Microsoft) – kein Passwort vorhanden'}), 400
     if not verify_password(current, user['password_hash']):
         conn.close()
         return jsonify({'error': 'Aktuelles Passwort ist falsch'}), 400

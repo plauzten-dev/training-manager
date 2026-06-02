@@ -1,5 +1,6 @@
 training.db
 secret_key.txt
+start_dev.ps1
 uploads/
 __pycache__/
 *.pyc

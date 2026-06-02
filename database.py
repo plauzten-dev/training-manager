@@ -121,6 +121,18 @@ def init_db():
     except Exception:
         pass
 
+    # Migration: OAuth columns for social login (Google, Microsoft, ...)
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN oauth_provider TEXT")
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN oauth_id TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
     # Mark any pre-existing exercises without sport tag
     conn.execute("UPDATE exercises SET sport='Fußball' WHERE sport IS NULL OR sport=''")
     conn.commit()
