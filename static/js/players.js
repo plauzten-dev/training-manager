@@ -44,6 +44,43 @@ let allPlayers = [];
 let currentTeamId  = null;
 let activePosFilter = '';
 
+// ── Birthday helpers ──────────────────────────────────────────────────────────
+function isBirthdayToday(birthday) {
+  if (!birthday) return false;
+  const today = new Date();
+  const parts = birthday.split('-');
+  return parseInt(parts[1]) === today.getMonth() + 1 &&
+         parseInt(parts[2]) === today.getDate();
+}
+
+function calcAge(birthday) {
+  if (!birthday) return null;
+  const today = new Date();
+  const [y, m, d] = birthday.split('-').map(Number);
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age--;
+  return age;
+}
+
+function formatBirthdayDisplay(birthday) {
+  if (!birthday) return null;
+  const [y, m, d] = birthday.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+// ── Invite code helpers ───────────────────────────────────────────────────────
+async function copyInviteCode(code, btn) {
+  try {
+    await navigator.clipboard.writeText(code);
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    }, 2000);
+  } catch {
+    showToast('Kopieren fehlgeschlagen', 'error');
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await loadTeams();
@@ -60,7 +97,6 @@ async function loadTeams() {
     return;
   }
 
-  // Keep current selection if still valid
   if (!currentTeamId || !allTeams.find(t => t.id === currentTeamId)) {
     currentTeamId = allTeams[0].id;
   }
@@ -291,12 +327,10 @@ function applyFilters() {
 
 function setPosFilter(btn, pos) {
   const row = document.getElementById('pos-filter-row');
-  // Aktiven Button antippen → auf-/zuklappen
   if (btn.classList.contains('active')) {
     if (row) row.classList.toggle('collapsed');
     return;
   }
-  // Anderen Button wählen → Filter setzen + zuklappen
   activePosFilter = pos;
   document.querySelectorAll('.pos-filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -341,32 +375,83 @@ function renderPlayers(players) {
 }
 
 function playerCardHTML(p) {
-  const color    = posColor(p.position);
-  const initials = p.name.trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
-  const team     = allTeams.find(t => t.id === p.team_id);
-  const sc       = team ? (SPORT_COLORS[team.sport] || SPORT_COLORS['Allgemein']) : SPORT_COLORS['Allgemein'];
-  const numBadge = p.number ? `<span class="player-num-badge">#${p.number}</span>` : '';
-  const notesHTML = p.notes
-    ? `<p class="player-card-notes">${escHtml(p.notes)}</p>` : '';
+  const color       = posColor(p.position);
+  const initials    = p.name.trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  const team        = allTeams.find(t => t.id === p.team_id);
+  const sc          = team ? (SPORT_COLORS[team.sport] || SPORT_COLORS['Allgemein']) : SPORT_COLORS['Allgemein'];
+  const numBadge    = p.number ? `<span class="player-num-badge">#${p.number}</span>` : '';
+  const notesHTML   = p.notes ? `<p class="player-card-notes">${escHtml(p.notes)}</p>` : '';
   const avatarInner = p.avatar_path
     ? `<img src="${p.avatar_path.startsWith('http') ? p.avatar_path : '/uploads/' + p.avatar_path}" alt="">`
     : initials;
 
+  // Birthday
+  const isToday  = isBirthdayToday(p.birthday);
+  const age      = calcAge(p.birthday);
+  const bdClass  = isToday ? ' is-birthday' : '';
+
+  // Birthday banner (only if today)
+  const bdBanner = isToday ? `
+    <div class="birthday-banner">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/>
+        <path d="M4 21h16"/>
+        <path d="M9 8V7a3 3 0 0 1 6 0v1"/>
+        <line x1="9" y1="12" x2="9" y2="16"/>
+        <line x1="12" y1="12" x2="12" y2="16"/>
+        <line x1="15" y1="12" x2="15" y2="16"/>
+      </svg>
+      Heute Geburtstag!
+    </div>` : '';
+
+  // Age chip
+  const ageChip = age !== null ? `<span class="player-age-chip">${age} J.</span>` : '';
+
+  // Other teams badges (teams besides the current viewed one)
+  const otherTeamIds = (p.team_ids || []).filter(tid => tid !== currentTeamId);
+  const otherTeamBadges = otherTeamIds.slice(0, 2).map(tid => {
+    const t2  = allTeams.find(x => x.id === tid);
+    const sc2 = t2 ? (SPORT_COLORS[t2.sport] || SPORT_COLORS['Allgemein']) : SPORT_COLORS['Allgemein'];
+    return `<span class="player-other-team-badge" style="background:${sc2.bg}22;color:${sc2.bg};border-color:${sc2.bg}44">${escHtml(t2?.name || '?')}</span>`;
+  }).join('');
+  const moreCount = otherTeamIds.length > 2 ? `<span class="player-other-team-more">+${otherTeamIds.length - 2}</span>` : '';
+  const otherTeamsRow = otherTeamIds.length > 0
+    ? `<div class="player-other-teams">${otherTeamBadges}${moreCount}</div>` : '';
+
   return `
-    <div class="player-card" id="pcard-${p.id}">
+    <div class="player-card${bdClass}" id="pcard-${p.id}">
+      ${isToday ? '<div class="birthday-confetti" aria-hidden="true"></div>' : ''}
       <div class="player-card-top ${sc.cls}">
         ${numBadge}
         <span class="player-pos-tag">${escHtml(p.position)}</span>
       </div>
       <div class="player-card-body">
         <div class="player-avatar" style="background:${color}">${avatarInner}</div>
-        <div class="player-card-name">${escHtml(p.name)}</div>
+        <div class="player-card-name-row">
+          <div class="player-card-name">${escHtml(p.name)}</div>
+          ${ageChip}
+        </div>
+        ${bdBanner}
         ${notesHTML}
+        ${otherTeamsRow}
 
         <!-- Direct status toggle -->
         <div class="player-status-row" id="pstatus-${p.id}">
           ${statusToggleHTML(p)}
         </div>
+
+        <!-- Invite code -->
+        ${p.invite_code ? `
+        <div class="player-invite-row" id="pinvite-${p.id}">
+          ${p.linked_user_id
+            ? `<span class="invite-linked-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Verknüpft</span>`
+            : `<span class="invite-code-label">Code:</span>
+               <span class="invite-code-value">${escHtml(p.invite_code)}</span>
+               <button class="invite-copy-btn" title="Code kopieren" onclick="copyInviteCode('${escHtml(p.invite_code)}',this)">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+               </button>`
+          }
+        </div>` : ''}
 
         <!-- Actions -->
         <div class="player-card-actions">
@@ -374,7 +459,7 @@ function playerCardHTML(p) {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Bearbeiten
           </button>
-          <button class="player-delete-btn" onclick="confirmDeletePlayer(${p.id},'${escHtml(p.name).replace(/'/g,"&#39;")}')">
+          <button class="player-delete-btn" title="Aus Team entfernen" onclick="confirmRemoveFromTeam(${p.id},'${escHtml(p.name).replace(/'/g,"&#39;")}',${currentTeamId})">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           </button>
         </div>
@@ -539,24 +624,40 @@ async function doDeleteTeam(id) {
 }
 
 // ── Add / Edit Player Modal ───────────────────────────────────────────────────
-let pendingAvatarFile = null;        // gewähltes Bild für noch nicht angelegten Spieler
+let pendingAvatarFile = null;
 
 function showPlayerModal(id = null, teamId = null) {
-  const p     = id ? allPlayers.find(x => x.id === id) : null;
-  const tId   = p?.team_id ?? teamId ?? currentTeamId;
-  const team  = allTeams.find(t => t.id === tId);
+  const p        = id ? allPlayers.find(x => x.id === id) : null;
+  const tId      = p?.team_id ?? teamId ?? currentTeamId;
+  const team     = allTeams.find(t => t.id === tId);
   const positions = team ? (SPORT_POSITIONS[team.sport] || ['Universal']) : ['Universal'];
-  const title = p ? 'Spieler bearbeiten' : 'Spieler hinzufügen';
+  const title    = p ? 'Spieler bearbeiten' : 'Spieler hinzufügen';
+  const playerTeamIds = p?.team_ids || (tId ? [tId] : []);
 
   pendingAvatarFile = null;
-  const initials   = (p?.name || '').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?';
-  const avColor    = posColor(p?.position || 'Universal');
+  const initials    = (p?.name || '').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?';
+  const avColor     = posColor(p?.position || 'Universal');
   const avatarInner = p?.avatar_path
     ? `<img src="${p.avatar_path.startsWith('http') ? p.avatar_path : '/uploads/' + p.avatar_path}" alt="">`
     : initials;
 
+  // Team checkboxes
+  const teamCheckboxes = allTeams.map(t => {
+    const sc      = SPORT_COLORS[t.sport] || SPORT_COLORS['Allgemein'];
+    const checked = playerTeamIds.includes(t.id);
+    return `
+      <label class="team-checkbox-opt">
+        <input type="checkbox" name="team_ids" value="${t.id}" ${checked ? 'checked' : ''}>
+        <span class="team-checkbox-label">
+          <span class="team-checkbox-dot" style="background:${sc.bg}"></span>
+          <span class="team-checkbox-name">${escHtml(t.name)}</span>
+          <span class="team-checkbox-sport">${escHtml(t.sport)}</span>
+        </span>
+      </label>`;
+  }).join('');
+
   openModal(title, `
-    <form id="player-form" onsubmit="submitPlayerForm(event,${id ?? 'null'},${tId ?? 'null'})">
+    <form id="player-form" onsubmit="submitPlayerForm(event,${id ?? 'null'})">
       <div class="player-avatar-edit">
         <div class="player-avatar-edit-preview" id="player-avatar-preview" style="background:${avColor}">${avatarInner}</div>
         <div>
@@ -588,41 +689,53 @@ function showPlayerModal(id = null, teamId = null) {
           <input type="number" name="number" value="${p?.number ?? ''}" placeholder="z.B. 10" min="1" max="99">
         </div>
       </div>
-      <div class="form-group" style="margin-top:16px">
-        <label>Status</label>
-        <div class="status-radio-row">
-          <label class="status-radio-opt">
-            <input type="radio" name="status" value="fit" ${(!p || p.status === 'fit') ? 'checked' : ''}>
-            <span class="sro-label ps-fit">Fit</span>
-          </label>
-          <label class="status-radio-opt">
-            <input type="radio" name="status" value="krank" ${p?.status === 'krank' ? 'checked' : ''}>
-            <span class="sro-label ps-krank">Krank</span>
-          </label>
-          <label class="status-radio-opt">
-            <input type="radio" name="status" value="verletzt" ${p?.status === 'verletzt' ? 'checked' : ''}>
-            <span class="sro-label ps-verletzt">Verletzt</span>
-          </label>
+      <div class="form-row" style="margin-top:16px">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Geburtstag <span class="form-optional">optional</span></label>
+          <input type="date" name="birthday" value="${p?.birthday || ''}">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Status</label>
+          <div class="status-radio-row">
+            <label class="status-radio-opt">
+              <input type="radio" name="status" value="fit" ${(!p || p.status === 'fit') ? 'checked' : ''}>
+              <span class="sro-label ps-fit">Fit</span>
+            </label>
+            <label class="status-radio-opt">
+              <input type="radio" name="status" value="krank" ${p?.status === 'krank' ? 'checked' : ''}>
+              <span class="sro-label ps-krank">Krank</span>
+            </label>
+            <label class="status-radio-opt">
+              <input type="radio" name="status" value="verletzt" ${p?.status === 'verletzt' ? 'checked' : ''}>
+              <span class="sro-label ps-verletzt">Verletzt</span>
+            </label>
+          </div>
         </div>
       </div>
-      <div class="form-group">
+      ${allTeams.length > 1 ? `
+      <div class="form-group" style="margin-top:16px">
+        <label>Teams</label>
+        <div class="team-checkboxes-grid" id="team-checkboxes">
+          ${teamCheckboxes}
+        </div>
+      </div>` : ''}
+      <div class="form-group" style="margin-top:16px">
         <label>Notizen</label>
-        <textarea name="notes" rows="3" placeholder="Stärken, besondere Anmerkungen...">${escHtml(p?.notes || '')}</textarea>
+        <textarea name="notes" rows="2" placeholder="Stärken, besondere Anmerkungen...">${escHtml(p?.notes || '')}</textarea>
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px">
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px;flex-wrap:wrap">
+        ${p ? `<button type="button" class="btn btn-ghost btn-sm" style="margin-right:auto;color:#dc2626;border-color:#fecaca" onclick="confirmDeletePlayer(${p.id},'${escHtml(p.name).replace(/'/g,"&#39;")}')">Spieler löschen</button>` : ''}
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
         <button type="submit" class="btn btn-primary">${p ? 'Speichern' : 'Hinzufügen'}</button>
       </div>
     </form>`);
 }
 
-// Bild gewählt: bei vorhandenem Spieler sofort hochladen, sonst lokal vormerken
 async function onPlayerAvatarPick(input, id) {
   const file = input.files && input.files[0];
   if (!file) return;
   if (file.size > 16 * 1024 * 1024) { showToast('Bild ist zu groß (max. 16 MB)', 'error'); input.value = ''; return; }
 
-  // Sofort-Vorschau
   const reader = new FileReader();
   reader.onload = ev => {
     const prev = document.getElementById('player-avatar-preview');
@@ -669,16 +782,24 @@ async function removePlayerAvatar(id) {
   }
 }
 
-async function submitPlayerForm(e, id, teamId) {
+async function submitPlayerForm(e, id) {
   e.preventDefault();
   const form = e.target;
+
+  // Collect team_ids from checkboxes (if shown), else use currentTeamId
+  const checkboxes = form.querySelectorAll('[name="team_ids"]:checked');
+  const team_ids   = checkboxes.length > 0
+    ? Array.from(checkboxes).map(cb => parseInt(cb.value))
+    : (currentTeamId ? [currentTeamId] : []);
+
   const data = {
     name:     form.querySelector('[name="name"]').value.trim(),
     position: form.position.value,
     number:   form.number.value ? parseInt(form.number.value) : null,
     notes:    form.notes.value.trim(),
     status:   form.querySelector('[name="status"]:checked')?.value || 'fit',
-    team_id:  teamId,
+    birthday: form.birthday?.value || null,
+    team_ids,
   };
 
   const url    = id ? `/api/players/${id}` : '/api/players';
@@ -691,7 +812,6 @@ async function submitPlayerForm(e, id, teamId) {
   });
 
   if (res.ok) {
-    // Bei neuem Spieler: vorgemerktes Bild jetzt hochladen
     if (!id && pendingAvatarFile) {
       const created = await res.json();
       const fd = new FormData();
@@ -710,11 +830,42 @@ async function submitPlayerForm(e, id, teamId) {
   }
 }
 
-// ── Delete Player ─────────────────────────────────────────────────────────────
+// ── Remove from team (soft-remove) ───────────────────────────────────────────
+function confirmRemoveFromTeam(playerId, name, teamId) {
+  const team = allTeams.find(t => t.id === teamId);
+  const p    = allPlayers.find(x => x.id === playerId);
+  const isLastTeam = (p?.team_ids || []).length <= 1;
+
+  openModal(isLastTeam ? 'Spieler entfernen' : 'Aus Team entfernen', `
+    <p style="margin-bottom:20px;color:var(--text-muted)">
+      ${isLastTeam
+        ? `<strong>${escHtml(name)}</strong> hat nur dieses Team. Spieler wirklich löschen?`
+        : `<strong>${escHtml(name)}</strong> aus <strong>${escHtml(team?.name || '')}</strong> entfernen? Der Spieler bleibt in anderen Teams erhalten.`}
+    </p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-danger" onclick="${isLastTeam ? `doDeletePlayer(${playerId})` : `doRemoveFromTeam(${playerId},${teamId})`}">
+        ${isLastTeam ? 'Löschen' : 'Entfernen'}
+      </button>
+    </div>`);
+}
+
+async function doRemoveFromTeam(playerId, teamId) {
+  const res = await fetch(`/api/players/${playerId}/teams/${teamId}`, { method: 'DELETE' });
+  if (res.ok) {
+    closeModal();
+    showToast('Spieler aus Team entfernt', 'info');
+    await loadPlayers(currentTeamId);
+  } else {
+    showToast('Fehler', 'error');
+  }
+}
+
+// ── Delete Player (full) ──────────────────────────────────────────────────────
 function confirmDeletePlayer(id, name) {
   openModal('Spieler löschen', `
     <p style="margin-bottom:20px;color:var(--text-muted)">
-      <strong>${escHtml(name)}</strong> wirklich aus dem Team entfernen?
+      <strong>${escHtml(name)}</strong> endgültig löschen? Er wird aus allen Teams entfernt.
     </p>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
@@ -726,7 +877,7 @@ async function doDeletePlayer(id) {
   const res = await fetch(`/api/players/${id}`, { method: 'DELETE' });
   if (res.ok) {
     closeModal();
-    showToast('Spieler entfernt', 'info');
+    showToast('Spieler gelöscht', 'info');
     await loadPlayers(currentTeamId);
   } else {
     showToast('Fehler', 'error');
@@ -745,9 +896,8 @@ async function showAttendanceSummary(teamId) {
   const rows = players.length === 0
     ? `<p style="color:var(--text-muted);text-align:center;padding:24px 0">Noch keine Spieler im Team.</p>`
     : players.map(p => {
-
-        const total   = p.marked_count;
-        const pct     = total > 0 ? Math.round((p.present_count / total) * 100) : null;
+        const total    = p.marked_count;
+        const pct      = total > 0 ? Math.round((p.present_count / total) * 100) : null;
         const barColor = pct === null ? '#e2e8f0' : pct >= 75 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
         const pctLabel = pct === null ? '–' : `${pct}%`;
         return `

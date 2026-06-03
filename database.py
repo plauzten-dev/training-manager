@@ -133,6 +133,77 @@ def init_db():
     except Exception:
         pass
 
+    # Migration: birthday field on players
+    try:
+        conn.execute("ALTER TABLE players ADD COLUMN birthday TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: Many-to-Many player↔team memberships
+    try:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS player_team_memberships (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_id INTEGER NOT NULL,
+                team_id   INTEGER NOT NULL,
+                FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
+                FOREIGN KEY (team_id)   REFERENCES teams(id)   ON DELETE CASCADE,
+                UNIQUE (player_id, team_id)
+            )
+        ''')
+        conn.commit()
+    except Exception:
+        pass
+
+    # Seed memberships from existing team_id column (one-time migration)
+    try:
+        conn.execute('''
+            INSERT OR IGNORE INTO player_team_memberships (player_id, team_id)
+            SELECT id, team_id FROM players WHERE team_id IS NOT NULL
+        ''')
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: role field on users (trainer/player/private)
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'trainer'")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: invite_code on players (used to link player accounts)
+    try:
+        conn.execute("ALTER TABLE players ADD COLUMN invite_code TEXT")
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_players_invite_code ON players(invite_code)")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: linked_user_id on players (the user account that claimed this player slot)
+    try:
+        conn.execute("ALTER TABLE players ADD COLUMN linked_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Generate invite codes for all existing players that don't have one yet
+    players_without_code = conn.execute('SELECT id FROM players WHERE invite_code IS NULL').fetchall()
+    for row in players_without_code:
+        while True:
+            code = secrets.token_hex(4).upper()
+            existing = conn.execute('SELECT id FROM players WHERE invite_code = ?', (code,)).fetchone()
+            if not existing:
+                break
+        conn.execute('UPDATE players SET invite_code = ? WHERE id = ?', (code, row['id']))
+    if players_without_code:
+        conn.commit()
+
     # Mark any pre-existing exercises without sport tag
     conn.execute("UPDATE exercises SET sport='Fußball' WHERE sport IS NULL OR sport=''")
     conn.commit()

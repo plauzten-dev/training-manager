@@ -92,6 +92,32 @@
 
         <!-- Register form -->
         <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+          <!-- Role selector -->
+          <div class="form-group">
+            <label>Ich bin...</label>
+            <div class="role-selector" id="role-selector">
+              <button type="button" class="role-btn active" data-role="trainer" onclick="selectRole('trainer')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Trainer
+              </button>
+              <button type="button" class="role-btn" data-role="player" onclick="selectRole('player')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                Spieler
+              </button>
+              <button type="button" class="role-btn" data-role="private" onclick="selectRole('private')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Privat
+              </button>
+            </div>
+          </div>
+          <!-- Invite code – only for players -->
+          <div class="form-group" id="invite-code-group" style="display:none">
+            <label>Einladecode <span style="color:#dc2626">*</span></label>
+            <input type="text" id="reg-invite-code" placeholder="z.B. A3B9C2D1"
+                   autocomplete="off" maxlength="8"
+                   oninput="this.value=this.value.toUpperCase().replace(/[^A-F0-9]/g,'')">
+            <p class="form-hint">Den Code bekommst du von deinem Trainer.</p>
+          </div>
           <div class="form-group">
             <label>Benutzername</label>
             <input type="text" id="reg-username" placeholder="Dein Benutzername" required autocomplete="username">
@@ -218,6 +244,23 @@
       }
     }
 
+    let selectedRole = 'trainer';
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === role));
+      const codeGroup = document.getElementById('invite-code-group');
+      const codeInput = document.getElementById('reg-invite-code');
+      if (role === 'player') {
+        codeGroup.style.display = '';
+        codeInput.required = true;
+      } else {
+        codeGroup.style.display = 'none';
+        codeInput.required = false;
+        codeInput.value = '';
+      }
+    }
+
     async function handleRegister(e) {
       e.preventDefault();
       const btn = document.getElementById('register-btn');
@@ -235,14 +278,20 @@
       btn.disabled = true;
       btn.textContent = 'Konto wird erstellt...';
 
+      const body = {
+        username: document.getElementById('reg-username').value,
+        email: document.getElementById('reg-email').value,
+        password: pw1,
+        role: selectedRole,
+      };
+      if (selectedRole === 'player') {
+        body.invite_code = document.getElementById('reg-invite-code').value;
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: document.getElementById('reg-username').value,
-          email: document.getElementById('reg-email').value,
-          password: pw1
-        })
+        body: JSON.stringify(body)
       });
       const data = await res.json();
 

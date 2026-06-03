@@ -128,13 +128,16 @@ def login_required(f):
 
 @app.context_processor
 def inject_current_avatar():
-    """Stellt das Profilbild des eingeloggten Users allen Templates bereit (für Sidebar-Avatar)."""
+    """Stellt Profilbild und Rolle des eingeloggten Users allen Templates bereit."""
     if 'user_id' not in session:
         return {}
     conn = get_db()
-    row = conn.execute('SELECT avatar_path FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    row = conn.execute('SELECT avatar_path, role FROM users WHERE id = ?', (session['user_id'],)).fetchone()
     conn.close()
-    return {'current_avatar': row['avatar_path'] if row else None}
+    return {
+        'current_avatar': row['avatar_path'] if row else None,
+        'user_role': row['role'] if row else 'trainer',
+    }
 
 
 # ── PWA ──────────────────────────────────────────────────────────────────────
@@ -213,6 +216,7 @@ def _oauth_finish(provider, oauth_id, email, display_name):
 
         session['user_id'] = user['id']
         session['username'] = user['username']
+        session['user_role'] = user['role'] if user['role'] else 'trainer'
         return redirect('/dashboard')
     except Exception:
         return redirect('/login?oauth_error=1')
@@ -367,23 +371,54 @@ def assetlinks():
 @app.route('/api/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
-    username = (data.get('username') or '').strip()
-    email = (data.get('email') or '').strip()
-    password = data.get('password') or ''
+    username    = (data.get('username') or '').strip()
+    email       = (data.get('email') or '').strip()
+    password    = data.get('password') or ''
+    role        = (data.get('role') or 'trainer').strip()
+    invite_code = (data.get('invite_code') or '').strip().upper()
+
+    if role not in ('trainer', 'player', 'private'):
+        role = 'trainer'
 
     if not username or not email or not password:
         return jsonify({'error': 'Alle Felder müssen ausgefüllt sein'}), 400
     if len(password) < 6:
         return jsonify({'error': 'Passwort muss mindestens 6 Zeichen lang sein'}), 400
+    if role == 'player' and not invite_code:
+        return jsonify({'error': 'Als Spieler ist ein Einladecode erforderlich'}), 400
 
     conn = get_db()
     try:
-        conn.execute('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-                     (username, email, hash_password(password)))
+        # Validate invite code for players
+        player_row = None
+        if role == 'player':
+            player_row = conn.execute(
+                'SELECT * FROM players WHERE invite_code = ?', (invite_code,)
+            ).fetchone()
+            if not player_row:
+                conn.close()
+                return jsonify({'error': 'Einladecode ungültig oder nicht gefunden'}), 400
+            if player_row['linked_user_id']:
+                conn.close()
+                return jsonify({'error': 'Dieser Einladecode wurde bereits verwendet'}), 400
+
+        conn.execute(
+            'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+            (username, email, hash_password(password), role)
+        )
         conn.commit()
         user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+
+        if role == 'player' and player_row:
+            conn.execute(
+                'UPDATE players SET linked_user_id = ? WHERE id = ?',
+                (user['id'], player_row['id'])
+            )
+            conn.commit()
+
         session['user_id'] = user['id']
         session['username'] = user['username']
+        session['user_role'] = role
         return jsonify({'message': 'Registrierung erfolgreich', 'username': username})
     except sqlite3.IntegrityError as e:
         msg = str(e)
@@ -413,6 +448,7 @@ def login():
 
     session['user_id'] = user['id']
     session['username'] = user['username']
+    session['user_role'] = user['role'] if user['role'] else 'trainer'
     return jsonify({'message': 'Anmeldung erfolgreich', 'username': user['username']})
 
 
@@ -435,6 +471,7 @@ def test_login():
     conn.close()
     session['user_id'] = user['id']
     session['username'] = user['username']
+    session['user_role'] = 'trainer'
     return jsonify({'message': 'Testaccount eingeloggt'})
 
 
@@ -1058,15 +1095,30 @@ def delete_team(team_id):
 def get_players():
     team_id = request.args.get('team_id')
     conn    = get_db()
-    query   = '''SELECT p.*, t.name as team_name, t.sport as team_sport
-                 FROM players p LEFT JOIN teams t ON t.id = p.team_id
-                 WHERE p.user_id = ?'''
-    params  = [session['user_id']]
     if team_id:
-        query  += ' AND p.team_id = ?'
-        params.append(int(team_id))
-    query += ' ORDER BY p.name'
-    players = [dict(r) for r in conn.execute(query, params).fetchall()]
+        rows = conn.execute(
+            '''SELECT p.*, t.name as team_name, t.sport as team_sport
+               FROM players p
+               JOIN player_team_memberships ptm ON ptm.player_id = p.id AND ptm.team_id = ?
+               LEFT JOIN teams t ON t.id = p.team_id
+               WHERE p.user_id = ?
+               ORDER BY p.name''',
+            [int(team_id), session['user_id']]
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            '''SELECT p.*, t.name as team_name, t.sport as team_sport
+               FROM players p LEFT JOIN teams t ON t.id = p.team_id
+               WHERE p.user_id = ? ORDER BY p.name''',
+            [session['user_id']]
+        ).fetchall()
+    players = [dict(r) for r in rows]
+    # Attach all team memberships per player
+    for p in players:
+        mbs = conn.execute(
+            'SELECT team_id FROM player_team_memberships WHERE player_id = ?', [p['id']]
+        ).fetchall()
+        p['team_ids'] = [m['team_id'] for m in mbs]
     conn.close()
     return jsonify(players)
 
@@ -1074,25 +1126,44 @@ def get_players():
 @app.route('/api/players', methods=['POST'])
 @login_required
 def create_player():
-    data = request.get_json()
+    data     = request.get_json()
     name     = (data.get('name') or '').strip()
     position = (data.get('position') or 'Universal').strip()
     number   = data.get('number')
     notes    = (data.get('notes') or '').strip()
     status   = (data.get('status') or 'fit').strip()
-    team_id  = data.get('team_id')
+    birthday = (data.get('birthday') or '').strip() or None
+    team_ids = data.get('team_ids') or []
+    # Backward-compat: single team_id still accepted
+    legacy   = data.get('team_id')
+    if legacy and legacy not in team_ids:
+        team_ids = [legacy] + [t for t in team_ids if t != legacy]
+    primary  = team_ids[0] if team_ids else None
 
     if not name:
         return jsonify({'error': 'Name ist erforderlich'}), 400
 
     conn = get_db()
+    # Generate unique invite code
+    while True:
+        invite_code = secrets.token_hex(4).upper()
+        if not conn.execute('SELECT id FROM players WHERE invite_code = ?', (invite_code,)).fetchone():
+            break
+
     cursor = conn.execute(
-        'INSERT INTO players (user_id, team_id, name, position, number, notes, status) VALUES (?,?,?,?,?,?,?)',
-        (session['user_id'], team_id if team_id else None, name, position,
-         number if number else None, notes, status)
+        'INSERT INTO players (user_id, team_id, name, position, number, notes, status, birthday, invite_code) VALUES (?,?,?,?,?,?,?,?,?)',
+        (session['user_id'], primary, name, position,
+         number if number else None, notes, status, birthday, invite_code)
     )
+    player_id = cursor.lastrowid
+    for tid in team_ids:
+        try:
+            conn.execute('INSERT OR IGNORE INTO player_team_memberships (player_id, team_id) VALUES (?,?)',
+                         (player_id, int(tid)))
+        except Exception:
+            pass
     conn.commit()
-    player = dict(conn.execute('SELECT * FROM players WHERE id = ?', (cursor.lastrowid,)).fetchone())
+    player = dict(conn.execute('SELECT * FROM players WHERE id = ?', (player_id,)).fetchone())
     conn.close()
     return jsonify(player), 201
 
@@ -1113,27 +1184,39 @@ def get_player(player_id):
 @app.route('/api/players/<int:player_id>', methods=['PUT'])
 @login_required
 def update_player(player_id):
-    data = request.get_json()
+    data     = request.get_json()
     name     = (data.get('name') or '').strip()
     position = (data.get('position') or 'Universal').strip()
     number   = data.get('number')
     notes    = (data.get('notes') or '').strip()
     status   = (data.get('status') or 'fit').strip()
-    team_id  = data.get('team_id')
+    birthday = (data.get('birthday') or '').strip() or None
+    team_ids = data.get('team_ids')  # None = don't touch memberships
 
     if not name:
         return jsonify({'error': 'Name ist erforderlich'}), 400
 
     conn = get_db()
-    p = conn.execute('SELECT id FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone()
-    if not p:
+    row  = conn.execute('SELECT id, team_id FROM players WHERE id = ? AND user_id = ?',
+                        (player_id, session['user_id'])).fetchone()
+    if not row:
         conn.close()
         return jsonify({'error': 'Spieler nicht gefunden'}), 404
 
+    primary = row['team_id']
+    if team_ids is not None:
+        primary = team_ids[0] if team_ids else None
+        conn.execute('DELETE FROM player_team_memberships WHERE player_id = ?', (player_id,))
+        for tid in team_ids:
+            try:
+                conn.execute('INSERT OR IGNORE INTO player_team_memberships (player_id, team_id) VALUES (?,?)',
+                             (player_id, int(tid)))
+            except Exception:
+                pass
+
     conn.execute(
-        'UPDATE players SET name=?, position=?, number=?, notes=?, status=?, team_id=? WHERE id=?',
-        (name, position, number if number else None, notes, status,
-         team_id if team_id else None, player_id)
+        'UPDATE players SET name=?, position=?, number=?, notes=?, status=?, team_id=?, birthday=? WHERE id=?',
+        (name, position, number if number else None, notes, status, primary, birthday, player_id)
     )
     conn.commit()
     player = dict(conn.execute('SELECT * FROM players WHERE id = ?', (player_id,)).fetchone())
@@ -1159,6 +1242,24 @@ def update_player_status(player_id):
     return jsonify({'message': 'Status aktualisiert'})
 
 
+@app.route('/api/players/<int:player_id>/regenerate-invite', methods=['POST'])
+@login_required
+def regenerate_invite_code(player_id):
+    conn = get_db()
+    p = conn.execute('SELECT id FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone()
+    if not p:
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    while True:
+        code = secrets.token_hex(4).upper()
+        if not conn.execute('SELECT id FROM players WHERE invite_code = ?', (code,)).fetchone():
+            break
+    conn.execute('UPDATE players SET invite_code = ?, linked_user_id = NULL WHERE id = ?', (code, player_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'invite_code': code})
+
+
 @app.route('/api/players/<int:player_id>', methods=['DELETE'])
 @login_required
 def delete_player(player_id):
@@ -1174,6 +1275,30 @@ def delete_player(player_id):
     if avatar:
         _delete_image(avatar)
     return jsonify({'message': 'Spieler gelöscht'})
+
+
+@app.route('/api/players/<int:player_id>/teams/<int:team_id>', methods=['DELETE'])
+@login_required
+def remove_player_from_team(player_id, team_id):
+    """Spieler aus einem Team entfernen (ohne ihn zu löschen)."""
+    conn = get_db()
+    row  = conn.execute('SELECT id, team_id FROM players WHERE id = ? AND user_id = ?',
+                        (player_id, session['user_id'])).fetchone()
+    if not row:
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
+    conn.execute('DELETE FROM player_team_memberships WHERE player_id = ? AND team_id = ?',
+                 (player_id, team_id))
+    # If this was the primary team, promote next membership to primary
+    if row['team_id'] == team_id:
+        nxt = conn.execute(
+            'SELECT team_id FROM player_team_memberships WHERE player_id = ? LIMIT 1', (player_id,)
+        ).fetchone()
+        conn.execute('UPDATE players SET team_id = ? WHERE id = ?',
+                     (nxt['team_id'] if nxt else None, player_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Spieler aus Team entfernt'})
 
 
 @app.route('/api/players/<int:player_id>/avatar', methods=['POST'])
@@ -1232,15 +1357,21 @@ def get_attendance(training_id):
         conn.close()
         return jsonify({'error': 'Training nicht gefunden'}), 404
 
-    query  = '''SELECT p.id, p.name, p.position, p.number, p.status, p.team_id, ta.present
-                FROM players p
-                LEFT JOIN training_attendance ta ON ta.player_id = p.id AND ta.training_id = ?
-                WHERE p.user_id = ?'''
-    params = [training_id, session['user_id']]
     if team_id:
-        query  += ' AND p.team_id = ?'
-        params.append(int(team_id))
-    query += ' ORDER BY p.name'
+        query = '''SELECT p.id, p.name, p.position, p.number, p.status, p.team_id, ta.present
+                   FROM players p
+                   JOIN player_team_memberships ptm ON ptm.player_id = p.id AND ptm.team_id = ?
+                   LEFT JOIN training_attendance ta ON ta.player_id = p.id AND ta.training_id = ?
+                   WHERE p.user_id = ?
+                   ORDER BY p.name'''
+        params = [int(team_id), training_id, session['user_id']]
+    else:
+        query = '''SELECT p.id, p.name, p.position, p.number, p.status, p.team_id, ta.present
+                   FROM players p
+                   LEFT JOIN training_attendance ta ON ta.player_id = p.id AND ta.training_id = ?
+                   WHERE p.user_id = ?
+                   ORDER BY p.name'''
+        params = [training_id, session['user_id']]
 
     rows = conn.execute(query, params).fetchall()
     conn.close()
@@ -1286,8 +1417,12 @@ def set_all_attendance(training_id):
         return jsonify({'error': 'Training nicht gefunden'}), 404
 
     if team_id:
-        players = conn.execute('SELECT id FROM players WHERE user_id = ? AND team_id = ?',
-                               (session['user_id'], int(team_id))).fetchall()
+        players = conn.execute(
+            '''SELECT p.id FROM players p
+               JOIN player_team_memberships ptm ON ptm.player_id = p.id AND ptm.team_id = ?
+               WHERE p.user_id = ?''',
+            (int(team_id), session['user_id'])
+        ).fetchall()
     else:
         players = conn.execute('SELECT id FROM players WHERE user_id = ?', (session['user_id'],)).fetchall()
 

@@ -316,6 +316,45 @@ textarea { resize: vertical; min-height: 90px; }
 .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 .auth-tab:hover:not(.active) { color: var(--text); }
 
+/* ── Role selector (Registrierung) ─────────────────────────────────────────── */
+.role-selector {
+  display: flex; gap: 8px;
+}
+.role-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px; border: 2px solid var(--border); border-radius: 10px;
+  background: var(--surface); color: var(--text-muted); cursor: pointer;
+  font-size: 0.78rem; font-weight: 600; transition: all 0.15s;
+}
+.role-btn svg { opacity: 0.6; transition: opacity 0.15s; }
+.role-btn:hover { border-color: var(--primary); color: var(--primary); }
+.role-btn:hover svg { opacity: 1; }
+.role-btn.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+.role-btn.active svg { opacity: 1; }
+
+.form-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+/* ── Invite code row on player cards ────────────────────────────────────────── */
+.player-invite-row {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px; padding: 5px 8px;
+  background: #f8fafc; border: 1px solid var(--border); border-radius: 7px;
+  font-size: 0.75rem;
+}
+.invite-code-label { color: var(--text-muted); font-weight: 500; }
+.invite-code-value { font-family: monospace; font-weight: 700; color: var(--text); letter-spacing: 0.05em; flex: 1; }
+.invite-copy-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border: none; background: none;
+  color: var(--text-muted); cursor: pointer; border-radius: 4px; flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.invite-copy-btn:hover { color: var(--primary); background: #eff6ff; }
+.invite-linked-badge {
+  display: flex; align-items: center; gap: 4px;
+  color: var(--success); font-weight: 600; font-size: 0.75rem;
+}
+
 /* TODO: VOR RELEASE ENTFERNEN */
 .btn-test-login {
   display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -1817,6 +1856,111 @@ input.team-search-input:focus {
 .ps-krank::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #d97706; }
 .ps-verletzt         { background: #fee2e2; color: #991b1b; }
 .ps-verletzt::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #dc2626; }
+
+/* Name + Age row */
+.player-card-name-row {
+  display: flex; align-items: center; gap: 6px; justify-content: center;
+}
+.player-age-chip {
+  font-size: 0.67rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+  background: #f1f5f9; color: var(--text-muted); flex-shrink: 0;
+}
+
+/* Other teams badges */
+.player-other-teams {
+  display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;
+}
+.player-other-team-badge {
+  font-size: 0.62rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid; letter-spacing: 0.01em; white-space: nowrap;
+}
+.player-other-team-more {
+  font-size: 0.62rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+  background: #f1f5f9; color: var(--text-muted);
+}
+
+/* ── Birthday Easter Egg ──────────────────────────────────────────────────── */
+@keyframes bd-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0), var(--shadow); }
+  50%       { box-shadow: 0 0 0 4px rgba(251,191,36,0.35), 0 8px 28px rgba(251,191,36,0.25); }
+}
+@keyframes bd-dot {
+  0%   { transform: translateY(0) scale(1); opacity: 0.9; }
+  100% { transform: translateY(-48px) scale(0.2); opacity: 0; }
+}
+
+.player-card.is-birthday {
+  border-color: #fbbf24;
+  animation: bd-glow 2.2s ease-in-out infinite;
+  overflow: visible;
+}
+.player-card.is-birthday .player-card-top {
+  background: linear-gradient(135deg, #92400e, #d97706, #fbbf24) !important;
+}
+
+/* Confetti dots inside card */
+.birthday-confetti {
+  position: absolute; inset: 0; border-radius: 14px; pointer-events: none;
+  overflow: hidden; z-index: 0;
+}
+.player-card { position: relative; }
+.birthday-confetti::before,
+.birthday-confetti::after {
+  content: '';
+  position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  animation: bd-dot 1.6s ease-in infinite;
+}
+.birthday-confetti::before {
+  left: 22%; top: 50%; background: #fbbf24;
+  animation-delay: 0s;
+}
+.birthday-confetti::after {
+  left: 68%; top: 45%; background: #a78bfa;
+  animation-delay: 0.8s;
+}
+
+/* Birthday banner inside card */
+.birthday-banner {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 999px;
+  background: linear-gradient(90deg, #fef3c7, #fde68a);
+  color: #92400e; font-size: 0.72rem; font-weight: 700;
+  border: 1px solid #fbbf24; position: relative; z-index: 1;
+}
+
+/* ── Multi-Team checkboxes in modal ──────────────────────────────────────── */
+.team-checkboxes-grid {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 160px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 10px; padding: 8px;
+  background: var(--bg);
+}
+.team-checkbox-opt {
+  display: flex; align-items: center; cursor: pointer;
+}
+.team-checkbox-opt input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: var(--primary);
+  cursor: pointer; flex-shrink: 0; margin-right: 10px;
+}
+.team-checkbox-label {
+  display: flex; align-items: center; gap: 7px; flex: 1; user-select: none;
+  padding: 4px 0;
+}
+.team-checkbox-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.team-checkbox-name {
+  font-size: 0.85rem; font-weight: 600; color: var(--text);
+}
+.team-checkbox-sport {
+  font-size: 0.75rem; color: var(--text-muted);
+}
+
+/* Optional label in form */
+.form-optional {
+  font-size: 0.72rem; font-weight: 400; color: var(--text-muted);
+  margin-left: 4px;
+}
 
 .player-card-notes {
   font-size: 0.78rem; color: var(--text-muted); line-height: 1.45;
