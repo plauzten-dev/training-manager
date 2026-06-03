@@ -1,7 +1,38 @@
 # Training Manager – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 27. Mai 2026
-> Status: ✅ Version 0.25 – Mobile Nav + Mein Team Mobile Fixes
+> Zuletzt aktualisiert: 03. Juni 2026
+> Status: ✅ Version B.0.46 – Geburtstag + Multi-Team (Issue #5 + #7)
+
+---
+
+## B.0.46 – Änderungen (03.06.2026)
+
+### Issue #5 – Geburtsdatum + Altersberechnung (optionales Spielerprofil-Feld)
+- [x] `database.py` – Migration: `birthday TEXT` Spalte zu `players`
+- [x] `app.py` – `create_player` + `update_player` akzeptieren `birthday`; API gibt `birthday` zurück
+- [x] `players.js` – Geburtstagsfeld im Spieler-Modal (`type="date"`, optional), Hilfsfunktionen `isBirthdayToday()`, `calcAge()`, `formatBirthdayDisplay()`
+- [x] `players.js` – Alters-Chip ("24 J.") neben dem Spielernamen auf der Karte
+- [x] `players.js` + `style.css` – Birthday Easter Egg: Goldener Glimmrand (CSS-Animation `bd-glow`), warmgoldener Farbverlauf im Card-Header, Konfetti-Punkte-Animation (`:before`/`:after`), "Heute Geburtstag!"-Banner mit Kuchen-Icon
+
+### Issue #7 – Spieler mehreren Teams zuordnen
+- [x] `database.py` – Neue Tabelle `player_team_memberships (player_id, team_id, UNIQUE)`, Migration: bestehende `team_id`-Daten in Memberships übertragen
+- [x] `app.py` – `GET /api/players?team_id=X`: JOIN über Memberships statt direkter `team_id`-Spalte; API gibt `team_ids: [...]` pro Spieler zurück
+- [x] `app.py` – `POST/PUT /api/players`: akzeptieren `team_ids: [...]`, Memberships werden synchronisiert; `team_id` Spalte = erstes Team (für Backwards-Compat)
+- [x] `app.py` – Neuer Endpoint `DELETE /api/players/<id>/teams/<team_id>` – Spieler aus einem Team entfernen ohne ihn zu löschen
+- [x] `app.py` – Attendance-Routen nutzen Memberships-JOIN statt `team_id`-Filter
+- [x] `players.js` – Spieler-Modal: Multi-Team-Checkboxen (alle eigenen Teams, aktive vorgehakt) wenn mehr als 1 Team vorhanden
+- [x] `players.js` – Spielerkarte: Team-Badges für andere Teams; "Aus Team entfernen"-Dialog (smart: letztes Team → vollständige Löschung); "Spieler löschen" in Bearbeiten-Modal
+- [x] `style.css` – Styles für Alters-Chip, Other-Team-Badges, Birthday-Glow/Konfetti/Banner, Multi-Team-Checkboxes, `.form-optional`
+
+---
+
+## Weit-Zukunft-Ideen (nicht geplant)
+
+### Erweiterte Terminorganisation (vorgeschlagen von: **mad-directory**, GitHub Issue #8)
+> **Wichtig: Sehr weit in der Zukunft – nicht in naher Roadmap.**
+> Idee: Serientermine, Spiele, Turniere, sonstige Termine mit Uhrzeiten und Standorten.
+> Diese Funktion würde die App grundlegend um einen zweiten Kalender-Typ erweitern.
+> Aufwand: Hoch (neues DB-Schema, Kalender-Erweiterung, neue UI-Typen, Standortverwaltung).
 
 ---
 
