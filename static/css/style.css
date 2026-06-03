@@ -1646,6 +1646,21 @@ textarea { resize: vertical; min-height: 90px; }
 .mt-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
 .mt-card:active { transform: scale(0.985); }
 
+/* Trainer-Training Hervorhebung (für Spieler) */
+.mt-card-trainer {
+  border-left: 3px solid #2563eb;
+  background: linear-gradient(to right, #eff6ff 0%, #fff 60%);
+}
+.mt-card-date-trainer {
+  background: linear-gradient(145deg, #1e3a8a 0%, #3b82f6 100%) !important;
+}
+.mt-trainer-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.7rem; font-weight: 600; color: #2563eb;
+  background: #dbeafe; border-radius: 4px;
+  padding: 1px 6px; margin-right: 6px;
+}
+
 /* Date badge */
 .mt-card-date {
   display: flex; flex-direction: column; align-items: center; justify-content: center;

@@ -100,29 +100,41 @@ function renderAll(trainings) {
 }
 
 function trainingCardHTML(t) {
-  const d       = new Date(t.date + 'T00:00:00');
-  const mon     = MONTHS_SHORT[d.getMonth()];
-  const day     = d.getDate();
-  const wd      = WEEKDAYS[d.getDay()];
-  const exCount = t.exercise_count ?? 0;
+  const d            = new Date(t.date + 'T00:00:00');
+  const mon          = MONTHS_SHORT[d.getMonth()];
+  const day          = d.getDate();
+  const wd           = WEEKDAYS[d.getDay()];
+  const exCount      = t.exercise_count ?? 0;
+  const isTrainerT   = t.owned_by_me === false;  // Spieler sieht Trainer-Training
+  const cardClass    = isTrainerT ? ' mt-card-trainer' : '';
+  const trainerBadge = isTrainerT ? `
+    <div class="mt-trainer-badge">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Vom Trainer
+    </div>` : '';
 
   return `
-    <div class="mt-card" onclick="window.location.href='/training/${t.id}'">
-      <div class="mt-card-date">
+    <div class="mt-card${cardClass}" onclick="window.location.href='/training/${t.id}'">
+      <div class="mt-card-date${isTrainerT ? ' mt-card-date-trainer' : ''}">
         <span class="mt-card-month">${mon}</span>
         <span class="mt-card-day">${day}</span>
         <span class="mt-card-wd">${wd}</span>
       </div>
       <div class="mt-card-body">
         <div class="mt-card-title">${escHtml(t.title)}</div>
-        <div class="mt-card-meta">${exCount} Übung${exCount !== 1 ? 'en' : ''}</div>
+        <div class="mt-card-meta">${trainerBadge}${exCount} Übung${exCount !== 1 ? 'en' : ''}</div>
       </div>
       <div class="mt-card-actions">
-        <button class="mt-repeat-btn"
+        ${!isTrainerT ? `<button class="mt-repeat-btn"
           title="Wiederholen"
           onclick="event.stopPropagation(); showRepeatModal(${t.id}, '${escHtml(t.title).replace(/'/g,"\\'")}')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
-        </button>
+        </button>` : ''}
         <svg class="mt-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>`;

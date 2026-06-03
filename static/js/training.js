@@ -21,7 +21,12 @@ let attTeams    = [];
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await loadTraining();
-  fetchAttTeams();
+  if (USER_ROLE === 'trainer') {
+    fetchAttTeams();
+  } else if (USER_ROLE === 'player') {
+    loadMyAttendance();
+  }
+  // private: keine Anwesenheit
 }
 
 async function fetchAttTeams() {
@@ -48,6 +53,11 @@ async function loadTraining() {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function renderPage() {
+  // canEdit: Trainer immer, Privat immer, Spieler nur bei eigenem Training
+  const canEdit = USER_ROLE === 'trainer' || USER_ROLE === 'private' || (USER_ROLE === 'player' && training.owned_by_me);
+  const isTrainerTraining = USER_ROLE === 'player' && !training.owned_by_me;
+  window._canEdit = canEdit;
+  window._isTrainerTraining = isTrainerTraining;
   const dateObj = new Date(training.date + 'T00:00:00');
   const displayDate = `${dateObj.getDate()}. ${MONTHS_DE[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
 
@@ -64,20 +74,22 @@ function renderPage() {
           </div>
         </div>
         <div class="training-actions">
+          ${canEdit ? `
           <button class="btn btn-ghost btn-sm" onclick="showEditModal()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Bearbeiten
-          </button>
+          </button>` : ''}
           <a href="/training/${TRAINING_ID}/pdf" target="_blank" class="btn btn-ghost btn-sm" title="Als PDF exportieren">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             PDF
           </a>
+          ${canEdit ? `
           <button class="btn btn-danger btn-sm" onclick="confirmDeleteTraining()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
-          <a href="/calendar" class="btn btn-ghost btn-sm">
+          </button>` : ''}
+          <a href="/my-trainings" class="btn btn-ghost btn-sm">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-            Kalender
+            Zurück
           </a>
         </div>
       </div>
@@ -85,11 +97,14 @@ function renderPage() {
       <!-- Notes -->
       <div class="training-notes-card">
         <div class="notes-label">Notizen</div>
-        <textarea class="notes-textarea" id="notes-area" placeholder="Notizen zum Training..."
-          oninput="scheduleNotesSave()">${escHtml(training.notes || '')}</textarea>
-        <div class="notes-save-row">
-          <span id="notes-status" style="font-size:0.78rem;color:var(--text-muted)"></span>
-        </div>
+        ${canEdit
+          ? `<textarea class="notes-textarea" id="notes-area" placeholder="Notizen zum Training..."
+               oninput="scheduleNotesSave()">${escHtml(training.notes || '')}</textarea>
+             <div class="notes-save-row">
+               <span id="notes-status" style="font-size:0.78rem;color:var(--text-muted)"></span>
+             </div>`
+          : `<div class="notes-readonly">${training.notes ? escHtml(training.notes) : '<span style="color:var(--text-muted);font-size:0.85rem">Keine Notizen</span>'}</div>`
+        }
       </div>
 
       <!-- Exercises -->
@@ -101,13 +116,15 @@ function renderPage() {
         <div class="exercise-list" id="exercise-list">
           ${renderExerciseList()}
         </div>
+        ${canEdit ? `
         <button class="add-exercise-btn" onclick="showAddExerciseModal()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Übung hinzufügen
-        </button>
+        </button>` : ''}
       </div>
 
-      <!-- Anwesenheit -->
+      <!-- Anwesenheit: Trainer sieht vollen Block, Spieler bei Trainer-Training eigenen Status, sonst nichts -->
+      ${USER_ROLE === 'trainer' ? `
       <div class="attendance-section" id="attendance-section">
         <div class="section-header">
           <span class="section-title">Anwesenheit</span>
@@ -127,7 +144,15 @@ function renderPage() {
             <div class="spinner" style="width:22px;height:22px;border-width:2px;margin:0 auto"></div>
           </div>
         </div>
-      </div>
+      </div>` : isTrainerTraining ? `
+      <div class="attendance-section" id="attendance-section">
+        <div class="section-header">
+          <span class="section-title">Meine Anwesenheit</span>
+        </div>
+        <div id="my-attendance-block" style="padding:8px 0">
+          <div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto"></div>
+        </div>
+      </div>` : ''}
 
     </div>`;
   attachDragHandlers();
@@ -157,8 +182,8 @@ function exerciseItemHTML(e, i) {
     : `<div class="field-placeholder ${bgClass}" style="width:100%;height:100%">${svgSmall}</div>`;
 
   return `
-    <div class="exercise-list-item" id="ex-item-${e.id}" draggable="true" data-id="${e.id}">
-      <div class="drag-handle" title="Ziehen zum Sortieren">${DRAG_HANDLE_SVG}</div>
+    <div class="exercise-list-item" id="ex-item-${e.id}" ${window._canEdit ? 'draggable="true"' : ''} data-id="${e.id}">
+      ${window._canEdit ? `<div class="drag-handle" title="Ziehen zum Sortieren">${DRAG_HANDLE_SVG}</div>` : ''}
       <div class="exercise-list-thumb">${thumbHTML}</div>
       <div class="exercise-list-info">
         <div class="exercise-list-title">${escHtml(e.title)}</div>
@@ -169,9 +194,10 @@ function exerciseItemHTML(e, i) {
           <span class="badge ${diffBadge(e.difficulty)}" style="font-size:0.7rem">${e.difficulty}</span>
         </div>
       </div>
+      ${window._canEdit ? `
       <button class="exercise-list-remove" title="Entfernen" onclick="removeExercise(${e.id})">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      </button>` : ''}
     </div>`;
 }
 
@@ -473,6 +499,49 @@ async function saveDragOrder() {
     body: JSON.stringify({ order })
   });
   if (!res.ok) showToast('Reihenfolge konnte nicht gespeichert werden', 'error');
+}
+
+// ── Player: eigene Anwesenheit ────────────────────────────────────────────────
+async function loadMyAttendance() {
+  const block = document.getElementById('my-attendance-block');
+  if (!block) return;
+  const res  = await fetch(`/api/trainings/${TRAINING_ID}/my-attendance`);
+  if (!res.ok) { block.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem">Fehler beim Laden</p>'; return; }
+  const data = await res.json();
+  renderMyAttendance(data);
+}
+
+function renderMyAttendance(data) {
+  const block = document.getElementById('my-attendance-block');
+  if (!block) return;
+  const present = data.present;
+  block.innerHTML = `
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px">Bist du bei diesem Training dabei?</p>
+    <div style="display:flex;gap:8px">
+      <button onclick="setMyAttendance(true)" class="btn btn-sm${present === 1 ? ' btn-primary' : ' btn-ghost'}" style="flex:1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Ja, ich bin dabei
+      </button>
+      <button onclick="setMyAttendance(false)" class="btn btn-sm${present === 0 ? ' btn-danger' : ' btn-ghost'}" style="flex:1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Nein, ich fehle
+      </button>
+    </div>`;
+}
+
+async function setMyAttendance(present) {
+  const res = await fetch(`/api/trainings/${TRAINING_ID}/my-attendance`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ present })
+  });
+  if (res.ok) {
+    const data = await res.json();
+    renderMyAttendance({ present: data.present });
+    showToast(present ? 'Anwesenheit bestätigt' : 'Abwesenheit vermerkt');
+  } else {
+    showToast('Fehler beim Speichern', 'error');
+  }
 }
 
 // ── Attendance ────────────────────────────────────────────────────────────────

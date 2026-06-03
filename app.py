@@ -126,6 +126,24 @@ def login_required(f):
     return decorated
 
 
+def _get_user_role(user_id):
+    """Liest die Rolle des Users direkt aus der DB (zuverlässiger als Session)."""
+    conn = get_db()
+    row = conn.execute('SELECT role FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+    return row['role'] if row else 'trainer'
+
+
+def _get_player_trainer_id(user_id):
+    """Gibt die user_id des Trainers zurück, der den verknüpften Spieler besitzt. Oder None."""
+    conn = get_db()
+    player = conn.execute(
+        'SELECT user_id FROM players WHERE linked_user_id = ?', (user_id,)
+    ).fetchone()
+    conn.close()
+    return player['user_id'] if player else None
+
+
 @app.context_processor
 def inject_current_avatar():
     """Stellt Profilbild und Rolle des eingeloggten Users allen Templates bereit."""
@@ -717,29 +735,51 @@ def delete_exercise(exercise_id):
 @login_required
 def get_trainings():
     month = request.args.get('month')
-    conn = get_db()
+    conn  = get_db()
+    uid   = session['user_id']
 
-    if month:
-        rows = conn.execute(
+    # Rolle und Trainer-ID in derselben Verbindung holen
+    user_row = conn.execute('SELECT role FROM users WHERE id = ?', (uid,)).fetchone()
+    user_role = user_row['role'] if user_row else 'trainer'
+
+    trainer_id = None
+    if user_role == 'player':
+        p = conn.execute('SELECT user_id FROM players WHERE linked_user_id = ?', (uid,)).fetchone()
+        if p:
+            trainer_id = p['user_id']
+
+    def _fetch(user_id):
+        if month:
+            return conn.execute(
+                """SELECT t.*, COUNT(te.id) as exercise_count
+                   FROM trainings t LEFT JOIN training_exercises te ON t.id = te.training_id
+                   WHERE t.user_id = ? AND strftime('%Y-%m', t.date) = ?
+                   GROUP BY t.id ORDER BY t.date""",
+                (user_id, month)
+            ).fetchall()
+        return conn.execute(
             """SELECT t.*, COUNT(te.id) as exercise_count
-               FROM trainings t
-               LEFT JOIN training_exercises te ON t.id = te.training_id
-               WHERE t.user_id = ? AND strftime('%Y-%m', t.date) = ?
-               GROUP BY t.id ORDER BY t.date""",
-            (session['user_id'], month)
-        ).fetchall()
-    else:
-        rows = conn.execute(
-            """SELECT t.*, COUNT(te.id) as exercise_count
-               FROM trainings t
-               LEFT JOIN training_exercises te ON t.id = te.training_id
+               FROM trainings t LEFT JOIN training_exercises te ON t.id = te.training_id
                WHERE t.user_id = ?
                GROUP BY t.id ORDER BY t.date DESC""",
-            (session['user_id'],)
+            (user_id,)
         ).fetchall()
 
+    result = [dict(r) for r in _fetch(uid)]
+    for t in result:
+        t['owned_by_me'] = True
+
+    # Spieler: zusätzlich Trainer-Trainings anhängen
+    if trainer_id:
+        trainer_rows = [dict(r) for r in _fetch(trainer_id)]
+        for t in trainer_rows:
+            t['owned_by_me'] = False
+        result = result + trainer_rows
+        result.sort(key=lambda x: x['date'], reverse=True)
+
     conn.close()
-    return jsonify([dict(r) for r in rows])
+    return jsonify(result)
+
 
 
 @app.route('/api/trainings', methods=['POST'])
@@ -768,9 +808,24 @@ def create_training():
 @login_required
 def get_training(training_id):
     conn = get_db()
+    uid  = session['user_id']
+
     training = conn.execute(
-        'SELECT * FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])
+        'SELECT * FROM trainings WHERE id = ? AND user_id = ?', (training_id, uid)
     ).fetchone()
+    owned_by_me = training is not None
+
+    # Spieler dürfen Trainings ihres Trainers lesen (read-only)
+    if not training:
+        user_row = conn.execute('SELECT role FROM users WHERE id = ?', (uid,)).fetchone()
+        if user_row and user_row['role'] == 'player':
+            p = conn.execute('SELECT user_id FROM players WHERE linked_user_id = ?', (uid,)).fetchone()
+            if p:
+                training = conn.execute(
+                    'SELECT * FROM trainings WHERE id = ? AND user_id = ?', (training_id, p['user_id'])
+                ).fetchone()
+                owned_by_me = False
+
     if not training:
         conn.close()
         return jsonify({'error': 'Training nicht gefunden'}), 404
@@ -785,6 +840,7 @@ def get_training(training_id):
 
     result = dict(training)
     result['exercises'] = [dict(e) for e in exercises]
+    result['owned_by_me'] = owned_by_me
     return jsonify(result)
 
 
@@ -939,25 +995,45 @@ def dashboard_api():
     conn    = get_db()
     today   = datetime.date.today()
 
-    training_count_month = conn.execute(
-        'SELECT COUNT(*) FROM trainings WHERE user_id=? AND date >= ?',
-        (user_id, today.replace(day=1).isoformat())
-    ).fetchone()[0]
+    # Spieler: eigene Stats + Trainer-Stats zusammenführen
+    trainer_id = None
+    if _get_user_role(session['user_id']) == 'player':
+        trainer_id = _get_player_trainer_id(user_id)
 
-    total_trainings = conn.execute(
-        'SELECT COUNT(*) FROM trainings WHERE user_id=?', (user_id,)
-    ).fetchone()[0]
+    month_start = today.replace(day=1).isoformat()
+    if trainer_id:
+        training_count_month = conn.execute(
+            'SELECT COUNT(*) FROM trainings WHERE (user_id=? OR user_id=?) AND date >= ?',
+            (user_id, trainer_id, month_start)
+        ).fetchone()[0]
+        total_trainings = conn.execute(
+            'SELECT COUNT(*) FROM trainings WHERE user_id=? OR user_id=?', (user_id, trainer_id)
+        ).fetchone()[0]
+    else:
+        training_count_month = conn.execute(
+            'SELECT COUNT(*) FROM trainings WHERE user_id=? AND date >= ?',
+            (user_id, month_start)
+        ).fetchone()[0]
+        total_trainings = conn.execute(
+            'SELECT COUNT(*) FROM trainings WHERE user_id=?', (user_id,)
+        ).fetchone()[0]
 
     total_exercises = conn.execute('SELECT COUNT(*) FROM exercises').fetchone()[0]
 
     upcoming = []
     for i in range(4):
         day = (today + datetime.timedelta(days=i)).isoformat()
-        trainings = [dict(r) for r in conn.execute(
+        own_t = [dict(r) | {'from_trainer': False} for r in conn.execute(
             'SELECT id, title FROM trainings WHERE user_id=? AND date=? ORDER BY created_at',
             (user_id, day)
         ).fetchall()]
-        upcoming.append({'date': day, 'trainings': trainings})
+        trainer_t = []
+        if trainer_id:
+            trainer_t = [dict(r) | {'from_trainer': True} for r in conn.execute(
+                'SELECT id, title FROM trainings WHERE user_id=? AND date=? ORDER BY created_at',
+                (trainer_id, day)
+            ).fetchall()]
+        upcoming.append({'date': day, 'trainings': own_t + trainer_t})
 
     suggested = [dict(r) for r in conn.execute(
         "SELECT id, title, core_competency, difficulty, sport FROM exercises "
@@ -1434,6 +1510,40 @@ def set_all_attendance(training_id):
     conn.commit()
     conn.close()
     return jsonify({'message': f'{len(players)} Spieler markiert', 'count': len(players)})
+
+
+@app.route('/api/trainings/<int:training_id>/my-attendance', methods=['GET', 'PUT'])
+@login_required
+def my_attendance(training_id):
+    """Spieler markiert/liest seine eigene Anwesenheit für ein Training."""
+    conn = get_db()
+    player = conn.execute(
+        'SELECT * FROM players WHERE linked_user_id = ?', (session['user_id'],)
+    ).fetchone()
+    if not player:
+        conn.close()
+        return jsonify({'error': 'Kein Spielerprofil verknüpft'}), 404
+
+    if request.method == 'GET':
+        att = conn.execute(
+            'SELECT present FROM training_attendance WHERE training_id = ? AND player_id = ?',
+            (training_id, player['id'])
+        ).fetchone()
+        conn.close()
+        return jsonify({
+            'player_name': player['name'],
+            'present': att['present'] if att else None
+        })
+
+    data = request.get_json()
+    present = 1 if data.get('present') else 0
+    conn.execute(
+        'INSERT OR REPLACE INTO training_attendance (training_id, player_id, present) VALUES (?,?,?)',
+        (training_id, player['id'], present)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Anwesenheit gespeichert', 'present': present})
 
 
 @app.route('/api/teams/<int:team_id>/attendance-summary', methods=['GET'])
