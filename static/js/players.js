@@ -5,7 +5,7 @@ const SPORT_POSITIONS = {
   'Basketball': ['Point Guard', 'Shooting Guard', 'Small Forward', 'Power Forward', 'Center'],
   'Volleyball': ['Libero', 'Außenangreifer', 'Mittelangreifer', 'Zuspieler', 'Diagonal'],
   'Tennis':     ['Einzel', 'Doppel', 'Universal'],
-  'Floorball':  ['Torwart', 'Verteidiger', 'Mittelfeld', 'Stürmer'],
+  'Floorball':  ['Torwart', 'Verteidiger', 'Stürmer'],
   'Gym':        ['Universal'],
   'Allgemein':  ['Universal'],
 };
@@ -107,7 +107,62 @@ function renderTeamTabs() {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Neues Team
     </button>`;
+  updateMobileTeamSelector();
 }
+
+function updateMobileTeamSelector() {
+  const team = allTeams.find(t => t.id === currentTeamId);
+  const sc   = team ? (SPORT_COLORS[team.sport] || SPORT_COLORS['Allgemein']) : null;
+  const dot  = document.getElementById('mob-team-dot');
+  const name = document.getElementById('mob-team-name');
+  const sport = document.getElementById('mob-team-sport');
+  if (dot && name && sport && team) {
+    dot.style.cssText   = `background:${sc.bg};width:10px;height:10px;border-radius:50%;flex-shrink:0`;
+    name.textContent    = team.name;
+    sport.textContent   = team.sport;
+  }
+  const dd = document.getElementById('team-dropdown');
+  if (!dd) return;
+  dd.innerHTML = allTeams.map(t => {
+    const sc2   = SPORT_COLORS[t.sport] || SPORT_COLORS['Allgemein'];
+    const active = t.id === currentTeamId;
+    return `<div class="team-dropdown-item${active ? ' active' : ''}" onclick="selectTeamMobile(${t.id})">
+      <span class="team-tab-dot" style="background:${sc2.bg};width:10px;height:10px;border-radius:50%;flex-shrink:0"></span>
+      <span class="team-dropdown-item-info">
+        <span class="team-dropdown-item-name">${escHtml(t.name)}</span>
+        <span class="team-dropdown-item-sport">${escHtml(t.sport)}</span>
+      </span>
+      ${active ? `<svg class="team-dropdown-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 12 4 9"/></svg>` : ''}
+    </div>`;
+  }).join('') + `
+    <div class="team-dropdown-add" onclick="showCreateTeamModal();closeTeamDropdown()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Neues Team
+    </div>`;
+}
+
+function toggleTeamDropdown(e) {
+  e.stopPropagation();
+  const btn = document.getElementById('team-selector-btn');
+  const dd  = document.getElementById('team-dropdown');
+  const open = dd.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+function closeTeamDropdown() {
+  const btn = document.getElementById('team-selector-btn');
+  const dd  = document.getElementById('team-dropdown');
+  if (!dd) return;
+  dd.classList.remove('open');
+  btn.classList.remove('open');
+}
+
+function selectTeamMobile(id) {
+  closeTeamDropdown();
+  selectTeam(id);
+}
+
+document.addEventListener('click', closeTeamDropdown);
 
 async function selectTeam(id) {
   currentTeamId  = id;

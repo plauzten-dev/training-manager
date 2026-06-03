@@ -195,10 +195,13 @@ async function loadDashboard() {
     const isToday = date === todayStr;
     const dayName  = idx < 3 ? REL_LABELS[idx] : SHORT_DAYS[d.getDay()];
     const dateNum  = `${d.getDate()}. ${MONTHS[d.getMonth()]}`;
+    const maxShow   = window.innerWidth <= 640 ? 2 : 3;
+    const shown     = trainings.slice(0, maxShow);
+    const extra     = trainings.length - maxShow;
     const trainHtml = trainings.length
-      ? trainings.map(t =>
+      ? shown.map(t =>
           `<div class="dash-day-pill" onclick="event.stopPropagation();window.location='/training/${t.id}'">${t.title}</div>`
-        ).join('')
+        ).join('') + (extra > 0 ? `<div class="dash-day-more">···</div>` : '')
       : `<span class="dash-day-empty">Kein Training</span>`;
     return `
       <div class="dash-day${isToday ? ' today' : ''}" onclick="window.location='/calendar'">

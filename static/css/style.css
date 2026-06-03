@@ -542,6 +542,10 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .dash-day-pill:hover { background: #dbeafe; }
 .dash-day-empty { color: var(--text-muted); font-size: 0.8rem; }
+.dash-day-more {
+  font-size: 0.76rem; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.12em; padding: 2px 4px;
+}
 .dash-day-add {
   margin-top: auto; font-size: 0.76rem; color: var(--text-muted);
   display: flex; align-items: center; gap: 5px; padding-top: 6px;
@@ -719,7 +723,7 @@ textarea { resize: vertical; min-height: 90px; }
 .cal-day {
   padding: 8px; border: 1px solid #f1f5f9;
   cursor: pointer; transition: background 0.12s; position: relative;
-  min-height: 90px;
+  min-height: 90px; min-width: 0; overflow: hidden;
 }
 .cal-day:hover { background: #f8fafc; }
 .cal-day.other-month { opacity: 0.28; pointer-events: none; }
@@ -743,7 +747,7 @@ textarea { resize: vertical; min-height: 90px; }
 /* Training chips: softer green, left border accent */
 .cal-training-dot { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
 .training-chip {
-  display: flex; align-items: center;
+  display: block;
   font-size: 0.65rem; font-weight: 600;
   background: #dcfce7; color: #15803d;
   border-left: 2.5px solid #16a34a;
@@ -1092,6 +1096,7 @@ textarea { resize: vertical; min-height: 90px; }
   .dash-hero-greeting { font-size: 1.35rem; }
   .dash-hero-deco { display: none; }
   .dash-body { padding: 18px 16px; gap: 22px; }
+  .dash-page { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 82px); }
 
   /* Dashboard stats: 2 columns on phone */
   .dash-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1178,7 +1183,7 @@ textarea { resize: vertical; min-height: 90px; }
   }
 
   /* Training detail – complete mobile redesign */
-  .training-page-layout { padding: 12px 14px 72px; gap: 12px; }
+  .training-page-layout { padding: 12px 14px calc(env(safe-area-inset-bottom, 0px) + 82px); gap: 12px; }
 
   /* Header: stack title above action buttons */
   .training-header-card { flex-direction: column; padding: 16px; gap: 12px; }
@@ -1239,6 +1244,20 @@ textarea { resize: vertical; min-height: 90px; }
 
   /* Forms */
   .form-row { flex-direction: column; }
+
+  /* Bottom fade: gradient over scroll content, above nav */
+  .main-wrapper { position: relative; }
+  .main-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    pointer-events: none;
+    z-index: 6;
+  }
 }
 
 /* Extra small phones */
@@ -2017,7 +2036,72 @@ input.team-search-input:focus {
 }
 .att-all-btn:hover { background: #bbf7d0; }
 
+/* ── Mobile Team Selector (Dropdown) ─────────────────────────────────────── */
+.team-selector-wrap { display: none; }
+
+.team-selector-btn {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--text); cursor: pointer; font-family: inherit;
+  transition: border-color 0.15s; text-align: left;
+}
+.team-selector-btn:hover { border-color: #94a3b8; }
+.team-selector-btn.open { border-color: var(--primary); }
+.team-selector-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.team-selector-name { font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-selector-sport { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+.team-selector-chevron { margin-left: auto; flex-shrink: 0; color: var(--text-muted); transition: transform 0.2s; }
+.team-selector-btn.open .team-selector-chevron { transform: rotate(180deg); }
+
+.team-selector-add-btn {
+  width: 44px; height: 44px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; border: 1.5px solid var(--primary);
+  background: rgba(37,99,235,0.06); color: var(--primary);
+  cursor: pointer; transition: background 0.15s;
+}
+.team-selector-add-btn:hover { background: rgba(37,99,235,0.14); }
+
+.team-dropdown {
+  display: none; position: absolute;
+  top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  z-index: 200; overflow: hidden;
+}
+.team-dropdown.open { display: block; }
+
+.team-dropdown-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 16px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.team-dropdown-item:last-of-type { border-bottom: none; }
+.team-dropdown-item:hover { background: var(--bg); }
+.team-dropdown-item.active { background: #f0fdf4; }
+.team-dropdown-item-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.team-dropdown-item-name { font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-dropdown-item-sport { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+.team-dropdown-check { flex-shrink: 0; color: var(--success); }
+
+.team-dropdown-add {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 16px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 600; color: var(--primary);
+  border-top: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.team-dropdown-add:hover { background: #eff6ff; }
+
 /* ── Responsive – Players ────────────────────────────────────────────────── */
+/* Tabs → Dropdown ab ≤1200px (alles außer breitem Desktop) */
+@media (max-width: 1200px) {
+  .team-tabs-row { display: none; }
+  .team-selector-wrap { display: flex; align-items: center; gap: 8px; position: relative; }
+}
+
 @media (max-width: 900px) {
   .team-stats-row { grid-template-columns: repeat(2, 1fr); }
   .players-grid   { grid-template-columns: repeat(2, 1fr); }
@@ -2029,17 +2113,12 @@ input.team-search-input:focus {
 
 @media (max-width: 640px) {
   .players-top   { padding: 16px 16px 0; gap: 10px; }
-  .players-scroll { padding: 12px 16px 20px; gap: 16px; }
+  .players-scroll { padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 82px); gap: 16px; }
   .players-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .mobile-nav-item { font-size: 0.58rem; }
   .nav-icon { width: 44px; }
   .player-card-top  { height: 48px; }
   .player-avatar    { width: 46px; height: 46px; margin-top: -23px; font-size: 0.95rem; }
-  /* Team-Tabs: players-top hat overflow:visible → negative Margins greifen jetzt */
-  .team-tabs-row {
-    margin-left: -16px; margin-right: -16px;
-    padding-left: 16px; padding-right: 16px;
-  }
   /* Team header: Info-Block + Actions stapeln */
   .team-header-row  { flex-direction: column; align-items: stretch; gap: 10px; }
   .team-header-info { min-width: 0; }

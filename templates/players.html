@@ -13,6 +13,22 @@
       </div>
     </div>
     <div class="team-tabs-row" id="team-tabs-row"></div>
+
+    <!-- Mobile: Dropdown-Selektor (ersetzt Tabs auf ≤640px) -->
+    <div class="team-selector-wrap" id="team-selector-wrap">
+      <button class="team-selector-btn" id="team-selector-btn" onclick="toggleTeamDropdown(event)">
+        <span class="team-tab-dot" id="mob-team-dot"></span>
+        <span class="team-selector-info">
+          <span class="team-selector-name" id="mob-team-name">Team auswählen</span>
+          <span class="team-selector-sport" id="mob-team-sport"></span>
+        </span>
+        <svg class="team-selector-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button class="team-selector-add-btn" onclick="showCreateTeamModal()" title="Neues Team">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="team-dropdown" id="team-dropdown"></div>
+    </div>
   </div>
 
   <!-- Scrollbarer Bereich: Team-Content -->
