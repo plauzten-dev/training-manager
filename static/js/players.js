@@ -603,7 +603,7 @@ function confirmDeleteTeam(teamId) {
   openModal('Team löschen', `
     <p style="margin-bottom:20px;color:var(--text-muted)">
       <strong>"${escHtml(t?.name || '')}"</strong> wirklich löschen?
-      Alle Spieler dieses Teams werden ebenfalls entfernt.
+      Die Spieler bleiben erhalten und werden keinem Team mehr zugeordnet.
     </p>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>

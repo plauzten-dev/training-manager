@@ -437,11 +437,17 @@ def register():
         user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
 
         if role == 'player' and player_row:
-            conn.execute(
-                'UPDATE players SET linked_user_id = ? WHERE id = ?',
+            # Atomic update: only succeeds if nobody else claimed the code in the meantime
+            cursor = conn.execute(
+                'UPDATE players SET linked_user_id = ? WHERE id = ? AND linked_user_id IS NULL',
                 (user['id'], player_row['id'])
             )
             conn.commit()
+            if cursor.rowcount == 0:
+                # Race condition: code was claimed between our check and this update
+                conn.execute('DELETE FROM users WHERE id = ?', (user['id'],))
+                conn.commit()
+                return jsonify({'error': 'Dieser Einladecode wurde bereits verwendet'}), 400
 
         session['user_id'] = user['id']
         session['username'] = user['username']
@@ -1531,11 +1537,19 @@ def set_attendance(training_id):
     player_id = data.get('player_id')
     present   = data.get('present')
 
+    if player_id is None:
+        return jsonify({'error': 'player_id fehlt'}), 400
+
     conn = get_db()
     t = conn.execute('SELECT id FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])).fetchone()
     if not t:
         conn.close()
         return jsonify({'error': 'Training nicht gefunden'}), 404
+
+    # Verify player belongs to this user
+    if not conn.execute('SELECT id FROM players WHERE id = ? AND user_id = ?', (player_id, session['user_id'])).fetchone():
+        conn.close()
+        return jsonify({'error': 'Spieler nicht gefunden'}), 404
 
     if present is None:
         conn.execute('DELETE FROM training_attendance WHERE training_id = ? AND player_id = ?', (training_id, player_id))
@@ -1633,20 +1647,21 @@ def team_attendance_summary(team_id):
           COALESCE(SUM(CASE WHEN ta.present = 1 THEN 1 ELSE 0 END), 0) AS present_count,
           COALESCE(SUM(CASE WHEN ta.present = 0 THEN 1 ELSE 0 END), 0) AS absent_count
         FROM players p
+        JOIN player_team_memberships ptm ON ptm.player_id = p.id AND ptm.team_id = ?
         LEFT JOIN training_attendance ta ON ta.player_id = p.id
         LEFT JOIN trainings tr ON tr.id = ta.training_id AND tr.user_id = ?
-        WHERE p.user_id = ? AND p.team_id = ?
+        WHERE p.user_id = ?
         GROUP BY p.id, p.name, p.position, p.status
         ORDER BY present_count DESC, p.name
-    ''', (session['user_id'], session['user_id'], team_id)).fetchall()
+    ''', (team_id, session['user_id'], session['user_id'])).fetchall()
 
     total_tracked = conn.execute('''
         SELECT COUNT(DISTINCT ta.training_id)
         FROM training_attendance ta
         JOIN players p ON p.id = ta.player_id
+        JOIN player_team_memberships ptm ON ptm.player_id = p.id AND ptm.team_id = ?
         JOIN trainings tr ON tr.id = ta.training_id AND tr.user_id = ?
-        WHERE p.team_id = ?
-    ''', (session['user_id'], team_id)).fetchone()[0]
+    ''', (team_id, session['user_id'])).fetchone()[0]
 
     conn.close()
     return jsonify({

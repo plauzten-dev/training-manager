@@ -2172,6 +2172,38 @@ input.team-search-input:focus {
 .sport-select-btn:hover { border-color: #94a3b8; background: var(--card); }
 .sport-select-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
+/* ── Exercise Sport Floating Dropdown ────────────────────────────────────── */
+.ex-sport-wrap { position: relative; }
+.ex-sport-trigger {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 9px 12px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--text); font-size: 0.875rem; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: border-color 0.15s;
+  text-align: left;
+}
+.ex-sport-trigger:hover { border-color: #94a3b8; }
+.ex-sport-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ex-sport-panel {
+  display: none;
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 300;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  grid-template-columns: repeat(2, 1fr); gap: 6px;
+}
+.ex-sport-panel.open { display: grid; }
+.ex-sport-option {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 10px; border-radius: 7px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.12s;
+  white-space: nowrap;
+}
+.ex-sport-option:hover { border-color: #94a3b8; background: var(--bg); }
+.ex-sport-option.active { font-weight: 700; }
+
 /* ── Player Status Row (direct toggle on card) ───────────────────────────── */
 .player-status-row {
   display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;

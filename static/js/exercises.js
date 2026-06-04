@@ -35,10 +35,24 @@ const DIFF_CLASS = {
 };
 
 const SPORT_COMPETENCIES = {
-  '':          [],  // populated from API
-  'Fußball':   ['Passspiel','Torschuss','Dribbling','Zweikampf','Torwartspiel','Spielaufbau','Pressing','Standardsituationen','Ausdauer','Koordination','Spielintelligenz'],
-  'Tennis':    ['Schlagtechnik','Aufschlag','Netzspiel','Grundlinienspiel','Return','Taktik','Kondition'],
-  'Floorball': ['Passspiel','Torschuss','Stickhandling','Zweikampf','Torhüterspiel','Spielaufbau','Pressing','Kondition'],
+  '':           [],
+  'Fußball':    ['Passspiel','Torschuss','Dribbling','Zweikampf','Torwartspiel','Spielaufbau','Pressing','Standardsituationen','Ausdauer','Koordination','Spielintelligenz'],
+  'Tennis':     ['Schlagtechnik','Aufschlag','Netzspiel','Grundlinienspiel','Return','Taktik','Kondition'],
+  'Floorball':  ['Passspiel','Torschuss','Stickhandling','Zweikampf','Torhüterspiel','Spielaufbau','Pressing','Kondition'],
+  'Basketball': ['Dribbling','Korbwurf','Taktik','Spielform','Schnellangriff','Verteidigung','Kondition'],
+  'Volleyball': ['Annahme','Zuspiel','Aufschlag','Block','Angriff','Spielform','Kondition'],
+  'Gym':        ['Kraft','Ausdauer','Rumpfkraft','Explosivkraft','Koordination','Stabilisation','Abschluss'],
+  'Allgemein':  ['Aufwärmen','Dehnen','Koordination','Stabilisation','Ausdauer','Abschluss'],
+};
+
+const SPORT_COLORS = {
+  'Fußball':    '#16a34a',
+  'Tennis':     '#ea580c',
+  'Floorball':  '#3b82f6',
+  'Basketball': '#7c3aed',
+  'Volleyball': '#d97706',
+  'Gym':        '#4b5563',
+  'Allgemein':  '#0d9488',
 };
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -262,9 +276,25 @@ function exerciseFormHTML(e) {
       <div class="form-row">
         <div class="form-group">
           <label>Sportart *</label>
-          <select name="sport" id="form-sport" required onchange="updateCompetencyOptions()">
-            ${['Fußball','Tennis','Floorball'].map(s => `<option value="${s}" ${sel('sport',s)}>${s}</option>`).join('')}
-          </select>
+          <div class="ex-sport-wrap" id="ex-sport-wrap">
+            <button type="button" class="ex-sport-trigger" id="ex-sport-trigger"
+                    onclick="toggleExSportDropdown(event)">
+              <span class="ex-sport-dot" id="ex-sport-dot"
+                    style="background:${SPORT_COLORS[e?.sport || 'Fußball'] || '#16a34a'}"></span>
+              <span id="ex-sport-label">${e?.sport || 'Fußball'}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto;opacity:.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="ex-sport-panel" id="ex-sport-panel">
+              ${Object.keys(SPORT_COLORS).map(s => `
+                <button type="button" class="ex-sport-option${(e?.sport || 'Fußball') === s ? ' active' : ''}"
+                        onclick="selectExSport('${s}')"
+                        style="${(e?.sport || 'Fußball') === s ? `background:${SPORT_COLORS[s]}15;border-color:${SPORT_COLORS[s]};color:${SPORT_COLORS[s]}` : ''}">
+                  <span class="ex-sport-dot" style="background:${SPORT_COLORS[s]}"></span>
+                  ${s}
+                </button>`).join('')}
+            </div>
+          </div>
+          <input type="hidden" name="sport" id="form-sport" value="${e?.sport || 'Fußball'}">
         </div>
         <div class="form-group">
           <label>Kernkompetenz *</label>
@@ -324,22 +354,64 @@ function exerciseFormHTML(e) {
 
 function setupFormDynamics(currentSportVal) {
   updateCompetencyOptions(currentSportVal);
+  // Close sport dropdown on outside click
+  document.addEventListener('click', closeExSportDropdown, { capture: true, once: false });
 }
 
 function updateCompetencyOptions(sportVal) {
-  const sportEl = document.getElementById('form-sport');
-  const compEl  = document.getElementById('form-competency');
-  if (!sportEl || !compEl) return;
+  const hiddenEl = document.getElementById('form-sport');
+  const compEl   = document.getElementById('form-competency');
+  if (!compEl) return;
 
-  const sport = sportVal || sportEl.value;
+  const sport   = sportVal || (hiddenEl ? hiddenEl.value : 'Fußball');
   const options = SPORT_COMPETENCIES[sport] || [];
 
-  // Preserve current selection if still valid
   const current = compEl.value;
   compEl.innerHTML = '<option value="">Bitte wählen</option>';
   options.forEach(c => {
     compEl.innerHTML += `<option value="${c}" ${c === current ? 'selected' : ''}>${c}</option>`;
   });
+}
+
+function toggleExSportDropdown(event) {
+  event.stopPropagation();
+  const panel = document.getElementById('ex-sport-panel');
+  if (!panel) return;
+  panel.classList.toggle('open');
+}
+
+function closeExSportDropdown(e) {
+  const wrap = document.getElementById('ex-sport-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('ex-sport-panel')?.classList.remove('open');
+  }
+}
+
+function selectExSport(sport) {
+  // Update hidden input
+  const hidden = document.getElementById('form-sport');
+  if (hidden) hidden.value = sport;
+
+  // Update trigger label + dot
+  const label = document.getElementById('ex-sport-label');
+  const dot   = document.getElementById('ex-sport-dot');
+  if (label) label.textContent = sport;
+  if (dot)   dot.style.background = SPORT_COLORS[sport] || '#64748b';
+
+  // Update active state in panel
+  document.querySelectorAll('.ex-sport-option').forEach(btn => {
+    const isActive = btn.textContent.trim() === sport;
+    btn.classList.toggle('active', isActive);
+    btn.style.background    = isActive ? `${SPORT_COLORS[sport]}15` : '';
+    btn.style.borderColor   = isActive ? SPORT_COLORS[sport] : '';
+    btn.style.color         = isActive ? SPORT_COLORS[sport] : '';
+  });
+
+  // Close panel
+  document.getElementById('ex-sport-panel')?.classList.remove('open');
+
+  // Update competency options
+  updateCompetencyOptions(sport);
 }
 
 function setupImagePreview() {
