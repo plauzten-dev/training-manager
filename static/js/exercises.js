@@ -469,6 +469,70 @@ async function addExerciseToTraining(trainingId, exerciseId, rowEl) {
   }
 }
 
+// ── Import via Link ───────────────────────────────────────────────────────────
+function showImportFromLinkModal() {
+  openModal('Übung via Link importieren', `
+    <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:16px">
+      Füge einen Share-Link ein, um eine geteilte Übung in deine Sammlung zu kopieren.
+    </p>
+    <div class="form-group">
+      <label>Share-Link</label>
+      <input type="url" id="import-link-input" placeholder="https://…/exercise/share/…" style="width:100%"
+             oninput="document.getElementById('import-link-error').textContent=''">
+      <p id="import-link-error" style="color:var(--danger);font-size:0.8rem;margin-top:4px;min-height:1.2em"></p>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" id="import-link-btn" onclick="submitImportFromLink()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Importieren
+      </button>
+    </div>`, 'md');
+
+  setTimeout(() => document.getElementById('import-link-input')?.focus(), 50);
+}
+
+async function submitImportFromLink() {
+  const input = document.getElementById('import-link-input');
+  const errEl = document.getElementById('import-link-error');
+  const btn   = document.getElementById('import-link-btn');
+  const raw   = (input?.value || '').trim();
+
+  if (!raw) { errEl.textContent = 'Bitte einen Link einfügen.'; return; }
+
+  // Token aus URL extrahieren: letztes URL-Segment oder direkt Token (32 hex chars)
+  const match = raw.match(/\/exercise\/share\/([a-f0-9]{32})/i) || raw.match(/^([a-f0-9]{32})$/i);
+  if (!match) { errEl.textContent = 'Ungültiger Share-Link. Bitte den vollständigen Link einfügen.'; return; }
+  const token = match[1];
+
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin-btn 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>
+    Wird importiert…`;
+
+  const res = await fetch(`/api/exercises/import/${token}`, { method: 'POST' });
+  if (res.ok) {
+    closeModal();
+    showToast('Übung erfolgreich importiert!', 'success');
+    await fetchExercises();
+  } else {
+    const d = await res.json().catch(() => ({}));
+    errEl.textContent = d.error || 'Fehler beim Importieren.';
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Importieren`;
+  }
+}
+
+// Spin-Animation für Import-Button (einmalig injiziert)
+if (!document.getElementById('exercises-keyframes')) {
+  const s = document.createElement('style');
+  s.id = 'exercises-keyframes';
+  s.textContent = '@keyframes spin-btn { to { transform: rotate(360deg); } }';
+  document.head.appendChild(s);
+}
+
 // ── Share ─────────────────────────────────────────────────────────────────────
 async function shareExercise(exerciseId, btn) {
   btn.disabled = true;
