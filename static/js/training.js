@@ -33,6 +33,8 @@ async function fetchAttTeams() {
   const res = await fetch('/api/teams');
   if (!res.ok) return;
   attTeams = await res.json();
+  const saved = localStorage.getItem(`att_team_${TRAINING_ID}`);
+  if (saved) attTeamId = parseInt(saved) || null;
   renderAttTeamSelect();
 }
 
@@ -128,7 +130,12 @@ function renderPage() {
       <div class="attendance-section" id="attendance-section">
         <div class="section-header">
           <span class="section-title">Anwesenheit</span>
-          <span class="section-count" id="attendance-count"></span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="section-count" id="attendance-count"></span>
+            <button class="att-reload-btn" id="att-reload-btn" onclick="reloadAttendance()" title="Anwesenheiten aktualisieren">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
         </div>
         <div class="att-team-row" id="att-team-row" style="display:none">
           <select class="att-team-select" id="att-team-select" onchange="onAttTeamChange(this.value)">
@@ -544,6 +551,16 @@ async function setMyAttendance(present) {
   }
 }
 
+function reloadAttendance() {
+  const btn = document.getElementById('att-reload-btn');
+  if (btn) {
+    btn.classList.add('att-reload-spinning');
+    btn.disabled = true;
+    setTimeout(() => { btn.classList.remove('att-reload-spinning'); btn.disabled = false; }, 700);
+  }
+  loadAttendance();
+}
+
 // ── Attendance ────────────────────────────────────────────────────────────────
 const ATT_POS_COLORS = {
   'Torwart':    '#f59e0b', 'Verteidiger': '#3b82f6', 'Mittelfeld': '#16a34a',
@@ -561,13 +578,19 @@ function renderAttTeamSelect() {
   }
   sel.innerHTML = '<option value="">– Team auswählen –</option>' +
     attTeams.map(t => `<option value="${t.id}">${t.name} · ${t.sport}</option>`).join('');
-  if (attTeamId) sel.value = attTeamId;
+  if (attTeamId) {
+    sel.value = attTeamId;
+    if (!sel.value) attTeamId = null; // team no longer exists
+  }
   row.style.display = 'flex';
-  renderAttendance(null);
+  if (attTeamId) loadAttendance();
+  else renderAttendance(null);
 }
 
 function onAttTeamChange(val) {
   attTeamId = val ? parseInt(val) : null;
+  if (attTeamId) localStorage.setItem(`att_team_${TRAINING_ID}`, attTeamId);
+  else localStorage.removeItem(`att_team_${TRAINING_ID}`);
   loadAttendance();
 }
 

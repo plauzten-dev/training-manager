@@ -1065,7 +1065,7 @@ textarea { resize: vertical; min-height: 90px; }
 .mobile-nav-wrap {
   display: none;
   flex-shrink: 0;
-  padding: 6px 10px max(4px, calc(env(safe-area-inset-bottom, 8px) - 30px));
+  padding: 6px 10px 4px;
   pointer-events: none;
 }
 .mobile-nav {
@@ -1124,6 +1124,9 @@ textarea { resize: vertical; min-height: 90px; }
 
 /* Mobile: hide sidebar, show bottom nav, adjust layouts */
 @media (max-width: 640px) {
+  /* Prevent iOS auto-zoom on input focus (triggers when font-size < 16px) */
+  input, select, textarea { font-size: 16px !important; }
+
   .app-layout { flex-direction: column; }
   .sidebar { display: none; }
   .mobile-nav-wrap {
@@ -1149,7 +1152,7 @@ textarea { resize: vertical; min-height: 90px; }
   .dash-hero-greeting { font-size: 1.35rem; }
   .dash-hero-deco { display: none; }
   .dash-body { padding: 18px 16px; gap: 22px; }
-  .dash-page { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 82px); }
+  .dash-page { padding-bottom: 82px; }
 
   /* Dashboard stats: 2 columns on phone */
   .dash-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1236,7 +1239,7 @@ textarea { resize: vertical; min-height: 90px; }
   }
 
   /* Training detail – complete mobile redesign */
-  .training-page-layout { padding: 12px 14px calc(env(safe-area-inset-bottom, 0px) + 82px); gap: 12px; }
+  .training-page-layout { padding: 12px 14px 82px; gap: 12px; }
 
   /* Header: stack title above action buttons */
   .training-header-card { flex-direction: column; padding: 16px; gap: 12px; }
@@ -1521,7 +1524,7 @@ textarea { resize: vertical; min-height: 90px; }
 .avatar-remove-btn { color: var(--danger); }
 
 @media (max-width: 640px) {
-  .settings-mob-home { padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 82px + 16px); }
+  .settings-mob-home { padding: 0 16px 98px; }
   .settings-detail-grid { padding: 0 16px 48px; }
 }
 
@@ -1597,7 +1600,7 @@ textarea { resize: vertical; min-height: 90px; }
 .mt-fab {
   display: none;
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 72px);
+  bottom: 72px;
   right: 20px;
   width: 54px; height: 54px; border-radius: 50%;
   background: var(--primary); color: #fff;
@@ -2074,6 +2077,17 @@ input.team-search-input:focus {
 .att-none    { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
 .att-none:hover    { background: #e2e8f0; }
 
+.att-reload-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text-muted); cursor: pointer;
+  transition: background 0.15s, color 0.15s; flex-shrink: 0;
+}
+.att-reload-btn:hover:not(:disabled) { background: var(--border); color: var(--text); }
+.att-reload-btn:disabled { opacity: 0.5; cursor: default; }
+.att-reload-btn.att-reload-spinning svg { animation: spin 0.7s linear; }
+
 .att-no-team {
   display: flex; align-items: center; gap: 12px;
   padding: 20px 4px; color: var(--text-muted); font-size: 0.85rem;
@@ -2286,7 +2300,7 @@ input.team-search-input:focus {
 
 @media (max-width: 640px) {
   .players-top   { padding: 16px 16px 0; gap: 10px; }
-  .players-scroll { padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 82px); gap: 16px; }
+  .players-scroll { padding: 12px 16px 82px; gap: 16px; }
   .players-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .mobile-nav-item { font-size: 0.58rem; }
   .nav-icon { width: 44px; }
