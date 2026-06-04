@@ -66,6 +66,16 @@ async function init() {
       tab.classList.add('active');
     }
   }
+  updateSportSelMobile(currentSport);
+
+  // Close mobile sport panel on outside click
+  document.addEventListener('click', (e) => {
+    const mob = document.getElementById('sport-sel-mob');
+    if (mob && !mob.contains(e.target)) {
+      document.getElementById('sport-sel-mob-panel')?.classList.remove('open');
+    }
+  });
+
   await loadFilterOptions(currentSport);
   await fetchExercises();
 }
@@ -99,12 +109,42 @@ async function setSport(el, sport) {
   currentSport = sport;
   localStorage.setItem('exercises_sport', sport);
   document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  if (el) {
+    el.classList.add('active');
+  } else {
+    document.querySelector(`.sport-tab[data-sport="${sport}"]`)?.classList.add('active');
+  }
+  updateSportSelMobile(sport);
   // Reset competency + field size filters for the new sport
   await loadFilterOptions(sport);
   document.getElementById('filter-competency').value = '';
   document.getElementById('filter-fieldsize').value  = '';
   await fetchExercises();
+}
+
+function updateSportSelMobile(sport) {
+  const dot     = document.getElementById('sport-sel-mob-dot');
+  const label   = document.getElementById('sport-sel-mob-label');
+  const trigger = document.getElementById('sport-sel-mob-trigger');
+  const color   = sport ? SPORT_COLORS[sport] : '#64748b';
+  if (dot)     dot.style.background = color;
+  if (label)   label.textContent = sport || 'Alle Sportarten';
+  if (trigger) { trigger.style.borderColor = sport ? color : ''; trigger.style.color = sport ? color : ''; }
+  document.querySelectorAll('.sport-sel-opt').forEach(btn => {
+    const s = btn.dataset.sport;
+    const isActive = s === sport;
+    const c = s ? SPORT_COLORS[s] : '#64748b';
+    btn.classList.toggle('active', isActive);
+    btn.style.background  = isActive ? c + '20' : '';
+    btn.style.borderColor = isActive ? c : '';
+    btn.style.color       = isActive ? c : '';
+  });
+  document.getElementById('sport-sel-mob-panel')?.classList.remove('open');
+}
+
+function toggleSportSelMobile(event) {
+  event.stopPropagation();
+  document.getElementById('sport-sel-mob-panel')?.classList.toggle('open');
 }
 
 // ── Fetch & Render ────────────────────────────────────────────────────────────
@@ -375,8 +415,21 @@ function updateCompetencyOptions(sportVal) {
 
 function toggleExSportDropdown(event) {
   event.stopPropagation();
-  const panel = document.getElementById('ex-sport-panel');
+  const panel   = document.getElementById('ex-sport-panel');
+  const trigger = document.getElementById('ex-sport-trigger');
   if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  if (!isOpen && trigger) {
+    const rect = trigger.getBoundingClientRect();
+    // Span the full modal width so form content doesn't bleed through on the right
+    const modal = trigger.closest('.modal-box');
+    const modalRect = modal ? modal.getBoundingClientRect() : null;
+    const left  = modalRect ? modalRect.left + 8 : rect.left;
+    const width = modalRect ? modalRect.width - 16 : Math.max(rect.width, 280);
+    panel.style.top   = (rect.bottom + 4) + 'px';
+    panel.style.left  = left + 'px';
+    panel.style.width = width + 'px';
+  }
   panel.classList.toggle('open');
 }
 

@@ -243,7 +243,7 @@ git push
 
 ---
 
-## Was bereits vollständig funktioniert (B.0.48)
+## Was bereits vollständig funktioniert (B.0.49)
 
 - Benutzer-Accounts (Register, Login, Logout, Profil + Passwort ändern)
 - Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload (Cloudinary), Suche, Filter, Sport-Tabs
@@ -359,3 +359,6 @@ git push
 20. **Sport-Dropdown Übungsformular (B.0.48)**: Schwebendes Custom-Dropdown (`.ex-sport-wrap`/`.ex-sport-trigger`/`.ex-sport-panel`). `updateCompetencyOptions()` liest von `<input type="hidden" id="form-sport">`, NICHT von einem `<select>`. `selectExSport(sport)` schließt Panel + aktualisiert Competencies. Alle 7 Sportarten + Kernkompetenzen in `SPORT_COMPETENCIES` in exercises.js.
 21. **Share-Link (B.0.48)**: `exercises.share_token` (UNIQUE, nullable). Route `/exercise/share/<token>` braucht KEIN `@login_required`. Import-Route `POST /api/exercises/import/<token>` kopiert Übung ohne `share_token`. Preview-Server: Immer prüfen ob nur EIN Prozess auf Port 5000 läuft (`netstat -ano | findstr ":5000"`), sonst antwortet alter Code.
 17. **Players Page Struktur (v0.25)**: `players.html` hat zwei Zonen: `.players-top` (kein overflow → Team-Tabs können voll-breit scrollen) und `.players-scroll` (overflow-y:auto → scrollbarer Content). Bei Änderungen an der Players-Page beide Zonen berücksichtigen.
+22. **Mobile Sport-Selektor (B.0.49)**: Auf ≤640px wird `.sport-tabs-bar { display:none }` und `.sport-sel-mob { display:block }`. `setSport(null, sport)` aufrufen für mobile Auswahl (el=null). `updateSportSelMobile(sport)` synchronisiert Trigger-Farbe + Panel-Aktiv-Status. Dropdown-Panel `position: absolute` relativ zu `.sport-sel-mob`.
+23. **Ex-Sport-Panel (B.0.49)**: `position: fixed; z-index: 9999; background: var(--card)` – `var(--surface)` ist NICHT definiert (wäre transparent). In `toggleExSportDropdown()` werden `top/left/width` via `getBoundingClientRect()` des Triggers gesetzt; Breite = Modal-Breite minus 16px Rand.
+24. **Mobile Filter-Panel (B.0.49)**: `.filter-sidebar.mobile-open { flex: 1; padding-bottom: 82px }` + `.exercises-layout { flex:1; overflow:hidden }` damit der Filter den vollen Platz füllt. `.filter-sidebar.mobile-open ~ .exercises-main { display:none }` versteckt Übungskarten wenn Filter offen.

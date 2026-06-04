@@ -1169,33 +1169,35 @@ textarea { resize: vertical; min-height: 90px; }
   .dash-quote-col { display: none; }
   .dash-stats-grid { grid-template-columns: 1fr; }
 
-  /* Sport tabs: scrollable row */
-  .sport-tabs-bar { flex-wrap: nowrap; overflow-x: auto; padding: 14px 16px 0; gap: 6px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .sport-tabs-bar::-webkit-scrollbar { display: none; }
-  .sport-tab { white-space: nowrap; flex-shrink: 0; padding: 8px 14px; font-size: 0.8rem; }
+  /* Sport tabs: hidden on mobile → replaced by sport-sel-mob */
+  .sport-tabs-bar { display: none; }
+  .sport-sel-mob { display: block; }
 
   /* Exercises: filter as collapsible panel */
-  .exercises-layout { flex-direction: column; padding: 0; gap: 0; }
+  .exercises-layout { flex-direction: column; padding: 0; gap: 0; flex: 1; overflow: hidden; }
   .filter-sidebar {
-    width: 100%; max-height: none; position: static;
+    width: 100%; overflow-y: auto; position: static;
     border-radius: 0; border-right: none;
     border-bottom: 1px solid var(--border);
     display: none;
   }
-  .filter-sidebar.mobile-open { display: block; }
+  .filter-sidebar.mobile-open { display: block; flex: 1; padding-bottom: 82px; }
+  .filter-sidebar.mobile-open ~ .exercises-main { display: none; }
   .exercises-main { padding: 14px 16px; }
   .exercises-count { padding: 0 0 10px; }
   .exercises-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
   /* Mobile filter toggle button */
   .mobile-filter-btn {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 16px; background: var(--card);
-    border-bottom: 1px solid var(--border);
-    font-size: 0.85rem; font-weight: 600; color: var(--text);
-    cursor: pointer; width: 100%;
+    display: inline-flex; align-items: center; gap: 6px;
+    margin: 10px 16px 0;
+    padding: 6px 12px; background: transparent;
+    border: 1.5px solid var(--border); border-radius: 999px;
+    font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; width: auto;
   }
-  .mobile-filter-btn svg { flex-shrink: 0; }
+  .mobile-filter-btn:hover { border-color: #94a3b8; color: var(--text); }
+  .mobile-filter-btn svg { flex-shrink: 0; width: 13px; height: 13px; }
 
   /* Calendar: ganze Seite scrollt (kein interner Scroll in der Card) */
   .calendar-layout { flex-direction: column; padding: 10px 12px 80px; gap: 12px; overflow-y: auto; }
@@ -2177,7 +2179,7 @@ input.team-search-input:focus {
 .ex-sport-trigger {
   display: flex; align-items: center; gap: 8px; width: 100%;
   padding: 9px 12px; border-radius: 8px;
-  border: 1.5px solid var(--border); background: var(--surface);
+  border: 1.5px solid var(--border); background: var(--card);
   color: var(--text); font-size: 0.875rem; font-weight: 500;
   cursor: pointer; font-family: inherit; transition: border-color 0.15s;
   text-align: left;
@@ -2186,11 +2188,12 @@ input.team-search-input:focus {
 .ex-sport-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .ex-sport-panel {
   display: none;
-  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 300;
-  background: var(--surface); border: 1.5px solid var(--border);
+  position: fixed; z-index: 9999;
+  background: var(--card); border: 1.5px solid var(--border);
   border-radius: 10px; padding: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   grid-template-columns: repeat(2, 1fr); gap: 6px;
+  min-width: 220px;
 }
 .ex-sport-panel.open { display: grid; }
 .ex-sport-option {
@@ -2203,6 +2206,40 @@ input.team-search-input:focus {
 }
 .ex-sport-option:hover { border-color: #94a3b8; background: var(--bg); }
 .ex-sport-option.active { font-weight: 700; }
+
+/* ── Mobile Sport Selector ───────────────────────────────────────────────── */
+/* display:none by default; toggled to block inside @media(≤640px) at end of file */
+.sport-sel-mob { display: none; padding: 12px 16px 0; position: relative; }
+.sport-sel-mob-trigger {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 10px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--text); font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: border-color 0.15s, color 0.15s;
+  text-align: left;
+}
+.sport-sel-mob-trigger:hover { border-color: #94a3b8; }
+.sport-sel-mob-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; transition: background 0.15s; }
+.sport-sel-mob-panel {
+  display: none;
+  position: absolute; top: calc(100% + 2px); left: 16px; right: 16px; z-index: 200;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.15);
+  grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.sport-sel-mob-panel.open { display: grid; }
+.sport-sel-opt {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 12px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.12s;
+  text-align: left;
+}
+.sport-sel-opt:hover { border-color: #94a3b8; background: var(--bg); }
+.sport-sel-opt:first-child { grid-column: 1 / -1; }
+.sport-sel-dot-sm { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
 /* ── Player Status Row (direct toggle on card) ───────────────────────────── */
 .player-status-row {
@@ -2354,4 +2391,9 @@ input.team-search-input:focus {
 
 @media (max-width: 380px) {
   .players-grid { grid-template-columns: 1fr; }
+}
+
+/* Override: show mobile sport selector on small screens (after the general display:none rule) */
+@media (max-width: 640px) {
+  .sport-sel-mob { display: block; }
 }

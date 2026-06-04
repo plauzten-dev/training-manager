@@ -54,6 +54,42 @@
   </button>
 </div>
 
+<!-- Mobile Sport Selector (≤640px) -->
+<div class="sport-sel-mob" id="sport-sel-mob">
+  <button class="sport-sel-mob-trigger" id="sport-sel-mob-trigger" onclick="toggleSportSelMobile(event)">
+    <span class="sport-sel-mob-dot" id="sport-sel-mob-dot" style="background:#64748b"></span>
+    <span id="sport-sel-mob-label">Alle Sportarten</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto;opacity:.55"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
+  <div class="sport-sel-mob-panel" id="sport-sel-mob-panel">
+    <button class="sport-sel-opt" data-sport="" onclick="setSport(null,'')">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="8" y1="2" x2="8" y2="14"/></svg>
+      Alle Sportarten
+    </button>
+    <button class="sport-sel-opt" data-sport="Fußball" onclick="setSport(null,'Fußball')">
+      <span class="sport-sel-dot-sm" style="background:#16a34a"></span>Fußball
+    </button>
+    <button class="sport-sel-opt" data-sport="Tennis" onclick="setSport(null,'Tennis')">
+      <span class="sport-sel-dot-sm" style="background:#ea580c"></span>Tennis
+    </button>
+    <button class="sport-sel-opt" data-sport="Floorball" onclick="setSport(null,'Floorball')">
+      <span class="sport-sel-dot-sm" style="background:#3b82f6"></span>Floorball
+    </button>
+    <button class="sport-sel-opt" data-sport="Basketball" onclick="setSport(null,'Basketball')">
+      <span class="sport-sel-dot-sm" style="background:#7c3aed"></span>Basketball
+    </button>
+    <button class="sport-sel-opt" data-sport="Volleyball" onclick="setSport(null,'Volleyball')">
+      <span class="sport-sel-dot-sm" style="background:#d97706"></span>Volleyball
+    </button>
+    <button class="sport-sel-opt" data-sport="Gym" onclick="setSport(null,'Gym')">
+      <span class="sport-sel-dot-sm" style="background:#4b5563"></span>Gym
+    </button>
+    <button class="sport-sel-opt" data-sport="Allgemein" onclick="setSport(null,'Allgemein')">
+      <span class="sport-sel-dot-sm" style="background:#0d9488"></span>Allgemein
+    </button>
+  </div>
+</div>
+
 <button class="mobile-filter-btn" id="mobile-filter-toggle" onclick="toggleMobileFilter()" style="display:none">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
   <span id="filter-btn-label">Filter anzeigen</span>

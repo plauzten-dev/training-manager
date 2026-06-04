@@ -1,7 +1,30 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 04. Juni 2026
-> Status: ✅ Version B.0.48 – Übung teilen via Share-Link
+> Status: ✅ Version B.0.49 – Mobile UX-Fixes: Sport-Selektor, Filter-Panel, Formular-Dropdown
+
+---
+
+## B.0.49 – Änderungen (04.06.2026, 13. Session)
+
+### Fix: Formular Sport-Dropdown (Übung erstellen/bearbeiten)
+- [x] `exercises.js` – `toggleExSportDropdown()` nutzt jetzt `position: fixed` + `getBoundingClientRect()` → kein Overflow-Clipping durch `modal-box` mehr
+- [x] `exercises.js` – Panel spannt die gesamte Modal-Breite auf (`modal.getBoundingClientRect()` als Referenz)
+- [x] `style.css` – `.ex-sport-panel`: `position: fixed; z-index: 9999; background: var(--card)` (war `absolute` + `var(--surface)` → transparent)
+
+### Feature: Mobiler Sport-Selektor (≤640px)
+- [x] `exercises.html` – Neuer `<div class="sport-sel-mob">` Block mit Trigger-Button + 2-Spalten-Panel (8 Sport-Optionen)
+- [x] `exercises.js` – `toggleSportSelMobile()` + `updateSportSelMobile(sport)` – Trigger zeigt aktive Sportfarbe, Panel mit Farbdots
+- [x] `exercises.js` – `setSport()` unterstützt `null` als Element (mobile Aufrufe), aktualisiert Desktop-Tabs + Mobile-Selektor synchron
+- [x] `style.css` – `.sport-sel-mob*`-Klassen; auf Mobile (≤640px): `.sport-tabs-bar { display: none }`, `.sport-sel-mob { display: block }`
+
+### Fix: Filter-Button Design (Mobile)
+- [x] `style.css` – `.mobile-filter-btn`: schlichtes Pill-Element (inline, border-radius: 999px, transparent bg) statt voller weißer Balken
+
+### Fix: Filter-Panel vollständig (Mobile)
+- [x] `style.css` – Filter-Panel füllt gesamte verbleibende Höhe (`flex: 1; overflow-y: auto; padding-bottom: 82px`)
+- [x] `style.css` – Übungskarten werden versteckt wenn Filter offen: `.filter-sidebar.mobile-open ~ .exercises-main { display: none }`
+- [x] `style.css` – `exercises-layout` auf Mobile: `flex: 1; overflow: hidden` damit Flex-Kind `.filter-sidebar` korrekte Höhe erhält
 
 ---
 
