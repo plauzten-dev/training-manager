@@ -328,9 +328,18 @@ def training_page(training_id):
 @login_required
 def training_pdf_page(training_id):
     conn = get_db()
+    uid = session['user_id']
     training = conn.execute(
-        'SELECT * FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])
+        'SELECT * FROM trainings WHERE id = ? AND user_id = ?', (training_id, uid)
     ).fetchone()
+    if not training:
+        user_row = conn.execute('SELECT role FROM users WHERE id = ?', (uid,)).fetchone()
+        if user_row and user_row['role'] == 'player':
+            p = conn.execute('SELECT user_id FROM players WHERE linked_user_id = ?', (uid,)).fetchone()
+            if p:
+                training = conn.execute(
+                    'SELECT * FROM trainings WHERE id = ? AND user_id = ?', (training_id, p['user_id'])
+                ).fetchone()
     if not training:
         conn.close()
         return redirect(url_for('calendar_page'))
