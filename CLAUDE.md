@@ -243,7 +243,7 @@ git push
 
 ---
 
-## Was bereits vollständig funktioniert (v0.25)
+## Was bereits vollständig funktioniert (B.0.47)
 
 - Benutzer-Accounts (Register, Login, Logout, Profil + Passwort ändern)
 - Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload (Cloudinary), Suche, Filter, Sport-Tabs
@@ -261,12 +261,14 @@ git push
   - Spielerkarten mit direkten Status-Toggle-Chips (Fit/Krank/Verletzt), optimistisches UI
   - Team-Tabs mit Sportfarben, Sportart-Auswahl-Grid im Modal
   - Position-Filter auf Mobile: eingeklappt (nur aktiver Filter + Chevron), aufklappbar per Tap
-- **Anwesenheit pro Training**: Team-Selektor, Einzelmarkierung, "Ganzes Team anwesend"-Bulk-Button
+- **Anwesenheit pro Training**: Team-Selektor (persistiert per localStorage), Einzelmarkierung, Bulk-Button, Reload-Button
 - **Anwesenheits-Übersicht**: Fortschrittsbalken pro Spieler im Modal (grün ≥75%, orange ≥50%, rot darunter)
 - **Responsives Design + Mobile-Nav**: Bottom-Nav (≤640px) als Floating Pill, Sidebar auf Tablet (≤900px)
 - **PWA**: manifest.json, Service Worker (Cache v2), Apple-Meta-Tags – auf iOS & Android installierbar
 - **Play Store Basis**: PNG-Icons, erweitertes Manifest, `/offline`, `/privacy`, `/.well-known/assetlinks.json`
 - **QoL**: Sport-Tab-Auswahl wird per localStorage gespeichert; Dashboard-Vorschau zeigt "Heute"/"Morgen"/"Übermorgen"
+- **iOS-Fixes (B.0.47)**: kein Auto-Zoom bei Input-Fokus, kein Pinch-Zoom, keine Safe-Area am unteren Rand
+- **PDF für Spieler**: Spieler können PDFs von Trainer-Trainings öffnen (nicht nur eigene)
 
 ### Sport-Farben (vollständig)
 ```css
@@ -317,6 +319,9 @@ git push
 - [ ] SHA-256-Fingerprint aus Play Console → in `app.py` bei `assetlinks.json` eintragen (Placeholder ersetzen)
 - [ ] Store-Listing: Datenschutz-URL = `https://training-manager-nwga.onrender.com/privacy`
 
+### Nächste Session – Höchste Priorität
+- [ ] **Übung teilen via Share-Link** – Trainer teilt Übung per WhatsApp/Nachrichten/E-Mail; Spieler öffnet Link ohne Login, kann Übung in eigene Sammlung kopieren. Vollständiger Plan in `PROGRESS.md` unter "Nächste Session".
+
 ### Mittel priorisiert
 - [ ] **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
 - [ ] **Saison-/Wochenplanung** – Überblick über geplante Trainingswochen
@@ -345,5 +350,7 @@ git push
 13. **init_db() läuft beim Import**: Außerhalb von `__main__` – wird auch unter gunicorn ausgeführt.
 14. **Bildupload**: `_upload_image()` + `_delete_image()` in app.py – Cloudinary wenn Env-Vars gesetzt, sonst lokal.
 15. **image_path**: Kann lokaler Dateiname (z.B. `abc123.jpg`) ODER volle Cloudinary-URL sein – JS prüft `startsWith('http')`.
-16. **Mobile Nav Layout (B.0.27+)**: Nav nutzt `position:fixed; bottom:0; left:0; right:0` – schwebt immer am unteren Bildschirmrand, unabhängig von Viewport-Berechnungen. `.mobile-nav-wrap { pointer-events:none }`, `.mobile-nav { pointer-events:all }` damit Klicks neben der Pill durchgehen. Alle Scroll-Container (`.dash-page`, `.mt-page`, `.settings-page`, `#training-page-content`, `.players-scroll`, `.exercises-scroll`, `.cal-sidebar`) haben im Mobile-Breakpoint `padding-bottom: calc(env(safe-area-inset-bottom,0px) + 82px)` damit Inhalte nicht hinter der Nav verschwinden. `--app-height` (JS: `window.innerHeight`) bleibt für `.app-layout` erhalten um den `100dvh`-iOS-Bug zu vermeiden.
+16. **Mobile Nav Layout (B.0.47+)**: Nav nutzt `position:fixed; bottom:0; left:0; right:0` – schwebt immer am unteren Bildschirmrand. `.mobile-nav-wrap { pointer-events:none }`, `.mobile-nav { pointer-events:all }` damit Klicks neben der Pill durchgehen. Alle Scroll-Container (`.dash-page`, `.training-page-layout`, `.settings-mob-home`, `.players-scroll`) haben im Mobile-Breakpoint `padding-bottom: 82px` (kein `env(safe-area-inset-bottom)` mehr – Safe Area wurde B.0.47 komplett entfernt). FAB-Button: `bottom: 76px`. `--app-height` (JS: `window.innerHeight`) bleibt für `.app-layout` erhalten.
+18. **iOS-Zoom deaktiviert (B.0.47)**: Viewport hat `maximum-scale=1.0`. Alle `input, select, textarea` haben im Mobile-Breakpoint `font-size: 16px !important` – iOS zoomt bei Input-Fokus wenn font-size < 16px, daher !important nötig.
+19. **PDF-Zugriff für Spieler (B.0.47)**: Route `/training/<id>/pdf` erlaubt Spielern das Öffnen von Trainer-Trainings (via `linked_user_id → players.user_id`-Check), nicht nur eigene Trainings.
 17. **Players Page Struktur (v0.25)**: `players.html` hat zwei Zonen: `.players-top` (kein overflow → Team-Tabs können voll-breit scrollen) und `.players-scroll` (overflow-y:auto → scrollbarer Content). Bei Änderungen an der Players-Page beide Zonen berücksichtigen.

@@ -1,7 +1,55 @@
 # Training Manager – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 03. Juni 2026
-> Status: ✅ Version B.0.46 – Geburtstag + Multi-Team (Issue #5 + #7)
+> Zuletzt aktualisiert: 04. Juni 2026
+> Status: ✅ Version B.0.47 – Anwesenheit-Persistenz, iOS-Fix, PDF-Bug
+
+---
+
+## B.0.47 – Änderungen (04.06.2026, 11. Session)
+
+### Anwesenheit – Team-Auswahl persistieren
+- [x] `training.js` – Team-Auswahl wird per `localStorage` unter `att_team_<TRAINING_ID>` gespeichert
+- [x] `training.js` – Nach Reload wird das gespeicherte Team automatisch wiederhergestellt und Spielerliste direkt geladen
+- [x] `training.js` – Falls gespeichertes Team nicht mehr existiert, wird die Auswahl stillschweigend zurückgesetzt
+
+### Anwesenheit – Reload-Button
+- [x] `training.js` – Reload-Button (Pfeil-Icon) im Anwesenheits-Header neben dem Zähler
+- [x] `training.js` – Klick löst `loadAttendance()` aus + 700ms Spin-Animation auf dem Button
+- [x] `style.css` – `.att-reload-btn` + `.att-reload-spinning` Styles
+
+### iOS-Zoom auf Eingabefelder deaktiviert
+- [x] `base.html` – Viewport-Meta: `maximum-scale=1.0` hinzugefügt → verhindert Pinch-Zoom global
+- [x] `style.css` – `input, select, textarea { font-size: 16px !important }` im Mobile-Breakpoint ≤640px → iOS zoomt nicht mehr bei Input-Fokus (iOS-Trigger: font-size < 16px)
+
+### Safe Area am unteren Bildschirmrand entfernt
+- [x] `style.css` – `env(safe-area-inset-bottom)` aus allen 6 Vorkommen entfernt: Nav-Pill-Padding, `.dash-page`, `.training-page-layout`, `.settings-mob-home`, FAB-Button, `.players-scroll`
+- [x] `style.css` – FAB-Button `bottom: 76px` (über der Nav-Pill, die ~68px hoch ist)
+
+### Bugfix – PDF für Spieler bei Trainer-Trainings
+- [x] `app.py` – Route `/training/<id>/pdf`: Spieler wurden zum Kalender umgeleitet, weil nur `WHERE user_id = eigene_id` geprüft wurde. Jetzt dieselbe Zugriffslogik wie die Detail-API: Spieler dürfen PDFs von Trainings ihres Trainers laden (via `linked_user_id` → `players.user_id`-Check)
+
+---
+
+## Nächste Session – Feature: Übung teilen (Ansatz 1 – Share-Link)
+
+> **Startet direkt mit der Implementierung. Kein Brainstorming mehr nötig.**
+
+**Ziel:** Trainer kann eine Übung per WhatsApp / Nachrichten / E-Mail teilen. Spieler öffnen den Link, sehen die Übung vollständig (ohne Login) und können sie per "In meine Übungen kopieren" übernehmen.
+
+**Technischer Plan:**
+1. `database.py` – Migration: Neue Spalte `share_token TEXT` in `exercises` (nullable, UNIQUE)
+2. `app.py` – `POST /api/exercises/<id>/share` → generiert UUID-Token, speichert in DB, gibt `share_url` zurück
+3. `app.py` – Neue öffentliche Route `GET /exercise/share/<token>` → rendert neue Template `exercise_share.html` (kein Login nötig)
+4. `app.py` – `POST /api/exercises/import/<token>` → kopiert Übung in eigene exercises (Login nötig; Bild-URL wird übernommen)
+5. `exercise_share.html` – Standalone-Template (kein `extends base.html`), zeigt Übungsdetails + "In meine Übungen kopieren"-Button
+6. `exercises.js` – "Teilen"-Button pro Übung → ruft Share-API auf → Web Share API (`navigator.share()`) mit Link; Fallback: Link in Zwischenablage
+7. `style.css` – Styles für Share-Button + öffentliche Share-Seite
+
+**Wichtige Details:**
+- Token = `uuid.uuid4().hex` (32 Zeichen, kryptographisch sicher)
+- Bild: Cloudinary-URL direkt übernehmen (kein Re-Upload nötig)
+- "Kopieren"-Button nur wenn eingeloggt, sonst → Login-Hinweis
+- Token bleibt dauerhaft (kein Ablaufdatum) – Trainer kann Teilen durch Löschen der Übung widerrufen
 
 ---
 
