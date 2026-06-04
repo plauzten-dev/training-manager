@@ -1600,7 +1600,7 @@ textarea { resize: vertical; min-height: 90px; }
 .mt-fab {
   display: none;
   position: fixed;
-  bottom: 8px;
+  bottom: 76px;
   right: 20px;
   width: 54px; height: 54px; border-radius: 50%;
   background: var(--primary); color: #fff;
