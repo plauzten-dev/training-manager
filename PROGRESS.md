@@ -1,7 +1,20 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 04. Juni 2026
-> Status: ✅ Version B.0.47 – Anwesenheit-Persistenz, iOS-Fix, PDF-Bug
+> Status: ✅ Version B.0.48 – Übung teilen via Share-Link
+
+---
+
+## B.0.48 – Änderungen (04.06.2026, 12. Session)
+
+### Feature: Übung teilen via Share-Link
+- [x] `database.py` – Migration: `share_token TEXT` Spalte in `exercises` (nullable, UNIQUE Index)
+- [x] `app.py` – `POST /api/exercises/<id>/share` → generiert UUID-Token, speichert in DB, gibt `share_url` zurück (Token wird wiederverwendet wenn bereits vorhanden)
+- [x] `app.py` – Öffentliche Route `GET /exercise/share/<token>` → rendert `exercise_share.html` (kein Login nötig)
+- [x] `app.py` – `POST /api/exercises/import/<token>` → kopiert Übung in eigene Collection (Login nötig)
+- [x] `templates/exercise_share.html` – Standalone-Template (kein `extends base.html`): Sport-Farbgradient, Meta-Grid, Badges, "In meine Übungen kopieren"-Button (nur eingeloggt), "Link kopieren"-Fallback, Login-Hinweis für Gäste, "Erstellt mit Training Manager"-Branding
+- [x] `exercises.js` – "Teilen"-Button im Detail-Modal (neben Bearbeiten), `shareExercise()`: ruft Share-API auf → Web Share API (`navigator.share()`) wenn verfügbar, Fallback: Link in Zwischenablage
+- [x] Button-Feedback: grüner "Kopiert"-Status nach erfolgreichem Import
 
 ---
 
@@ -30,26 +43,11 @@
 
 ---
 
-## Nächste Session – Feature: Übung teilen (Ansatz 1 – Share-Link)
+## Nächste Session – Mögliche nächste Features
 
-> **Startet direkt mit der Implementierung. Kein Brainstorming mehr nötig.**
-
-**Ziel:** Trainer kann eine Übung per WhatsApp / Nachrichten / E-Mail teilen. Spieler öffnen den Link, sehen die Übung vollständig (ohne Login) und können sie per "In meine Übungen kopieren" übernehmen.
-
-**Technischer Plan:**
-1. `database.py` – Migration: Neue Spalte `share_token TEXT` in `exercises` (nullable, UNIQUE)
-2. `app.py` – `POST /api/exercises/<id>/share` → generiert UUID-Token, speichert in DB, gibt `share_url` zurück
-3. `app.py` – Neue öffentliche Route `GET /exercise/share/<token>` → rendert neue Template `exercise_share.html` (kein Login nötig)
-4. `app.py` – `POST /api/exercises/import/<token>` → kopiert Übung in eigene exercises (Login nötig; Bild-URL wird übernommen)
-5. `exercise_share.html` – Standalone-Template (kein `extends base.html`), zeigt Übungsdetails + "In meine Übungen kopieren"-Button
-6. `exercises.js` – "Teilen"-Button pro Übung → ruft Share-API auf → Web Share API (`navigator.share()`) mit Link; Fallback: Link in Zwischenablage
-7. `style.css` – Styles für Share-Button + öffentliche Share-Seite
-
-**Wichtige Details:**
-- Token = `uuid.uuid4().hex` (32 Zeichen, kryptographisch sicher)
-- Bild: Cloudinary-URL direkt übernehmen (kein Re-Upload nötig)
-- "Kopieren"-Button nur wenn eingeloggt, sonst → Login-Hinweis
-- Token bleibt dauerhaft (kein Ablaufdatum) – Trainer kann Teilen durch Löschen der Übung widerrufen
+- **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
+- **Saison-/Wochenplanung** – Überblick über geplante Trainingswochen
+- **Share-Link widerrufen** – `DELETE /api/exercises/<id>/share` um Token zu löschen
 
 ---
 

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>{{ exercise.title }} – Übung teilen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #1e293b;
+    background: #f1f5f9;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  .page-wrapper {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 16px 60px;
+  }
+
+  /* ── Header ── */
+  .share-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    color: #64748b;
+    font-size: 0.82rem;
+  }
+  .share-header svg { flex-shrink: 0; }
+  .share-header strong { color: #1e293b; }
+
+  /* ── Card ── */
+  .share-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  /* ── Image / Placeholder ── */
+  .share-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+  .share-img-placeholder {
+    width: 100%;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Sport-Farben (identisch mit style.css) */
+  .sport-bg-fussball   { background: linear-gradient(135deg,#14532d,#16a34a); }
+  .sport-bg-tennis     { background: linear-gradient(135deg,#7c2d12,#ea580c); }
+  .sport-bg-floorball  { background: linear-gradient(135deg,#1e3a8a,#3b82f6); }
+  .sport-bg-basketball { background: linear-gradient(135deg,#4c1d95,#7c3aed); }
+  .sport-bg-volleyball { background: linear-gradient(135deg,#78350f,#d97706); }
+  .sport-bg-gym        { background: linear-gradient(135deg,#1f2937,#4b5563); }
+  .sport-bg-allgemein  { background: linear-gradient(135deg,#134e4a,#0d9488); }
+
+  /* ── Card body ── */
+  .share-body {
+    padding: 24px;
+  }
+
+  .share-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  /* ── Badges ── */
+  .share-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .badge-sport   { background: #dbeafe; color: #1e40af; }
+  .badge-diff-0  { background: #dcfce7; color: #166534; }
+  .badge-diff-1  { background: #fef9c3; color: #854d0e; }
+  .badge-diff-2  { background: #fee2e2; color: #991b1b; }
+
+  /* ── Meta grid ── */
+  .share-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 10px;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .meta-label { font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .meta-value { font-size: 0.88rem; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 5px; }
+
+  /* ── Description ── */
+  .share-description {
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  /* ── Action bar ── */
+  .share-actions {
+    padding: 16px 24px 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-ghost   { background: #f1f5f9; color: #475569; }
+
+  /* ── Login hint ── */
+  .login-hint {
+    font-size: 0.82rem;
+    color: #64748b;
+    padding: 0 24px 20px;
+  }
+  .login-hint a { color: #2563eb; text-decoration: none; font-weight: 600; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e293b;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 9999;
+    opacity: 0;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* ── App-Branding footer ── */
+  .share-footer {
+    text-align: center;
+    margin-top: 28px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+  }
+  .share-footer a { color: #2563eb; text-decoration: none; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+  <!-- Header -->
+  <div class="share-header">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    <span>Geteilte Übung &middot; <strong>Training Manager</strong></span>
+  </div>
+
+  <!-- Card -->
+  <div class="share-card">
+    <!-- Bild oder Platzhalter -->
+    {% if exercise.image_path %}
+      {% if exercise.image_path.startswith('http') %}
+        <img class="share-img" src="{{ exercise.image_path }}" alt="{{ exercise.title }}">
+      {% else %}
+        <img class="share-img" src="/uploads/{{ exercise.image_path }}" alt="{{ exercise.title }}">
+      {% endif %}
+    {% else %}
+      {% set sport_class = {
+        'Fußball': 'sport-bg-fussball',
+        'Tennis': 'sport-bg-tennis',
+        'Floorball': 'sport-bg-floorball',
+        'Basketball': 'sport-bg-basketball',
+        'Volleyball': 'sport-bg-volleyball',
+        'Gym': 'sport-bg-gym',
+        'Allgemein': 'sport-bg-allgemein'
+      }.get(exercise.sport, 'sport-bg-allgemein') %}
+      <div class="share-img-placeholder {{ sport_class }}">
+        <svg width="80" height="80" viewBox="0 0 70 70" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.6" stroke-linecap="round"><circle cx="35" cy="35" r="22"/><circle cx="35" cy="35" r="8"/><line x1="13" y1="35" x2="57" y2="35"/><line x1="35" y1="13" x2="35" y2="57"/></svg>
+      </div>
+    {% endif %}
+
+    <!-- Body -->
+    <div class="share-body">
+      <h1 class="share-title">{{ exercise.title }}</h1>
+
+      <div class="share-badges">
+        <span class="badge badge-sport">{{ exercise.sport }}</span>
+        {% if exercise.difficulty == 'Anfänger' %}
+          <span class="badge badge-diff-0">Anfänger</span>
+        {% elif exercise.difficulty == 'Fortgeschritten' %}
+          <span class="badge badge-diff-1">Fortgeschritten</span>
+        {% else %}
+          <span class="badge badge-diff-2">Profi</span>
+        {% endif %}
+        <span class="badge" style="background:#f1f5f9;color:#64748b">{{ exercise.core_competency }}</span>
+      </div>
+
+      <div class="share-meta">
+        <div class="meta-item">
+          <span class="meta-label">Feldspieler</span>
+          <span class="meta-value">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+            {{ exercise.field_players }}
+          </span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Torhüter</span>
+          <span class="meta-value">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="1"/><path d="M10 11V8a2 2 0 1 1 4 0v3"/></svg>
+            {{ exercise.goalkeepers }}
+          </span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Spielfeldgröße</span>
+          <span class="meta-value">{{ exercise.field_size }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Kernkompetenz</span>
+          <span class="meta-value">{{ exercise.core_competency }}</span>
+        </div>
+      </div>
+
+      <p class="share-description">{{ exercise.description }}</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="share-actions">
+      {% if logged_in %}
+        <button class="btn btn-primary" id="import-btn" onclick="importExercise()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          In meine Übungen kopieren
+        </button>
+      {% endif %}
+      <button class="btn btn-ghost" onclick="copyLink()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Link kopieren
+      </button>
+    </div>
+
+    {% if not logged_in %}
+    <p class="login-hint">
+      <a href="/login">Anmelden</a> oder <a href="/login">Registrieren</a>, um diese Übung in deine Sammlung zu kopieren.
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Branding -->
+  <div class="share-footer">
+    Erstellt mit <a href="/">Training Manager</a>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const TOKEN = '{{ token }}';
+
+  async function importExercise() {
+    const btn = document.getElementById('import-btn');
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>
+      Wird kopiert...`;
+
+    const res = await fetch(`/api/exercises/import/${TOKEN}`, { method: 'POST' });
+    if (res.ok) {
+      showToast('Übung wurde in deine Sammlung kopiert!');
+      btn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Kopiert`;
+      btn.style.background = '#16a34a';
+    } else {
+      const d = await res.json().catch(() => ({}));
+      showToast(d.error || 'Fehler beim Kopieren', true);
+      btn.disabled = false;
+      btn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        In meine Übungen kopieren`;
+    }
+  }
+
+  function copyLink() {
+    const url = window.location.href;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => showToast('Link kopiert!'));
+    } else {
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showToast('Link kopiert!');
+    }
+  }
+
+  function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = isError ? '#dc2626' : '#1e293b';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* Spin-Animation für Lade-Icon */
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+</script>
+</body>
+</html>

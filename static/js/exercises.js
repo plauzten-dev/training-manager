@@ -214,6 +214,10 @@ async function showDetail(id) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Zu Training hinzufügen
       </button>
+      <button class="btn btn-ghost btn-sm" id="share-btn-${e.id}" onclick="shareExercise(${e.id}, this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Teilen
+      </button>
       <button class="btn btn-ghost btn-sm" onclick="showEditModal(${e.id})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Bearbeiten
@@ -463,6 +467,42 @@ async function addExerciseToTraining(trainingId, exerciseId, rowEl) {
     rowEl.style.opacity = '';
     showToast(d.error || 'Fehler', 'error');
   }
+}
+
+// ── Share ─────────────────────────────────────────────────────────────────────
+async function shareExercise(exerciseId, btn) {
+  btn.disabled = true;
+
+  const res = await fetch(`/api/exercises/${exerciseId}/share`, { method: 'POST' });
+  if (!res.ok) {
+    btn.disabled = false;
+    showToast('Fehler beim Erstellen des Links', 'error');
+    return;
+  }
+  const { share_url } = await res.json();
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Übung teilen', url: share_url });
+    } catch (_) { /* abgebrochen */ }
+    btn.disabled = false;
+    return;
+  }
+
+  // Fallback: Link in Zwischenablage
+  try {
+    await navigator.clipboard.writeText(share_url);
+    showToast('Link in Zwischenablage kopiert!', 'success');
+  } catch (_) {
+    const el = document.createElement('textarea');
+    el.value = share_url;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('Link in Zwischenablage kopiert!', 'success');
+  }
+  btn.disabled = false;
 }
 
 // ── Filters ───────────────────────────────────────────────────────────────────

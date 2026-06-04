@@ -738,6 +738,67 @@ def delete_exercise(exercise_id):
     return jsonify({'message': 'Übung gelöscht'})
 
 
+# ── Exercise Share API ────────────────────────────────────────────────────────
+
+@app.route('/exercise/share/<token>')
+def exercise_share_page(token):
+    conn = get_db()
+    exercise = conn.execute('SELECT * FROM exercises WHERE share_token = ?', (token,)).fetchone()
+    conn.close()
+    if not exercise:
+        return '<h2 style="font-family:sans-serif;padding:40px">Übung nicht gefunden oder Link ungültig.</h2>', 404
+    exercise = dict(exercise)
+    logged_in = 'user_id' in session
+    return render_template('exercise_share.html', exercise=exercise, token=token, logged_in=logged_in)
+
+
+@app.route('/api/exercises/<int:exercise_id>/share', methods=['POST'])
+@login_required
+def share_exercise(exercise_id):
+    conn = get_db()
+    exercise = conn.execute('SELECT * FROM exercises WHERE id = ?', (exercise_id,)).fetchone()
+    if not exercise:
+        conn.close()
+        return jsonify({'error': 'Übung nicht gefunden'}), 404
+
+    token = exercise['share_token']
+    if not token:
+        while True:
+            token = uuid.uuid4().hex
+            existing = conn.execute('SELECT id FROM exercises WHERE share_token = ?', (token,)).fetchone()
+            if not existing:
+                break
+        conn.execute('UPDATE exercises SET share_token = ? WHERE id = ?', (token, exercise_id))
+        conn.commit()
+
+    conn.close()
+    base_url = request.host_url.rstrip('/')
+    share_url = f"{base_url}/exercise/share/{token}"
+    return jsonify({'share_url': share_url, 'token': token})
+
+
+@app.route('/api/exercises/import/<token>', methods=['POST'])
+@login_required
+def import_exercise(token):
+    conn = get_db()
+    exercise = conn.execute('SELECT * FROM exercises WHERE share_token = ?', (token,)).fetchone()
+    if not exercise:
+        conn.close()
+        return jsonify({'error': 'Übung nicht gefunden'}), 404
+
+    e = dict(exercise)
+    cursor = conn.execute(
+        'INSERT INTO exercises (title, description, image_path, field_players, goalkeepers, core_competency, difficulty, field_size, sport) VALUES (?,?,?,?,?,?,?,?,?)',
+        (e['title'], e['description'], e['image_path'], e['field_players'], e['goalkeepers'],
+         e['core_competency'], e['difficulty'], e['field_size'], e['sport'])
+    )
+    conn.commit()
+    new_id = cursor.lastrowid
+    new_exercise = dict(conn.execute('SELECT * FROM exercises WHERE id = ?', (new_id,)).fetchone())
+    conn.close()
+    return jsonify(new_exercise), 201
+
+
 # ── Trainings API ─────────────────────────────────────────────────────────────
 
 @app.route('/api/trainings', methods=['GET'])

@@ -192,6 +192,18 @@ def init_db():
     except Exception:
         pass
 
+    # Migration: share_token on exercises (public share links)
+    try:
+        conn.execute("ALTER TABLE exercises ADD COLUMN share_token TEXT")
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_exercises_share_token ON exercises(share_token)")
+        conn.commit()
+    except Exception:
+        pass
+
     # Generate invite codes for all existing players that don't have one yet
     players_without_code = conn.execute('SELECT id FROM players WHERE invite_code IS NULL').fetchall()
     for row in players_without_code:
