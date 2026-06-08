@@ -435,14 +435,17 @@ textarea { resize: vertical; min-height: 90px; }
 .sport-tab svg { flex-shrink: 0; }
 
 /* Active states per sport */
-.sport-tab.active                           { color: #fff; border-color: #475569; background: #475569; }
-.sport-tab.active[data-sport="Fußball"]    { background: #16a34a; border-color: #16a34a; }
-.sport-tab.active[data-sport="Tennis"]     { background: #ea580c; border-color: #ea580c; }
-.sport-tab.active[data-sport="Floorball"]  { background: #2563eb; border-color: #2563eb; }
-.sport-tab.active[data-sport="Basketball"] { background: #7c3aed; border-color: #7c3aed; }
-.sport-tab.active[data-sport="Volleyball"] { background: #b45309; border-color: #b45309; }
-.sport-tab.active[data-sport="Gym"]        { background: #374151; border-color: #374151; }
-.sport-tab.active[data-sport="Allgemein"]  { background: #0d9488; border-color: #0d9488; }
+.sport-tab.active                              { color: #fff; border-color: #475569; background: #475569; }
+.sport-tab.active[data-sport="Fußball"]       { background: #16a34a; border-color: #16a34a; }
+.sport-tab.active[data-sport="Tennis"]        { background: #ea580c; border-color: #ea580c; }
+.sport-tab.active[data-sport="Floorball"]     { background: #2563eb; border-color: #2563eb; }
+.sport-tab.active[data-sport="Basketball"]    { background: #7c3aed; border-color: #7c3aed; }
+.sport-tab.active[data-sport="Volleyball"]    { background: #b45309; border-color: #b45309; }
+.sport-tab.active[data-sport="Gym"]           { background: #374151; border-color: #374151; }
+.sport-tab.active[data-sport="Allgemein"]     { background: #0d9488; border-color: #0d9488; }
+.fav-toggle-btn { gap: 6px; }
+.fav-toggle-btn.fav-toggle-active { border-color: #e11d48; color: #e11d48; background: #fff0f3; }
+.fav-toggle-btn.fav-toggle-active:hover { background: #ffe4e6; color: #e11d48; }
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  EXERCISES PAGE                                                            */
@@ -490,8 +493,17 @@ textarea { resize: vertical; min-height: 90px; }
   background: var(--card); border-radius: var(--radius);
   border: 1px solid var(--border); overflow: hidden;
   cursor: pointer; transition: transform 0.18s, box-shadow 0.18s;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow); position: relative;
 }
+.fav-btn {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.35); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; transition: background 0.15s, transform 0.15s;
+}
+.fav-btn:hover { background: rgba(0,0,0,0.55); transform: scale(1.1); }
+.fav-btn.fav-active { background: rgba(225,29,72,0.85); }
 .exercise-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
@@ -594,6 +606,8 @@ textarea { resize: vertical; min-height: 90px; }
   transition: background 0.12s;
 }
 .dash-day-pill:hover { background: #dbeafe; }
+.dash-day-event-pill { background: #fffbeb; border-color: transparent; }
+.dash-day-event-pill:hover { background: #fef3c7; }
 .dash-day-empty { color: var(--text-muted); font-size: 0.8rem; }
 .dash-day-more {
   font-size: 0.76rem; font-weight: 700; color: var(--text-muted);
@@ -862,6 +876,37 @@ textarea { resize: vertical; min-height: 90px; }
   transition: all 0.15s; display: flex; align-items: center; gap: 6px;
 }
 .cal-add-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+.cal-add-event-btn:hover { border-color: #d97706; color: #d97706; background: #fffbeb; }
+
+.training-list-meta { font-size: 0.73rem; color: var(--text-muted); display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.cal-event-badge {
+  display: inline-flex; align-items: center;
+  font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+}
+.cal-event-item:hover { border-color: #d97706; }
+.cal-event-del {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: transparent; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: background 0.15s, color 0.15s;
+}
+.cal-event-del:hover { background: #fee2e2; color: #dc2626; }
+
+/* Event chip in month/week cells */
+.event-chip { background: #fef3c7; color: #92400e; border-left-color: #d97706; }
+
+/* Week-view event item */
+.cal-wk-event {
+  border-left: 3px solid #d97706; background: #fffbeb;
+}
+.cal-wk-event:hover { background: #fef3c7; }
+
+/* has-event dot marker on month cell */
+.cal-day.has-event .day-number::after {
+  content: ''; display: inline-block; width: 5px; height: 5px;
+  border-radius: 50%; background: #d97706;
+  margin-left: 4px; vertical-align: middle;
+}
 
 /* ── Monat/Woche-Umschalter ──────────────────────────────────────────────── */
 .cal-view-toggle {
@@ -1142,6 +1187,7 @@ textarea { resize: vertical; min-height: 90px; }
   /* Page header */
   .page-header { padding: 20px 18px 0; flex-wrap: wrap; gap: 10px; }
   .page-title { font-size: 1.25rem; }
+  .fav-toggle-label, .via-link-label { display: none; }
 
   /* Login */
   .login-hero { display: none; }

@@ -204,6 +204,50 @@ def init_db():
     except Exception:
         pass
 
+    # Migration: exercise_favorites (user bookmarks)
+    try:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS exercise_favorites (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                exercise_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE,
+                UNIQUE (user_id, exercise_id)
+            )
+        ''')
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: events (Spieltermine, Turniere, etc.)
+    try:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                date TEXT NOT NULL,
+                time TEXT,
+                location TEXT,
+                type TEXT NOT NULL DEFAULT 'spiel',
+                notes TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        ''')
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: add team_id to events
+    try:
+        conn.execute("ALTER TABLE events ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL")
+        conn.commit()
+    except Exception:
+        pass
+
     # Generate invite codes for all existing players that don't have one yet
     players_without_code = conn.execute('SELECT id FROM players WHERE invite_code IS NULL').fetchall()
     for row in players_without_code:

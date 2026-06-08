@@ -190,26 +190,32 @@ async function loadDashboard() {
   /* 4-Day calendar */
   const todayStr = new Date().toISOString().split('T')[0];
   const REL_LABELS = ['Heute', 'Morgen', 'Übermorgen'];
-  document.getElementById('dash-days').innerHTML = data.upcoming.map(({ date, trainings }, idx) => {
+  const EV_COLORS = { spiel: '#d97706', turnier: '#7c3aed', sonstiges: '#64748b' };
+  document.getElementById('dash-days').innerHTML = data.upcoming.map(({ date, trainings, events }, idx) => {
     const d       = new Date(date + 'T12:00:00');
     const isToday = date === todayStr;
     const dayName  = idx < 3 ? REL_LABELS[idx] : SHORT_DAYS[d.getDay()];
     const dateNum  = `${d.getDate()}. ${MONTHS[d.getMonth()]}`;
     const maxShow   = window.innerWidth <= 640 ? 2 : 3;
-    const shown     = trainings.slice(0, maxShow);
-    const extra     = trainings.length - maxShow;
-    const trainHtml = trainings.length
-      ? shown.map(t =>
-          `<div class="dash-day-pill" onclick="event.stopPropagation();window.location='/training/${t.id}'">${t.title}</div>`
+    const allItems  = [
+      ...(trainings || []).map(t => ({ kind: 'training', ...t })),
+      ...(events || []).map(ev => ({ kind: 'event', ...ev })),
+    ];
+    const shown = allItems.slice(0, maxShow);
+    const extra = allItems.length - maxShow;
+    const itemsHtml = allItems.length
+      ? shown.map(item => item.kind === 'training'
+          ? `<div class="dash-day-pill" onclick="event.stopPropagation();window.location='/training/${item.id}'">${item.title}</div>`
+          : `<div class="dash-day-pill dash-day-event-pill" style="border-color:${EV_COLORS[item.type]||'#64748b'};color:${EV_COLORS[item.type]||'#64748b'}" onclick="event.stopPropagation();window.location='/calendar'">${item.title}</div>`
         ).join('') + (extra > 0 ? `<div class="dash-day-more">···</div>` : '')
-      : `<span class="dash-day-empty">Kein Training</span>`;
+      : `<span class="dash-day-empty">Kein Eintrag</span>`;
     return `
       <div class="dash-day${isToday ? ' today' : ''}" onclick="window.location='/calendar'">
         <div class="dash-day-header">
           <span class="dash-day-name">${dayName}</span>
           <span class="dash-day-num">${dateNum}</span>
         </div>
-        <div class="dash-day-trainings">${trainHtml}</div>
+        <div class="dash-day-trainings">${itemsHtml}</div>
         <div class="dash-day-add">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>

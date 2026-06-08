@@ -613,34 +613,43 @@ def get_exercises():
     difficulty = request.args.get('difficulty')
     field_size = request.args.get('field_size')
     search = request.args.get('search', '')
+    favorites_only = request.args.get('favorites') == '1'
+    uid = session['user_id']
 
-    query = 'SELECT * FROM exercises WHERE 1=1'
-    params = []
+    query = '''SELECT e.*,
+               CASE WHEN ef.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_favorite
+               FROM exercises e
+               LEFT JOIN exercise_favorites ef ON ef.exercise_id = e.id AND ef.user_id = ?
+               WHERE 1=1'''
+    params = [uid]
 
-    sport       = request.args.get('sport')
+    if favorites_only:
+        query += ' AND ef.user_id IS NOT NULL'
+
+    sport = request.args.get('sport')
     if sport:
-        query += ' AND sport = ?'
+        query += ' AND e.sport = ?'
         params.append(sport)
     if field_players:
-        query += ' AND field_players = ?'
+        query += ' AND e.field_players = ?'
         params.append(int(field_players))
     if goalkeepers:
-        query += ' AND goalkeepers = ?'
+        query += ' AND e.goalkeepers = ?'
         params.append(int(goalkeepers))
     if core_competency:
-        query += ' AND core_competency = ?'
+        query += ' AND e.core_competency = ?'
         params.append(core_competency)
     if difficulty:
-        query += ' AND difficulty = ?'
+        query += ' AND e.difficulty = ?'
         params.append(difficulty)
     if field_size:
-        query += ' AND field_size = ?'
+        query += ' AND e.field_size = ?'
         params.append(field_size)
     if search:
-        query += ' AND (title LIKE ? OR description LIKE ?)'
+        query += ' AND (e.title LIKE ? OR e.description LIKE ?)'
         params.extend([f'%{search}%', f'%{search}%'])
 
-    query += ' ORDER BY created_at DESC'
+    query += ' ORDER BY e.created_at DESC'
 
     conn = get_db()
     exercises = [dict(row) for row in conn.execute(query, params).fetchall()]
@@ -803,6 +812,179 @@ def import_exercise(token):
     new_exercise = dict(conn.execute('SELECT * FROM exercises WHERE id = ?', (new_id,)).fetchone())
     conn.close()
     return jsonify(new_exercise), 201
+
+
+# ── Exercise Favorites API ────────────────────────────────────────────────────
+
+@app.route('/api/exercises/<int:exercise_id>/favorite', methods=['POST'])
+@login_required
+def toggle_favorite(exercise_id):
+    uid = session['user_id']
+    conn = get_db()
+    existing = conn.execute(
+        'SELECT id FROM exercise_favorites WHERE user_id = ? AND exercise_id = ?', (uid, exercise_id)
+    ).fetchone()
+    if existing:
+        conn.execute('DELETE FROM exercise_favorites WHERE user_id = ? AND exercise_id = ?', (uid, exercise_id))
+        is_favorite = False
+    else:
+        conn.execute('INSERT INTO exercise_favorites (user_id, exercise_id) VALUES (?,?)', (uid, exercise_id))
+        is_favorite = True
+    conn.commit()
+    conn.close()
+    return jsonify({'is_favorite': is_favorite})
+
+
+# ── Events API ────────────────────────────────────────────────────────────────
+
+@app.route('/api/events', methods=['GET'])
+@login_required
+def get_events():
+    month = request.args.get('month')
+    uid = session['user_id']
+    conn = get_db()
+
+    user_row = conn.execute('SELECT role FROM users WHERE id = ?', (uid,)).fetchone()
+    user_role = user_row['role'] if user_row else 'trainer'
+
+    if user_role == 'player':
+        p = conn.execute('SELECT id, user_id FROM players WHERE linked_user_id = ?', (uid,)).fetchone()
+        if p:
+            trainer_id = p['user_id']
+            player_id = p['id']
+            team_rows = conn.execute(
+                'SELECT team_id FROM player_team_memberships WHERE player_id = ?', (player_id,)
+            ).fetchall()
+            team_ids = [r['team_id'] for r in team_rows]
+            if team_ids:
+                placeholders = ','.join('?' * len(team_ids))
+                if month:
+                    rows = conn.execute(
+                        f"SELECT e.*, t.name as team_name FROM events e LEFT JOIN teams t ON e.team_id = t.id "
+                        f"WHERE e.user_id = ? AND e.team_id IN ({placeholders}) AND strftime('%Y-%m', e.date) = ? ORDER BY e.date, e.time",
+                        (trainer_id, *team_ids, month)
+                    ).fetchall()
+                else:
+                    rows = conn.execute(
+                        f"SELECT e.*, t.name as team_name FROM events e LEFT JOIN teams t ON e.team_id = t.id "
+                        f"WHERE e.user_id = ? AND e.team_id IN ({placeholders}) ORDER BY e.date, e.time",
+                        (trainer_id, *team_ids)
+                    ).fetchall()
+            else:
+                rows = []
+        else:
+            rows = []
+        conn.close()
+        return jsonify([dict(r) for r in rows])
+
+    # Trainer/private: eigene Events
+    if month:
+        rows = conn.execute(
+            "SELECT e.*, t.name as team_name FROM events e LEFT JOIN teams t ON e.team_id = t.id "
+            "WHERE e.user_id = ? AND strftime('%Y-%m', e.date) = ? ORDER BY e.date, e.time",
+            (uid, month)
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT e.*, t.name as team_name FROM events e LEFT JOIN teams t ON e.team_id = t.id "
+            "WHERE e.user_id = ? ORDER BY e.date, e.time",
+            (uid,)
+        ).fetchall()
+    conn.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route('/api/events', methods=['POST'])
+@login_required
+def create_event():
+    data = request.get_json()
+    title = (data.get('title') or '').strip()
+    date = (data.get('date') or '').strip()
+    event_type = (data.get('type') or 'spiel').strip()
+    time = (data.get('time') or '').strip() or None
+    location = (data.get('location') or '').strip() or None
+    notes = (data.get('notes') or '').strip()
+    raw_team_id = data.get('team_id')
+
+    if not title or not date:
+        return jsonify({'error': 'Titel und Datum erforderlich'}), 400
+    if event_type not in ('spiel', 'turnier', 'sonstiges'):
+        event_type = 'spiel'
+
+    conn = get_db()
+    team_id = None
+    if raw_team_id:
+        t = conn.execute('SELECT id FROM teams WHERE id = ? AND user_id = ?', (int(raw_team_id), session['user_id'])).fetchone()
+        if t:
+            team_id = int(raw_team_id)
+
+    cursor = conn.execute(
+        'INSERT INTO events (user_id, title, date, time, location, type, notes, team_id) VALUES (?,?,?,?,?,?,?,?)',
+        (session['user_id'], title, date, time, location, event_type, notes, team_id)
+    )
+    conn.commit()
+    event = dict(conn.execute(
+        'SELECT e.*, t.name as team_name FROM events e LEFT JOIN teams t ON e.team_id = t.id WHERE e.id = ?',
+        (cursor.lastrowid,)
+    ).fetchone())
+    conn.close()
+    return jsonify(event), 201
+
+
+@app.route('/api/events/<int:event_id>', methods=['PUT'])
+@login_required
+def update_event(event_id):
+    data = request.get_json()
+    title = (data.get('title') or '').strip()
+    date = (data.get('date') or '').strip()
+    event_type = (data.get('type') or 'spiel').strip()
+    time = (data.get('time') or '').strip() or None
+    location = (data.get('location') or '').strip() or None
+    notes = (data.get('notes') or '').strip()
+    raw_team_id = data.get('team_id')
+
+    if not title or not date:
+        return jsonify({'error': 'Titel und Datum erforderlich'}), 400
+    if event_type not in ('spiel', 'turnier', 'sonstiges'):
+        event_type = 'spiel'
+
+    conn = get_db()
+    ev = conn.execute('SELECT id FROM events WHERE id = ? AND user_id = ?', (event_id, session['user_id'])).fetchone()
+    if not ev:
+        conn.close()
+        return jsonify({'error': 'Termin nicht gefunden'}), 404
+
+    team_id = None
+    if raw_team_id:
+        t = conn.execute('SELECT id FROM teams WHERE id = ? AND user_id = ?', (int(raw_team_id), session['user_id'])).fetchone()
+        if t:
+            team_id = int(raw_team_id)
+
+    conn.execute(
+        'UPDATE events SET title=?, date=?, time=?, location=?, type=?, notes=?, team_id=? WHERE id=?',
+        (title, date, time, location, event_type, notes, team_id, event_id)
+    )
+    conn.commit()
+    event = dict(conn.execute(
+        'SELECT e.*, t.name as team_name FROM events e LEFT JOIN teams t ON e.team_id = t.id WHERE e.id = ?',
+        (event_id,)
+    ).fetchone())
+    conn.close()
+    return jsonify(event)
+
+
+@app.route('/api/events/<int:event_id>', methods=['DELETE'])
+@login_required
+def delete_event(event_id):
+    conn = get_db()
+    ev = conn.execute('SELECT id FROM events WHERE id = ? AND user_id = ?', (event_id, session['user_id'])).fetchone()
+    if not ev:
+        conn.close()
+        return jsonify({'error': 'Termin nicht gefunden'}), 404
+    conn.execute('DELETE FROM events WHERE id = ?', (event_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Termin gelöscht'})
 
 
 # ── Trainings API ─────────────────────────────────────────────────────────────
@@ -1109,7 +1291,11 @@ def dashboard_api():
                 'SELECT id, title FROM trainings WHERE user_id=? AND date=? ORDER BY created_at',
                 (trainer_id, day)
             ).fetchall()]
-        upcoming.append({'date': day, 'trainings': own_t + trainer_t})
+        day_events = [dict(r) for r in conn.execute(
+            'SELECT id, title, time, location, type FROM events WHERE user_id=? AND date=? ORDER BY time',
+            (user_id, day)
+        ).fetchall()]
+        upcoming.append({'date': day, 'trainings': own_t + trainer_t, 'events': day_events})
 
     suggested = [dict(r) for r in conn.execute(
         "SELECT id, title, core_competency, difficulty, sport FROM exercises "

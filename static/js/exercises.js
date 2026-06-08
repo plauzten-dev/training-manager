@@ -59,14 +59,21 @@ const SPORT_COLORS = {
 async function init() {
   const savedSport = localStorage.getItem('exercises_sport') || '';
   if (savedSport) {
-    const tab = document.querySelector(`.sport-tab[data-sport="${savedSport}"]`);
-    if (tab) {
-      currentSport = savedSport;
-      document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+    currentSport = savedSport;
+    if (savedSport !== 'favorites') {
+      const tab = document.querySelector(`.sport-tab[data-sport="${savedSport}"]`);
+      if (tab) {
+        document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      }
     }
   }
   updateSportSelMobile(currentSport);
+  updateFavToggleBtn(currentSport);
+  if (currentSport === 'favorites') {
+    await fetchExercises();
+    return;
+  }
 
   // Close mobile sport panel on outside click
   document.addEventListener('click', (e) => {
@@ -111,28 +118,53 @@ async function setSport(el, sport) {
   document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
   if (el) {
     el.classList.add('active');
-  } else {
+  } else if (sport !== 'favorites') {
     document.querySelector(`.sport-tab[data-sport="${sport}"]`)?.classList.add('active');
   }
   updateSportSelMobile(sport);
-  // Reset competency + field size filters for the new sport
-  await loadFilterOptions(sport);
-  document.getElementById('filter-competency').value = '';
-  document.getElementById('filter-fieldsize').value  = '';
+  updateFavToggleBtn(sport);
+  if (sport !== 'favorites') {
+    await loadFilterOptions(sport);
+    document.getElementById('filter-competency').value = '';
+    document.getElementById('filter-fieldsize').value  = '';
+  }
   await fetchExercises();
+}
+
+function toggleFavoritesView() {
+  if (currentSport === 'favorites') {
+    setSport(null, '');
+  } else {
+    setSport(null, 'favorites');
+  }
+}
+
+function updateFavToggleBtn(sport) {
+  const btn = document.getElementById('fav-toggle-btn');
+  if (!btn) return;
+  const active = sport === 'favorites';
+  btn.classList.toggle('fav-toggle-active', active);
+  const svg = btn.querySelector('svg');
+  if (svg) {
+    svg.setAttribute('fill', active ? '#e11d48' : 'none');
+    svg.setAttribute('stroke', active ? '#e11d48' : 'currentColor');
+  }
 }
 
 function updateSportSelMobile(sport) {
   const dot     = document.getElementById('sport-sel-mob-dot');
   const label   = document.getElementById('sport-sel-mob-label');
   const trigger = document.getElementById('sport-sel-mob-trigger');
-  const color   = sport ? SPORT_COLORS[sport] : '#64748b';
+  // Favorites handled by header button; dropdown shows sport filter only
+  const displaySport = sport === 'favorites' ? '' : sport;
+  const color = displaySport ? (SPORT_COLORS[displaySport] || '#64748b') : '#64748b';
+  const labelText = displaySport || 'Alle Sportarten';
   if (dot)     dot.style.background = color;
-  if (label)   label.textContent = sport || 'Alle Sportarten';
-  if (trigger) { trigger.style.borderColor = sport ? color : ''; trigger.style.color = sport ? color : ''; }
+  if (label)   label.textContent = labelText;
+  if (trigger) { trigger.style.borderColor = displaySport ? color : ''; trigger.style.color = displaySport ? color : ''; }
   document.querySelectorAll('.sport-sel-opt').forEach(btn => {
     const s = btn.dataset.sport;
-    const isActive = s === sport;
+    const isActive = s === displaySport;
     const c = s ? SPORT_COLORS[s] : '#64748b';
     btn.classList.toggle('active', isActive);
     btn.style.background  = isActive ? c + '20' : '';
@@ -150,7 +182,11 @@ function toggleSportSelMobile(event) {
 // ── Fetch & Render ────────────────────────────────────────────────────────────
 async function fetchExercises() {
   const params = new URLSearchParams();
-  if (currentSport) params.set('sport', currentSport);
+  if (currentSport === 'favorites') {
+    params.set('favorites', '1');
+  } else if (currentSport) {
+    params.set('sport', currentSport);
+  }
 
   const players    = document.getElementById('filter-players').value;
   const gk         = document.getElementById('filter-gk').value;
@@ -201,9 +237,15 @@ function cardHTML(e) {
   const diffClass = DIFF_CLASS[e.difficulty] || 'badge-gray';
   const sportBadgeClass = { 'Fußball':'badge-green','Tennis':'badge-red','Floorball':'badge-blue' }[e.sport] || 'badge-gray';
 
+  const favFill = e.is_favorite ? '#e11d48' : 'none';
+  const favStroke = e.is_favorite ? '#e11d48' : 'currentColor';
+
   return `
     <div class="exercise-card" onclick="showDetail(${e.id})">
       <div class="exercise-card-img">${imgContent}</div>
+      <button class="fav-btn${e.is_favorite ? ' fav-active' : ''}" onclick="toggleFavorite(event,${e.id},this)" title="${e.is_favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="${favFill}" stroke="${favStroke}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
       <div class="exercise-card-body">
         <div class="exercise-card-title">${escHtml(e.title)}</div>
         <div class="exercise-card-meta">
@@ -217,6 +259,26 @@ function cardHTML(e) {
         </div>
       </div>
     </div>`;
+}
+
+// ── Favorites ─────────────────────────────────────────────────────────────────
+async function toggleFavorite(event, exerciseId, btn) {
+  event.stopPropagation();
+  const res = await fetch(`/api/exercises/${exerciseId}/favorite`, { method: 'POST' });
+  if (!res.ok) { showToast('Fehler', 'error'); return; }
+  const { is_favorite } = await res.json();
+
+  const svg = btn.querySelector('svg');
+  if (svg) {
+    svg.setAttribute('fill', is_favorite ? '#e11d48' : 'none');
+    svg.setAttribute('stroke', is_favorite ? '#e11d48' : 'currentColor');
+  }
+  btn.classList.toggle('fav-active', is_favorite);
+
+  // Wenn wir im Favoriten-Tab sind und eine Übung entfernt wird, neu laden
+  if (!is_favorite && currentSport === 'favorites') {
+    await fetchExercises();
+  }
 }
 
 // ── Detail Modal ──────────────────────────────────────────────────────────────

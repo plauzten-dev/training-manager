@@ -1,7 +1,64 @@
 # Training Manager – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 04. Juni 2026
-> Status: ✅ Version B.0.49 – Mobile UX-Fixes: Sport-Selektor, Filter-Panel, Formular-Dropdown
+> Zuletzt aktualisiert: 08. Juni 2026
+> Status: ✅ Version B.0.51 – Favoriten-Button im Header + Event Team-Auswahl
+
+---
+
+## B.0.51 – Änderungen (08.06.2026, 15. Session)
+
+### Feature: Favoriten-Button in Page-Header (Übungen)
+- [x] `exercises.html` – Herz-Button `#fav-toggle-btn` im Page-Header (vor "Via Link"), Icon-only auf Mobile
+- [x] `exercises.html` – "Meine Favoriten"-Tab aus Sport-Tab-Leiste entfernt
+- [x] `exercises.html` – "Meine Favoriten"-Option aus mobilem Sport-Dropdown entfernt
+- [x] `exercises.js` – `toggleFavoritesView()` – Toggle zwischen Favoriten und Alle
+- [x] `exercises.js` – `updateFavToggleBtn(sport)` – Herz-Button rot/gefüllt wenn aktiv
+- [x] `exercises.js` – `setSport()` + `init()` rufen `updateFavToggleBtn()` auf
+- [x] `exercises.js` – `updateSportSelMobile()` zeigt "Alle Sportarten" wenn Favoriten-Modus aktiv
+- [x] `style.css` – `.fav-toggle-btn`, `.fav-toggle-btn.fav-toggle-active`, `.fav-toggle-label/.via-link-label { display:none }` auf ≤640px
+
+### Feature: Termine – Team-Auswahl
+- [x] `database.py` – Migration: `ALTER TABLE events ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL`
+- [x] `app.py` – `GET /api/events`: Spieler-Rolle lädt Trainer-Events gefiltert nach eigenem Team (via `player_team_memberships`)
+- [x] `app.py` – `POST /api/events`: akzeptiert `team_id`, validiert Zugehörigkeit zum User
+- [x] `app.py` – `PUT /api/events/<id>`: akzeptiert `team_id`, validiert Zugehörigkeit zum User
+- [x] `app.py` – Alle Event-Queries mit `LEFT JOIN teams` → gibt `team_name` zurück
+- [x] `calendar.js` – `loadTeams()` – lädt Teams via `/api/teams`
+- [x] `calendar.js` – `eventFormHTML(dateVal, ev, teams)` – Team-Dropdown (optional, "Kein Team" als Default)
+- [x] `calendar.js` – `showCreateEventModal()` + `showEditEventModal()` laden Teams parallel
+- [x] `calendar.js` – `submitEvent()` sendet `team_id` mit
+- [x] `calendar.js` – Sidebar zeigt `team_name` im Event-Meta
+
+---
+
+## B.0.50 – Änderungen (08.06.2026, 14. Session)
+
+### Feature: Übungs-Favoriten
+- [x] `database.py` – Migration: `exercise_favorites` Tabelle (`user_id`, `exercise_id`, UNIQUE)
+- [x] `app.py` – `GET /api/exercises` gibt jetzt `is_favorite`-Flag zurück (LEFT JOIN), unterstützt `?favorites=1`-Filter
+- [x] `app.py` – `POST /api/exercises/<id>/favorite` → Toggle (fügt hinzu oder entfernt)
+- [x] `exercises.html` – "Meine Favoriten"-Tab in der Sport-Tab-Leiste (rot, Herz-Icon)
+- [x] `exercises.html` – "Meine Favoriten"-Option im mobilen Sport-Selektor
+- [x] `exercises.js` – `toggleFavorite(event, id, btn)` – API-Call, Herz-Button wird rot/gefüllt
+- [x] `exercises.js` – `setSport()` und `fetchExercises()` unterstützen `'favorites'` als Sonderfall
+- [x] `exercises.js` – `cardHTML()` – Herz-Button auf jeder Übungskarte (oben rechts, stopPropagation)
+- [x] `style.css` – `.fav-btn`, `.fav-btn.fav-active`, `.sport-tab-favorites` Styles
+
+### Feature: Kalender-Terminerweiterung (Spiele, Turniere, Sonstiges)
+- [x] `database.py` – Migration: `events` Tabelle (`user_id`, `title`, `date`, `time`, `location`, `type`, `notes`)
+- [x] `app.py` – `GET /api/events?month=` – Events eines Monats laden
+- [x] `app.py` – `POST /api/events` – Termin erstellen
+- [x] `app.py` – `PUT /api/events/<id>` – Termin bearbeiten
+- [x] `app.py` – `DELETE /api/events/<id>` – Termin löschen
+- [x] `app.py` – Dashboard-API: `upcoming`-Einträge enthalten jetzt `events`-Array pro Tag
+- [x] `calendar.html` – "Termin"-Button im Header (neben "Neues Training")
+- [x] `calendar.js` – `eventsMap` parallel zu `trainingsMap`, `fetchEvents()` lädt Events
+- [x] `calendar.js` – Monatsansicht: Event-Chips in Orange/Lila/Grau je nach Typ, `has-event` Punkt-Indikator
+- [x] `calendar.js` – Wochenansicht: Events mit farbiger linker Kante
+- [x] `calendar.js` – Sidebar: Events mit Badge, Uhrzeit, Ort, Löschen-Button, "Termin hinzufügen"-Button
+- [x] `calendar.js` – `showCreateEventModal()`, `showEditEventModal()`, `submitEvent()`, `deleteEventFromModal()`, `deleteEventFromSidebar()`
+- [x] `dashboard.html` – 4-Tage-Vorschau zeigt Events als orangefarbene Pill neben Trainings
+- [x] `style.css` – Event-Chip, Event-Badge, Kalender-Event-Styles, Dashboard-Event-Pill
 
 ---
 

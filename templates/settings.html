@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Einstellungen – Training Manager{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Einstellungen â€“ Training Manager{% endblock %}
 
 {% block content %}
 <div class="settings-page">
@@ -10,7 +10,7 @@
   </div>
 </div>
 
-<!-- ── Mobile: WhatsApp-style nav list (nur ≤640px) ──────────────────────── -->
+<!-- â”€â”€ Mobile: WhatsApp-style nav list (nur â‰¤640px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <div class="settings-mob-home" id="settings-mob-home">
 
   <div class="settings-mob-profile" onclick="showSettingDetail('detail-profil','Profil bearbeiten','Benutzername und E-Mail')">
@@ -40,12 +40,12 @@
       </div>
       <div class="settings-mob-chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
     </div>
-    <div class="settings-mob-row" onclick="showSettingDetail('detail-passwort','Passwort ändern','Sicherheit und Zugangsdaten')">
+    <div class="settings-mob-row" onclick="showSettingDetail('detail-passwort','Passwort Ã¤ndern','Sicherheit und Zugangsdaten')">
       <div class="settings-mob-row-icon blue">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
       <div class="settings-mob-row-text">
-        <div class="settings-mob-row-title">Passwort ändern</div>
+        <div class="settings-mob-row-title">Passwort Ã¤ndern</div>
         <div class="settings-mob-row-sub">Sicherheit und Zugangsdaten</div>
       </div>
       <div class="settings-mob-chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
@@ -78,7 +78,7 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </div>
       <div class="settings-mob-row-text">
-        <div class="settings-mob-row-title">Datenschutzerklärung</div>
+        <div class="settings-mob-row-title">DatenschutzerklÃ¤rung</div>
       </div>
       <div class="settings-mob-chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
     </div>
@@ -124,7 +124,7 @@
 
 </div><!-- /settings-mob-home -->
 
-<!-- ── Detail-Bereiche (Desktop: alle als Karten; Mobile: einzeln per Nav) ── -->
+<!-- â”€â”€ Detail-Bereiche (Desktop: alle als Karten; Mobile: einzeln per Nav) â”€â”€ -->
 <div class="settings-detail-grid" id="settings-detail-grid">
 
   <!-- Profil -->
@@ -154,7 +154,7 @@
         <div class="avatar-edit-side">
           <div class="avatar-edit-label">Profilbild</div>
           <div class="avatar-edit-actions">
-            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('user-avatar-input').click()">Bild wählen</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('user-avatar-input').click()">Bild wÃ¤hlen</button>
             <button type="button" class="btn btn-ghost btn-sm avatar-remove-btn" id="user-avatar-remove" onclick="removeUserAvatar()" {% if not user.avatar_path %}style="display:none"{% endif %}>Entfernen</button>
           </div>
         </div>
@@ -171,7 +171,7 @@
         </div>
         <div class="settings-form-footer">
           <span id="profile-status" class="settings-status"></span>
-          <button type="submit" class="btn btn-primary btn-sm" id="profile-btn">Änderungen speichern</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="profile-btn">Ã„nderungen speichern</button>
         </div>
       </form>
     </div>
@@ -189,7 +189,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </div>
         <div>
-          <div class="settings-card-title">Passwort ändern</div>
+          <div class="settings-card-title">Passwort Ã¤ndern</div>
           <div class="settings-card-sub">Lege ein neues Passwort fest</div>
         </div>
       </div>
@@ -217,7 +217,7 @@
               Mit Microsoft angemeldet
             </div>
           {% endif %}
-          <p class="oauth-login-hint">Dein Konto ist über {{ user.oauth_provider|capitalize }} verknüpft. Ein separates Passwort ist nicht notwendig.</p>
+          <p class="oauth-login-hint">Dein Konto ist Ã¼ber {{ user.oauth_provider|capitalize }} verknÃ¼pft. Ein separates Passwort ist nicht notwendig.</p>
         </div>
       {% else %}
       <form id="password-form" onsubmit="submitPassword(event)">
@@ -242,7 +242,7 @@
           <div id="pw-strength-label" class="form-hint"></div>
         </div>
         <div class="form-group">
-          <label>Neues Passwort bestätigen</label>
+          <label>Neues Passwort bestÃ¤tigen</label>
           <div class="input-password-wrap">
             <input type="password" id="input-confirm-pw" required autocomplete="new-password" oninput="checkPwMatch()">
             <button type="button" class="pw-toggle" onclick="togglePw('input-confirm-pw', this)" tabindex="-1">
@@ -253,7 +253,7 @@
         </div>
         <div class="settings-form-footer">
           <span id="password-status" class="settings-status"></span>
-          <button type="submit" class="btn btn-primary btn-sm" id="password-btn">Passwort ändern</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="password-btn">Passwort Ã¤ndern</button>
         </div>
       </form>
       {% endif %}
@@ -279,7 +279,7 @@
       <div class="info-grid">
         <div class="info-row">
           <span class="info-label">Mitglied seit</span>
-          <span class="info-value" id="joined-date">{{ user.created_at[:10] if user.created_at else '–' }}</span>
+          <span class="info-value" id="joined-date">{{ user.created_at[:10] if user.created_at else 'â€“' }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Benutzername</span>
@@ -306,13 +306,13 @@
         </div>
         <div>
           <div class="settings-card-title">Hilfe</div>
-          <div class="settings-card-sub">Häufige Fragen und App-Infos</div>
+          <div class="settings-card-sub">HÃ¤ufige Fragen und App-Infos</div>
         </div>
       </div>
       <div class="info-grid">
         <div class="info-row">
           <span class="info-label">App-Version</span>
-          <span class="info-value">B.0.49</span>
+          <span class="info-value">B.0.51</span>
         </div>
         <div class="info-row">
           <span class="info-label">Plattform</span>
@@ -321,16 +321,16 @@
       </div>
       <div class="settings-help-items">
         <div class="settings-help-item">
-          <div class="settings-help-q">Wie füge ich ein Training hinzu?</div>
+          <div class="settings-help-q">Wie fÃ¼ge ich ein Training hinzu?</div>
           <div class="settings-help-a">Gehe zum Kalender und tippe auf einen Tag, um ein neues Training zu erstellen.</div>
         </div>
         <div class="settings-help-item">
           <div class="settings-help-q">Wie installiere ich die App auf dem iPhone?</div>
-          <div class="settings-help-a">Öffne die App in Safari, tippe auf das Teilen-Symbol und wähle "Zum Home-Bildschirm".</div>
+          <div class="settings-help-a">Ã–ffne die App in Safari, tippe auf das Teilen-Symbol und wÃ¤hle "Zum Home-Bildschirm".</div>
         </div>
         <div class="settings-help-item">
           <div class="settings-help-q">Sind meine Daten sicher?</div>
-          <div class="settings-help-a">Alle Daten werden sicher auf dem Server gespeichert. Details findest du in der Datenschutzerklärung.</div>
+          <div class="settings-help-a">Alle Daten werden sicher auf dem Server gespeichert. Details findest du in der DatenschutzerklÃ¤rung.</div>
         </div>
       </div>
     </div>
@@ -354,7 +354,7 @@
       </div>
       <div class="notif-panel">
         <div class="notif-status">
-          <span class="notif-pill" id="notif-pill">…</span>
+          <span class="notif-pill" id="notif-pill">â€¦</span>
           <span class="notif-status-text" id="notif-status-text"></span>
         </div>
         <button id="notif-enable-btn" class="btn btn-primary btn-full btn-sm" onclick="requestNotifications()" style="display:none">
@@ -386,7 +386,7 @@
       </div>
       <div class="settings-placeholder">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <p>Hast du Ideen oder Fehler gefunden? Wir freuen uns über dein Feedback!</p>
+        <p>Hast du Ideen oder Fehler gefunden? Wir freuen uns Ã¼ber dein Feedback!</p>
         <button class="btn btn-primary btn-sm" onclick="location.href='https://github.com/plauzten-dev/training-manager/issues/new'">Feedback auf GitHub</button>
       </div>
     </div>
@@ -422,7 +422,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">iOS Navigationsleisten Bug</div>
-              <div class="roadmap-item-desc">Fix für iPhone-spezifische Darstellungsprobleme in der App-Navigation</div>
+              <div class="roadmap-item-desc">Fix fÃ¼r iPhone-spezifische Darstellungsprobleme in der App-Navigation</div>
             </div>
           </div>
           <div class="roadmap-item">
@@ -430,7 +430,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
             <div class="roadmap-item-body">
-              <div class="roadmap-item-title">Kalender auf Mobile überarbeiten</div>
+              <div class="roadmap-item-title">Kalender auf Mobile Ã¼berarbeiten</div>
               <div class="roadmap-item-desc">Verbessertes Layout und Touch-Bedienung des Kalender-Tabs auf Smartphones</div>
             </div>
           </div>
@@ -445,17 +445,17 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Google Play Store Release</div>
-              <div class="roadmap-item-desc">Veröffentlichung der App im Google Play Store als TWA (Trusted Web Activity)</div>
+              <div class="roadmap-item-desc">VerÃ¶ffentlichung der App im Google Play Store als TWA (Trusted Web Activity)</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Nächste Updates -->
+      <!-- NÃ¤chste Updates -->
       <div class="roadmap-section">
         <div class="roadmap-section-label next">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-          Nächste Updates
+          NÃ¤chste Updates
         </div>
         <div class="roadmap-items">
           <div class="roadmap-item">
@@ -464,7 +464,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Pro-Version</div>
-              <div class="roadmap-item-desc">Exklusive Features für engagierte Trainer – bestimmte Funktionen künftig per Version freigeschaltet</div>
+              <div class="roadmap-item-desc">Exklusive Features fÃ¼r engagierte Trainer â€“ bestimmte Funktionen kÃ¼nftig per Version freigeschaltet</div>
             </div>
           </div>
           <div class="roadmap-item">
@@ -492,7 +492,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Punktesystem</div>
-              <div class="roadmap-item-desc">Nutzer verdienen Punkte durch Übungen und lösen diese für UI-Styles oder Premium-Funktionen ein</div>
+              <div class="roadmap-item-desc">Nutzer verdienen Punkte durch Ãœbungen und lÃ¶sen diese fÃ¼r UI-Styles oder Premium-Funktionen ein</div>
               <div class="roadmap-item-credit">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
                 Idee von mibrueggl auf GitHub
@@ -506,7 +506,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Erweiterte Terminorganisation</div>
-              <div class="roadmap-item-desc">Serientermine, Spiele, Turniere und sonstige Termine mit Uhrzeiten und Standorten – ein vollständiger Vereinskalender über das Training hinaus</div>
+              <div class="roadmap-item-desc">Serientermine, Spiele, Turniere und sonstige Termine mit Uhrzeiten und Standorten â€“ ein vollstÃ¤ndiger Vereinskalender Ã¼ber das Training hinaus</div>
               <div class="roadmap-item-credit">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
                 Idee von mad-directory auf GitHub
@@ -521,7 +521,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Apple App Store Release</div>
-              <div class="roadmap-item-desc">Veröffentlichung der App im Apple App Store (erfordert Apple Developer Account)</div>
+              <div class="roadmap-item-desc">VerÃ¶ffentlichung der App im Apple App Store (erfordert Apple Developer Account)</div>
             </div>
           </div>
           <div class="roadmap-item">
@@ -530,7 +530,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Mehrsprachigkeit</div>
-              <div class="roadmap-item-desc">App auf Englisch (und weitere Sprachen) verfügbar machen – für eine größere Zielgruppe</div>
+              <div class="roadmap-item-desc">App auf Englisch (und weitere Sprachen) verfÃ¼gbar machen â€“ fÃ¼r eine grÃ¶ÃŸere Zielgruppe</div>
             </div>
           </div>
           <div class="roadmap-item">
@@ -539,7 +539,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Home Screen Widget</div>
-              <div class="roadmap-item-desc">Widget für iOS &amp; Android, das das nächste Training direkt auf dem Home Screen anzeigt</div>
+              <div class="roadmap-item-desc">Widget fÃ¼r iOS &amp; Android, das das nÃ¤chste Training direkt auf dem Home Screen anzeigt</div>
             </div>
           </div>
           <div class="roadmap-item">
@@ -548,7 +548,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Trainingsplan teilen</div>
-              <div class="roadmap-item-desc">Training per Link oder QR-Code an Spieler schicken – ohne dass diese einen Account brauchen</div>
+              <div class="roadmap-item-desc">Training per Link oder QR-Code an Spieler schicken â€“ ohne dass diese einen Account brauchen</div>
             </div>
           </div>
           <div class="roadmap-item">
@@ -557,7 +557,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Dark Mode</div>
-              <div class="roadmap-item-desc">Dunkles Design für abendliche Trainings-Sessions – schont Akku und Augen</div>
+              <div class="roadmap-item-desc">Dunkles Design fÃ¼r abendliche Trainings-Sessions â€“ schont Akku und Augen</div>
             </div>
           </div>
         </div>
@@ -575,8 +575,8 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M22 12A10 10 0 0 0 12 2M2 12a10 10 0 0 0 10 10"/><line x1="22" y1="12" x2="18" y2="12"/></svg>
             </div>
             <div class="roadmap-item-body">
-              <div class="roadmap-item-title">Einstellungen-Reiter überarbeitet</div>
-              <div class="roadmap-item-desc">Komplett neu gestaltetes Einstellungs-Menü im WhatsApp-Stil</div>
+              <div class="roadmap-item-title">Einstellungen-Reiter Ã¼berarbeitet</div>
+              <div class="roadmap-item-desc">Komplett neu gestaltetes Einstellungs-MenÃ¼ im WhatsApp-Stil</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -600,7 +600,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Eigene Teams erstellen</div>
-              <div class="roadmap-item-desc">Mehrere Teams mit sportartspezifischen Positionen und vollständiger Spielerverwaltung</div>
+              <div class="roadmap-item-desc">Mehrere Teams mit sportartspezifischen Positionen und vollstÃ¤ndiger Spielerverwaltung</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -613,7 +613,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Spieler in mehreren Teams</div>
-              <div class="roadmap-item-desc">Ein Spielerprofil kann gleichzeitig mehreren Teams zugeordnet werden – ideal für Trainer die mehrere Mannschaften betreuen</div>
+              <div class="roadmap-item-desc">Ein Spielerprofil kann gleichzeitig mehreren Teams zugeordnet werden â€“ ideal fÃ¼r Trainer die mehrere Mannschaften betreuen</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -626,7 +626,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Geburtsdatum &amp; Altersanzeige</div>
-              <div class="roadmap-item-desc">Optionales Geburtsdatum im Spielerprofil mit automatischer Altersberechnung – und einem kleinen Geburtstags-Highlight</div>
+              <div class="roadmap-item-desc">Optionales Geburtsdatum im Spielerprofil mit automatischer Altersberechnung â€“ und einem kleinen Geburtstags-Highlight</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -638,7 +638,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Rollen-System (Trainer / Spieler / Privat) <span class="ea-badge">Early Access</span></div>
-              <div class="roadmap-item-desc">Drei Nutzer-Rollen bei der Registrierung – Trainer verwalten Teams, Spieler sehen Trainer-Trainings read-only, Privat nutzt die App ohne Team</div>
+              <div class="roadmap-item-desc">Drei Nutzer-Rollen bei der Registrierung â€“ Trainer verwalten Teams, Spieler sehen Trainer-Trainings read-only, Privat nutzt die App ohne Team</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -649,8 +649,8 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg>
             </div>
             <div class="roadmap-item-body">
-              <div class="roadmap-item-title">Einladecodes &amp; Spieler-Verknüpfung <span class="ea-badge">Early Access</span></div>
-              <div class="roadmap-item-desc">Trainer generieren Einladecodes direkt auf der Spielerkarte – Spieler nutzen den Code bei der Registrierung um ihr Profil zu verknüpfen</div>
+              <div class="roadmap-item-title">Einladecodes &amp; Spieler-VerknÃ¼pfung <span class="ea-badge">Early Access</span></div>
+              <div class="roadmap-item-desc">Trainer generieren Einladecodes direkt auf der Spielerkarte â€“ Spieler nutzen den Code bei der Registrierung um ihr Profil zu verknÃ¼pfen</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -659,11 +659,11 @@
         </div>
       </div>
 
-      <!-- Fertiggestellt – kommt in einem der nächsten Updates -->
+      <!-- Fertiggestellt â€“ kommt in einem der nÃ¤chsten Updates -->
       <div class="roadmap-section">
         <div class="roadmap-section-label upcoming-done">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Fertiggestellt – kommt in einem der nächsten Updates
+          Fertiggestellt â€“ kommt in einem der nÃ¤chsten Updates
         </div>
         <div class="roadmap-items">
           <div class="roadmap-item done">
@@ -672,7 +672,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">OAuth Login (Google &amp; Microsoft)</div>
-              <div class="roadmap-item-desc">Vereinfachter Einstieg per bestehendem Google- oder Microsoft-Konto – kein separates Passwort nötig</div>
+              <div class="roadmap-item-desc">Vereinfachter Einstieg per bestehendem Google- oder Microsoft-Konto â€“ kein separates Passwort nÃ¶tig</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -684,7 +684,7 @@
             </div>
             <div class="roadmap-item-body">
               <div class="roadmap-item-title">Persistente Datenspeicherung</div>
-              <div class="roadmap-item-desc">Eigens hinzugefügte Übungen und Teams bleiben dauerhaft gespeichert – auch nach Server-Neustarts</div>
+              <div class="roadmap-item-desc">Eigens hinzugefÃ¼gte Ãœbungen und Teams bleiben dauerhaft gespeichert â€“ auch nach Server-Neustarts</div>
             </div>
             <div class="roadmap-check">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -703,7 +703,7 @@
 
 {% block scripts %}
 <script>
-// ── Mobile Navigation ─────────────────────────────────────────────────────────
+// â”€â”€ Mobile Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showSettingDetail(id, title, sub) {
   var grid = document.getElementById('settings-detail-grid');
   document.querySelectorAll('.settings-detail').forEach(function(d) {
@@ -727,7 +727,7 @@ function hideSettingDetail() {
   document.getElementById('settings-page-sub').textContent = 'Konto und App verwalten';
 }
 
-// ── Profilbild ────────────────────────────────────────────────────────────────
+// â”€â”€ Profilbild â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderAvatar(path) {
   const initials = '{{ (user.username[:2] if user.username else "?")|upper }}';
   const src = path ? (path.startsWith('http') ? path : '/uploads/' + path) : null;
@@ -743,7 +743,7 @@ function renderAvatar(path) {
 async function uploadUserAvatar(input) {
   const file = input.files && input.files[0];
   if (!file) return;
-  if (file.size > 16 * 1024 * 1024) { showToast('Bild ist zu groß (max. 16 MB)', 'error'); input.value = ''; return; }
+  if (file.size > 16 * 1024 * 1024) { showToast('Bild ist zu groÃŸ (max. 16 MB)', 'error'); input.value = ''; return; }
   const fd = new FormData();
   fd.append('image', file);
   const res = await fetch('/api/auth/avatar', { method: 'POST', body: fd });
@@ -768,7 +768,7 @@ async function removeUserAvatar() {
   }
 }
 
-// ── Profil ────────────────────────────────────────────────────────────────────
+// â”€â”€ Profil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function submitProfile(e) {
   e.preventDefault();
   const btn = document.getElementById('profile-btn');
@@ -787,7 +787,7 @@ async function submitProfile(e) {
   });
   const data = await res.json();
   btn.disabled = false;
-  btn.textContent = 'Änderungen speichern';
+  btn.textContent = 'Ã„nderungen speichern';
   if (res.ok) {
     status.textContent = 'Gespeichert';
     status.className = 'settings-status status-ok';
@@ -798,7 +798,7 @@ async function submitProfile(e) {
   }
 }
 
-// ── Passwort ──────────────────────────────────────────────────────────────────
+// â”€â”€ Passwort â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function togglePw(inputId, btn) {
   const inp = document.getElementById(inputId);
   const show = inp.type === 'password';
@@ -831,10 +831,10 @@ function checkPwMatch() {
   lbl.style.color = lvl.color;
   if (!cfm) { hint.textContent = ''; return; }
   if (nw === cfm) {
-    hint.textContent = 'Passwörter stimmen überein';
+    hint.textContent = 'PasswÃ¶rter stimmen Ã¼berein';
     hint.style.color = 'var(--success)';
   } else {
-    hint.textContent = 'Passwörter stimmen nicht überein';
+    hint.textContent = 'PasswÃ¶rter stimmen nicht Ã¼berein';
     hint.style.color = 'var(--danger)';
   }
 }
@@ -843,7 +843,7 @@ async function submitPassword(e) {
   const nw  = document.getElementById('input-new-pw').value;
   const cfm = document.getElementById('input-confirm-pw').value;
   if (nw !== cfm) {
-    document.getElementById('password-status').textContent = 'Passwörter stimmen nicht überein';
+    document.getElementById('password-status').textContent = 'PasswÃ¶rter stimmen nicht Ã¼berein';
     document.getElementById('password-status').className = 'settings-status status-err';
     return;
   }
@@ -863,13 +863,13 @@ async function submitPassword(e) {
   });
   const data = await res.json();
   btn.disabled = false;
-  btn.textContent = 'Passwort ändern';
+  btn.textContent = 'Passwort Ã¤ndern';
   if (res.ok) {
     document.getElementById('password-form').reset();
     document.getElementById('pw-strength-fill').style.width = '0';
     document.getElementById('pw-strength-label').textContent = '';
     document.getElementById('pw-match-hint').textContent = '';
-    status.textContent = 'Passwort erfolgreich geändert';
+    status.textContent = 'Passwort erfolgreich geÃ¤ndert';
     status.className = 'settings-status status-ok';
     setTimeout(() => { status.textContent = ''; }, 4000);
   } else {
@@ -878,7 +878,7 @@ async function submitPassword(e) {
   }
 }
 
-// ── Benachrichtigungen ──────────────────────────────────────────────────────
+// â”€â”€ Benachrichtigungen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function isiOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -904,18 +904,18 @@ function initNotifications() {
                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!isMobileDevice) {
     pill.className = 'notif-pill off';
-    pill.textContent = 'Nicht verfügbar';
-    text.textContent = 'Benachrichtigungen sind nur in der mobilen Version verfügbar.';
+    pill.textContent = 'Nicht verfÃ¼gbar';
+    text.textContent = 'Benachrichtigungen sind nur in der mobilen Version verfÃ¼gbar.';
     return;
   }
 
   const supported = 'Notification' in window && 'serviceWorker' in navigator;
   if (!supported) {
     pill.className = 'notif-pill off';
-    pill.textContent = 'Nicht verfügbar';
-    text.textContent = 'Dieses Gerät unterstützt keine Benachrichtigungen.';
+    pill.textContent = 'Nicht verfÃ¼gbar';
+    text.textContent = 'Dieses GerÃ¤t unterstÃ¼tzt keine Benachrichtigungen.';
     if (isiOS() && !isStandalone()) {
-      hint.textContent = 'Auf dem iPhone: Teilen-Symbol → „Zum Home-Bildschirm". Danach sind Benachrichtigungen verfügbar (iOS 16.4 oder neuer).';
+      hint.textContent = 'Auf dem iPhone: Teilen-Symbol â†’ â€žZum Home-Bildschirm". Danach sind Benachrichtigungen verfÃ¼gbar (iOS 16.4 oder neuer).';
     }
     return;
   }
@@ -924,13 +924,13 @@ function initNotifications() {
   if (perm === 'granted') {
     pill.className = 'notif-pill on';
     pill.textContent = 'Aktiviert';
-    text.textContent = 'Du erhältst Benachrichtigungen von Training Manager.';
+    text.textContent = 'Du erhÃ¤ltst Benachrichtigungen von Training Manager.';
     testBtn.style.display = '';
   } else if (perm === 'denied') {
     pill.className = 'notif-pill off';
     pill.textContent = 'Blockiert';
     text.textContent = 'Benachrichtigungen sind aktuell blockiert.';
-    hint.textContent = 'Erlaube sie wieder in den System- bzw. Browser-Einstellungen für diese App.';
+    hint.textContent = 'Erlaube sie wieder in den System- bzw. Browser-Einstellungen fÃ¼r diese App.';
   } else {
     pill.className = 'notif-pill';
     pill.textContent = 'Aus';
@@ -954,7 +954,7 @@ async function sendTestNotification() {
   if (Notification.permission !== 'granted') { initNotifications(); return; }
   const title = 'Training Manager';
   const opts = {
-    body: 'Das ist eine Test-Benachrichtigung – alles funktioniert!',
+    body: 'Das ist eine Test-Benachrichtigung â€“ alles funktioniert!',
     icon: '/static/icons/icon-192.png',
     badge: '/static/icons/icon-192.png',
     tag: 'tm-test'
