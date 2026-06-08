@@ -1,11 +1,20 @@
+# fly.toml app configuration file generated for training-manager on 2026-06-08T18:57:23Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
 app = 'training-manager'
 primary_region = 'fra'
 
 [build]
 
 [env]
-  PORT = "8080"
-  DB_PATH = "/data/training.db"
+  DB_PATH = '/data/training.db'
+  PORT = '8080'
+
+[[mounts]]
+  source = 'training_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
@@ -18,7 +27,4 @@ primary_region = 'fra'
   memory = '256mb'
   cpu_kind = 'shared'
   cpus = 1
-
-[[mounts]]
-  source = 'training_data'
-  destination = '/data'
+  memory_mb = 256
