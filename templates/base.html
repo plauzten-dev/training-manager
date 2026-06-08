@@ -120,7 +120,9 @@
       {% block content %}{% endblock %}
     </div>
 
-    <!-- Mobile Bottom Navigation (inside app-layout → no position:fixed needed) -->
+    </div><!-- /.app-layout -->
+
+    <!-- Mobile Bottom Navigation (outside app-layout to avoid iOS overflow:hidden clipping of fixed elements) -->
     <div class="mobile-nav-wrap">
     <nav class="mobile-nav" aria-label="Navigation">
     <div class="mobile-nav-inner">
@@ -153,8 +155,6 @@
     </div>
     </nav>
     </div><!-- /.mobile-nav-wrap -->
-
-  </div><!-- /.app-layout -->
 
   <!-- Toast notifications -->
   <div id="toast-container"></div>
