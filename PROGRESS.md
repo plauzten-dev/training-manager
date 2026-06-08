@@ -1,7 +1,29 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 08. Juni 2026
-> Status: ✅ Version B.0.51 – Favoriten-Button im Header + Event Team-Auswahl
+> Status: ✅ Version B.0.52 – Encoding-Fix + Kalender-Berechtigungen nach Rolle
+
+---
+
+## B.0.52 – Änderungen (08.06.2026, 16. Session)
+
+### Fix: Encoding-Bug in base.html (Mojibake)
+- [x] `base.html` – Alle kaputten UTF-8-Sequenzen korrigiert: `Ãœ→Ü`, `Ã¶→ö`, `Ã¤→ä`, `Ã¼→ü`, `Ã–→Ö`, `ÃŸ→ß`
+- [x] Betroffen: Sidebar-Nav ("Übersicht", "Übungen"), Mobile-Nav, HTML-Kommentare
+- [x] Ursache: Datei war irgendwann falsch kodiert gespeichert worden (Latin-1-Bytes als UTF-8 interpretiert)
+
+### Fix: Kalender-Buttons nach Rolle (Spieler/Privat dürfen keine Termine erstellen)
+- [x] `calendar.html` – Header-Buttons "Termin" + "Neues Training" in `{% if user_role == 'trainer' %}` gewrapped
+- [x] `calendar.html` – `const USER_ROLE = '{{ user_role }}';` als JS-Variable gesetzt (vor calendar.js)
+- [x] `calendar.js` – Sidebar: "Termin hinzufügen"-Button nur wenn `USER_ROLE === 'trainer'`; "Training hinzufügen" bleibt für alle Rollen sichtbar
+- [x] `calendar.js` – Wochenansicht: `cal-wk-add`-Button (Training) für alle Rollen sichtbar (war irrtümlich eingeschränkt – korrigiert)
+
+### Berechtigungsmatrix Kalender (Endstand)
+| Aktion | Trainer | Spieler | Privat |
+|--------|---------|---------|--------|
+| Termin erstellen | ✓ | ✗ | ✗ |
+| Training erstellen | ✓ | ✓ | ✓ |
+| Trainings/Events lesen | ✓ | ✓ (eigene Teams) | ✓ |
 
 ---
 
@@ -125,6 +147,7 @@
 
 ## Nächste Session – Mögliche nächste Features
 
+- **Testaccount entfernen** – letzter Release-Blocker (3 Stellen: app.py Route, login.html Button, style.css)
 - **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
 - **Saison-/Wochenplanung** – Überblick über geplante Trainingswochen
 - **Share-Link widerrufen** – `DELETE /api/exercises/<id>/share` um Token zu löschen

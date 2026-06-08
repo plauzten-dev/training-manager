@@ -243,7 +243,7 @@ git push
 
 ---
 
-## Was bereits vollständig funktioniert (B.0.49)
+## Was bereits vollständig funktioniert (B.0.52)
 
 - Benutzer-Accounts (Register, Login, Logout, Profil + Passwort ändern)
 - Übungsdatenbank: Erstellen/Bearbeiten/Löschen, Bildupload (Cloudinary), Suche, Filter, Sport-Tabs
@@ -270,6 +270,7 @@ git push
 - **QoL**: Sport-Tab-Auswahl wird per localStorage gespeichert; Dashboard-Vorschau zeigt "Heute"/"Morgen"/"Übermorgen"
 - **iOS-Fixes**: kein Auto-Zoom bei Input-Fokus, kein Pinch-Zoom, keine Safe-Area am unteren Rand
 - **PDF für Spieler**: Spieler können PDFs von Trainer-Trainings öffnen (nicht nur eigene)
+- **Rollenbasierter Kalender**: Trainer sehen Header-Buttons "Termin"+"Neues Training"; Spieler/Privat sehen nur "Training hinzufügen" (alle Rollen dürfen eigene Trainings anlegen, aber keine Termine)
 
 ### Sport-Farben (vollständig)
 ```css
@@ -354,11 +355,14 @@ git push
 14. **Bildupload**: `_upload_image()` + `_delete_image()` in app.py – Cloudinary wenn Env-Vars gesetzt, sonst lokal.
 15. **image_path**: Kann lokaler Dateiname (z.B. `abc123.jpg`) ODER volle Cloudinary-URL sein – JS prüft `startsWith('http')`.
 16. **Mobile Nav Layout (B.0.47+)**: Nav nutzt `position:fixed; bottom:0; left:0; right:0` – schwebt immer am unteren Bildschirmrand. `.mobile-nav-wrap { pointer-events:none }`, `.mobile-nav { pointer-events:all }` damit Klicks neben der Pill durchgehen. Alle Scroll-Container (`.dash-page`, `.training-page-layout`, `.settings-mob-home`, `.players-scroll`) haben im Mobile-Breakpoint `padding-bottom: 82px` (kein `env(safe-area-inset-bottom)` mehr – Safe Area wurde B.0.47 komplett entfernt). FAB-Button: `bottom: 76px`. `--app-height` (JS: `window.innerHeight`) bleibt für `.app-layout` erhalten.
+17. **Players Page Struktur (v0.25)**: `players.html` hat zwei Zonen: `.players-top` (kein overflow → Team-Tabs können voll-breit scrollen) und `.players-scroll` (overflow-y:auto → scrollbarer Content). Bei Änderungen an der Players-Page beide Zonen berücksichtigen.
 18. **iOS-Zoom deaktiviert (B.0.47)**: Viewport hat `maximum-scale=1.0`. Alle `input, select, textarea` haben im Mobile-Breakpoint `font-size: 16px !important` – iOS zoomt bei Input-Fokus wenn font-size < 16px, daher !important nötig.
 19. **PDF-Zugriff für Spieler (B.0.47)**: Route `/training/<id>/pdf` erlaubt Spielern das Öffnen von Trainer-Trainings (via `linked_user_id → players.user_id`-Check), nicht nur eigene Trainings.
 20. **Sport-Dropdown Übungsformular (B.0.48)**: Schwebendes Custom-Dropdown (`.ex-sport-wrap`/`.ex-sport-trigger`/`.ex-sport-panel`). `updateCompetencyOptions()` liest von `<input type="hidden" id="form-sport">`, NICHT von einem `<select>`. `selectExSport(sport)` schließt Panel + aktualisiert Competencies. Alle 7 Sportarten + Kernkompetenzen in `SPORT_COMPETENCIES` in exercises.js.
 21. **Share-Link (B.0.48)**: `exercises.share_token` (UNIQUE, nullable). Route `/exercise/share/<token>` braucht KEIN `@login_required`. Import-Route `POST /api/exercises/import/<token>` kopiert Übung ohne `share_token`. Preview-Server: Immer prüfen ob nur EIN Prozess auf Port 5000 läuft (`netstat -ano | findstr ":5000"`), sonst antwortet alter Code.
-17. **Players Page Struktur (v0.25)**: `players.html` hat zwei Zonen: `.players-top` (kein overflow → Team-Tabs können voll-breit scrollen) und `.players-scroll` (overflow-y:auto → scrollbarer Content). Bei Änderungen an der Players-Page beide Zonen berücksichtigen.
 22. **Mobile Sport-Selektor (B.0.49)**: Auf ≤640px wird `.sport-tabs-bar { display:none }` und `.sport-sel-mob { display:block }`. `setSport(null, sport)` aufrufen für mobile Auswahl (el=null). `updateSportSelMobile(sport)` synchronisiert Trigger-Farbe + Panel-Aktiv-Status. Dropdown-Panel `position: absolute` relativ zu `.sport-sel-mob`.
 23. **Ex-Sport-Panel (B.0.49)**: `position: fixed; z-index: 9999; background: var(--card)` – `var(--surface)` ist NICHT definiert (wäre transparent). In `toggleExSportDropdown()` werden `top/left/width` via `getBoundingClientRect()` des Triggers gesetzt; Breite = Modal-Breite minus 16px Rand.
 24. **Mobile Filter-Panel (B.0.49)**: `.filter-sidebar.mobile-open { flex: 1; padding-bottom: 82px }` + `.exercises-layout { flex:1; overflow:hidden }` damit der Filter den vollen Platz füllt. `.filter-sidebar.mobile-open ~ .exercises-main { display:none }` versteckt Übungskarten wenn Filter offen.
+25. **USER_ROLE JS-Variable (B.0.52)**: In Templates die Rolle als `<script>const USER_ROLE = '{{ user_role }}';</script>` vor dem Page-Script setzen (Muster: `my_trainings.html`, `training.html`, `calendar.html`). Werte: `'trainer'` | `'player'` | `'private'`. Im Template selbst `{% if user_role == 'trainer' %}` für serverseitiges Ausblenden nutzen.
+26. **Kalender-Berechtigungen (B.0.52)**: Header-Buttons "Termin" + "Neues Training" sind in `{% if user_role == 'trainer' %}` gewrapped. In `calendar.js` steuert `USER_ROLE === 'trainer'` ob "Termin hinzufügen" in Sidebar erscheint. "Training hinzufügen" (Sidebar + Wochenansicht) ist für ALLE Rollen sichtbar – Spieler/Private dürfen eigene Trainings anlegen, aber keine Termine.
+27. **Encoding base.html (B.0.52)**: Datei muss als UTF-8 gespeichert sein. Bei zukünftigen Edits mit externen Editoren prüfen ob Umlaute korrekt sind. Mojibake-Muster: `Ãœ`→`Ü`, `Ã¶`→`ö` etc. signalisiert falsche Speicherkodierung.

@@ -20,10 +20,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- iOS-PWA Viewport-HÃ¶he: setzt --app-height auf das echte sichtbare Viewport.
-       Behebt den weiÃŸen Bereich unter der Nav (100dvh-Fehlberechnung im Standalone).
-       visualViewport.height gibt die wirklich sichtbare FlÃ¤che zurÃ¼ck (exkl. Safe-Area unten),
-       window.innerHeight schlieÃŸt die Safe-Area fÃ¤lschlicherweise ein. -->
+  <!-- iOS-PWA Viewport-Höhe: setzt --app-height auf das echte sichtbare Viewport.
+       Behebt den weißen Bereich unter der Nav (100dvh-Fehlberechnung im Standalone).
+       visualViewport.height gibt die wirklich sichtbare Fläche zurück (exkl. Safe-Area unten),
+       window.innerHeight schließt die Safe-Area fälschlicherweise ein. -->
   <script>
     (function () {
       var root = document.documentElement;
@@ -76,7 +76,7 @@
       <nav class="sidebar-nav">
         <a href="/dashboard" class="nav-item {% if request.endpoint == 'dashboard_page' %}active{% endif %}">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Ãœbersicht
+          Übersicht
         </a>
         <a href="/calendar" class="nav-item {% if request.endpoint == 'calendar_page' %}active{% endif %}">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -84,7 +84,7 @@
         </a>
         <a href="/exercises" class="nav-item {% if request.endpoint == 'exercises_page' %}active{% endif %}">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/></svg>
-          Ãœbungen
+          Übungen
         </a>
         <a href="/my-trainings" class="nav-item {% if request.endpoint == 'my_trainings_page' %}active{% endif %}">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -120,13 +120,13 @@
       {% block content %}{% endblock %}
     </div>
 
-    <!-- Mobile Bottom Navigation (inside app-layout â†’ no position:fixed needed) -->
+    <!-- Mobile Bottom Navigation (inside app-layout → no position:fixed needed) -->
     <div class="mobile-nav-wrap">
     <nav class="mobile-nav" aria-label="Navigation">
     <div class="mobile-nav-inner">
       <a href="/dashboard" class="mobile-nav-item {% if request.endpoint == 'dashboard_page' %}active{% endif %}">
         <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-        Ãœbersicht
+        Übersicht
       </a>
       <a href="/calendar" class="mobile-nav-item {% if request.endpoint == 'calendar_page' %}active{% endif %}">
         <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
@@ -134,7 +134,7 @@
       </a>
       <a href="/exercises" class="mobile-nav-item {% if request.endpoint == 'exercises_page' %}active{% endif %}">
         <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/></svg></span>
-        Ãœbungen
+        Übungen
       </a>
       <a href="/my-trainings" class="mobile-nav-item {% if request.endpoint == 'my_trainings_page' %}active{% endif %}">
         <span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
@@ -218,7 +218,7 @@
       navigator.serviceWorker.register('/sw.js', { scope: '/' });
     }
 
-    // PWA Splash Screen â€“ nur beim ersten Ã–ffnen der App, nicht bei Tab-Wechseln
+    // PWA Splash Screen – nur beim ersten Öffnen der App, nicht bei Tab-Wechseln
     (function() {
       const isStandalone = window.navigator.standalone === true ||
                            window.matchMedia('(display-mode: standalone)').matches;
