@@ -225,21 +225,30 @@ training_attendance (
 
 ---
 
-## Live-Deployment (v1.4)
+## Live-Deployment (B.0.52)
 
-- **Live-URL:** `https://training-manager-nwga.onrender.com`
+- **Live-URL:** `https://training-manager.fly.dev`
 - **GitHub:** `plauzten-dev/training-manager` (branch: main)
-- **Hosting:** Render.com Free-Tier (Python 3, gunicorn)
-- **Bilder:** Cloudinary (Env-Vars in Render: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`)
-- **DB:** SQLite ephemer – Daten gehen bei Redeploy verloren, Seed-Übungen kommen automatisch zurück
-- **PWA:** Auf iOS via Safari → Teilen → "Zum Home-Bildschirm" installierbar
+- **Hosting:** Fly.io (Python 3.12, gunicorn, Docker, Region: Frankfurt)
+- **VM:** shared-1x-cpu@256MB, Auto-Sleep aktiv (~2-3s Aufwachzeit)
+- **DB:** SQLite **persistent** auf Volume `/data/training.db` – Daten bleiben bei Redeploy erhalten
+- **Bilder:** Cloudinary (Secrets in Fly.io: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`)
+- **PWA:** Auf iOS via Safari → Teilen → "Zum Home-Bildschirm" installierbar (neue URL verwenden)
+- **Kosten:** ~$2-3/Monat (Volume + VM-Nutzung)
 
 ### Neue Version deployen
 ```powershell
 git add .
 git commit -m "Beschreibung"
 git push
+# Fly.io deployt automatisch via GitHub-Integration
 ```
+
+### Fly.io Dashboard
+- Volumes: `fly.io/apps/training-manager/volumes`
+- Secrets: `fly.io/apps/training-manager/secrets`
+- Logs: `fly.io/apps/training-manager/monitoring/logs`
+- 24/7 Betrieb (kein Auto-Sleep): `min_machines_running = 1` in `fly.toml` setzen
 
 ---
 
@@ -365,4 +374,6 @@ git push
 24. **Mobile Filter-Panel (B.0.49)**: `.filter-sidebar.mobile-open { flex: 1; padding-bottom: 82px }` + `.exercises-layout { flex:1; overflow:hidden }` damit der Filter den vollen Platz füllt. `.filter-sidebar.mobile-open ~ .exercises-main { display:none }` versteckt Übungskarten wenn Filter offen.
 25. **USER_ROLE JS-Variable (B.0.52)**: In Templates die Rolle als `<script>const USER_ROLE = '{{ user_role }}';</script>` vor dem Page-Script setzen (Muster: `my_trainings.html`, `training.html`, `calendar.html`). Werte: `'trainer'` | `'player'` | `'private'`. Im Template selbst `{% if user_role == 'trainer' %}` für serverseitiges Ausblenden nutzen.
 26. **Kalender-Berechtigungen (B.0.52)**: Header-Buttons "Termin" + "Neues Training" sind in `{% if user_role == 'trainer' %}` gewrapped. In `calendar.js` steuert `USER_ROLE === 'trainer'` ob "Termin hinzufügen" in Sidebar erscheint. "Training hinzufügen" (Sidebar + Wochenansicht) ist für ALLE Rollen sichtbar – Spieler/Private dürfen eigene Trainings anlegen, aber keine Termine.
-27. **Encoding base.html (B.0.52)**: Datei muss als UTF-8 gespeichert sein. Bei zukünftigen Edits mit externen Editoren prüfen ob Umlaute korrekt sind. Mojibake-Muster: `Ãœ`→`Ü`, `Ã¶`→`ö` etc. signalisiert falsche Speicherkodierung.
+27. **Encoding aller Templates (B.0.52)**: Alle `.html`-Dateien müssen als UTF-8 gespeichert sein. Bei zukünftigen Edits mit externen Editoren prüfen ob Umlaute korrekt sind. Mojibake-Muster: `Ãœ`→`Ü`, `Ã¶`→`ö`, `â€"`→`–` etc. signalisiert falsche Speicherkodierung. Betroffen waren: `base.html`, `login.html`, `settings.html`.
+28. **Fly.io Deployment (B.0.52)**: App läuft auf `https://training-manager.fly.dev`. Deploy via `git push` (GitHub-Integration). SQLite-DB persistent auf Volume `/data/training.db` (Env-Var `DB_PATH`). Secrets in Fly.io Dashboard setzen, nicht in `fly.toml`. Auto-Sleep aktiv – für 24/7 `min_machines_running = 1` in `fly.toml`.
+29. **Kein Emoji in Templates**: `login.html` hatte `âš½` als Emoji-Logo – wurde durch App-SVG ersetzt. Regel: ausschließlich inline SVG, keine Unicode-Emojis.

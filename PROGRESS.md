@@ -7,10 +7,20 @@
 
 ## B.0.52 – Änderungen (08.06.2026, 16. Session)
 
-### Fix: Encoding-Bug in base.html (Mojibake)
+### Fix: Encoding-Bug in allen Templates (Mojibake komplett behoben)
 - [x] `base.html` – Alle kaputten UTF-8-Sequenzen korrigiert: `Ãœ→Ü`, `Ã¶→ö`, `Ã¤→ä`, `Ã¼→ü`, `Ã–→Ö`, `ÃŸ→ß`
-- [x] Betroffen: Sidebar-Nav ("Übersicht", "Übungen"), Mobile-Nav, HTML-Kommentare
-- [x] Ursache: Datei war irgendwann falsch kodiert gespeichert worden (Latin-1-Bytes als UTF-8 interpretiert)
+- [x] `login.html` – Alle Mojibake-Sequenzen korrigiert + Emoji `âš½` durch App-SVG ersetzt + Version B.0.52
+- [x] `settings.html` – 20+ Encoding-Fehler in Texten und JS-Strings behoben
+- [x] Ursache: Dateien waren irgendwann falsch kodiert gespeichert worden (Latin-1-Bytes als UTF-8 interpretiert)
+
+### Deployment: Render.com → Fly.io migriert
+- [x] `Dockerfile` erstellt (python:3.12-slim, gunicorn, Port 8080)
+- [x] `fly.toml` erstellt (Region: FRA, 256MB RAM, Volume-Mount `/data`)
+- [x] Fly.io App `training-manager` deployt: `https://training-manager.fly.dev`
+- [x] Persistentes Volume `training_data` (1GB, Frankfurt) erstellt + gemountet
+- [x] Secrets gesetzt: `SECRET_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- [x] `DB_PATH=/data/training.db` via `fly.toml` gesetzt – SQLite überlebt jetzt Restarts
+- [x] Auto-Deploy via GitHub-Integration bei jedem `git push`
 
 ### Fix: Kalender-Buttons nach Rolle (Spieler/Privat dürfen keine Termine erstellen)
 - [x] `calendar.html` – Header-Buttons "Termin" + "Neues Training" in `{% if user_role == 'trainer' %}` gewrapped
