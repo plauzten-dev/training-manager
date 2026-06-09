@@ -1,7 +1,26 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 09. Juni 2026
-> Status: ✅ Version B.0.53 – Bugfix-Session (Settings-JS-Crash, Bildupload, Kalender, iOS-Nav)
+> Status: ✅ Version B.0.54 – Safe-Areas komplett entfernt (iOS-Nav sauber gelöst)
+
+---
+
+## B.0.54 – Änderungen (09.06.2026, 17. Session) – Safe-Area-Refactor
+
+### Fix #5 (final): iOS-Nav schwebte trotz innerHeight-Fix zu hoch
+- [x] **Architektur-Wechsel statt Safe-Area-Rechnerei**: `viewport-fit=cover` aus ALLEN Templates
+      entfernt (`base.html`, `login.html`, `privacy.html`, `offline.html`) + `status-bar-style`
+      von `black-translucent` auf `default`.
+- [x] Wirkung: iOS hält die Web-View automatisch zwischen Statusleiste (Uhr) und Home-Indikator.
+      `window.innerHeight` = exakt nutzbare Fläche → `.app-layout` füllt sie voll, Nav am echten
+      unteren Rand, kein weißer Block, keine Uhr-Überlappung – ganz ohne `env(safe-area-inset-*)`.
+- [x] Alle `env(safe-area-inset-*)` entfernt: `style.css` (`.app-layout` padding-top, `.mobile-nav-wrap`
+      padding-bottom, `.mt-fab` bottom) + `privacy.html` padding.
+- [x] `sw.js` Cache `v9` → `v10` (PWA zieht neues CSS/JS).
+- [x] Version B.0.54 (base/login/settings). Live verifiziert: cover weg, status-bar=default, SW=v10.
+- ⚠️ **iOS-Hinweis**: `apple-mobile-web-app-*`-Meta + Statusleisten-Stil werden von iOS beim
+      „Zum Home-Bildschirm" gecacht → installierte PWA muss **gelöscht und neu installiert** werden,
+      damit die Änderung greift. Am iPhone gegenchecken.
 
 ---
 
