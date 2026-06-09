@@ -1,7 +1,46 @@
 # Training Manager – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 08. Juni 2026
-> Status: ✅ Version B.0.52 – Encoding-Fix + Kalender-Berechtigungen nach Rolle
+> Zuletzt aktualisiert: 09. Juni 2026
+> Status: ✅ Version B.0.53 – Bugfix-Session (Settings-JS-Crash, Bildupload, Kalender, iOS-Nav)
+
+---
+
+## B.0.53 – Änderungen (09.06.2026, 17. Session) – Bugfixes
+
+### Fix #3/#15: Settings-Buttons & Profilbild-Upload (JS-SyntaxError)
+- [x] `settings.html` Zeile ~918: typografische Anführungszeichen `‘ … ’` (U+2018/U+2019) statt
+      gerader `'` als String-Delimiter → **gesamter `<script>`-Block** wurde nicht geparst →
+      ALLE Funktionen (`showSettingDetail`, `uploadUserAvatar`, `submitProfile` …) undefiniert.
+- [x] Root Cause für GitHub-Issue #15 (Profilbild-Upload) UND "Buttons nicht klickbar" zugleich.
+- [x] Verifiziert: Funktionen jetzt definiert, Avatar-Upload-Endpoint liefert 200.
+
+### Fix #14: Bildupload bei Übungen (stille Fehler + HEIC)
+- [x] `app.py` `ALLOWED_EXTENSIONS` um `heic`, `heif` erweitert (iPhone-Standardformat)
+- [x] `app.py` `_upload_image()`: HEIC/HEIF → bei Cloudinary `format='jpg'` (web-darstellbar);
+      `ext`-Ermittlung crasht nicht mehr bei fehlender Extension
+- [x] `app.py` `create_exercise`/`update_exercise`: ungültiges Format → klare **400** statt stiller
+      Erfolg-ohne-Bild; `_upload_image` in try/except → 400 statt 500-HTML
+- [x] `exercises.js` `submitExercise`: robustes JSON-Parsing (kein Hängen bei 413/Nicht-JSON),
+      Button wird immer zurückgesetzt, spezielle Meldung bei 413 ("Bild zu groß")
+- [x] `settings.html` Avatar-Input `accept="image/*"` (vorher HEIC ausgeschlossen)
+
+### Fix #4: Kalender-Kacheln scheinen unter Wochentag-Leiste durch (Mobile)
+- [x] `style.css` Mobile-Breakpoint: `.cal-day-name { position: static }` – auf Mobile scrollt die
+      ganze Seite (`.calendar-layout` overflow:auto), `.calendar-card`/`.calendar-grid` sind
+      `overflow:visible`. Sticky-Header in einem overflow:visible-Kind eines anderen Scroll-Containers
+      erzeugte den Durchscheine-Artefakt. Verifiziert per Screenshot.
+
+### Fix #5: Weißer Block unten auf iOS, Nav nach ganz unten
+- [x] `base.html` Viewport-JS: `--app-height` wieder = `window.innerHeight` (statt
+      `visualViewport.height`). visualViewport schließt die untere Safe-Area aus → `.app-layout` zu
+      kurz → Body-Hintergrund scheint als weißer Block durch. innerHeight enthält im Standalone die
+      volle Bildschirmhöhe inkl. Safe-Area → app-layout füllt den Screen, Nav (In-Flow) sitzt ganz
+      unten, `padding-bottom: env(safe-area-inset-bottom)` hält die Pill über dem Home-Indikator.
+- [x] Verifiziert (Desktop): --app-height=innerHeight, app-layout=volle Höhe, Body nicht scrollbar,
+      Nav-Unterkante am unteren Rand. iOS-Safe-Area-Verhalten nur am Gerät final prüfbar.
+
+### Version
+- [x] B.0.53 an allen 3 Stellen: `base.html` Splash, `login.html` Splash, `settings.html` Hilfe-Karte
 
 ---
 

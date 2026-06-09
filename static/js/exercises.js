@@ -554,15 +554,24 @@ async function submitExercise(e, editId = null) {
   const url    = editId ? `/api/exercises/${editId}` : '/api/exercises';
   const method = editId ? 'PUT' : 'POST';
 
-  const res  = await fetch(url, { method, body: formData });
-  const data = await res.json();
+  let res, data = {};
+  try {
+    res = await fetch(url, { method, body: formData });
+    data = await res.json().catch(() => ({}));
+  } catch (err) {
+    showToast('Netzwerkfehler – bitte erneut versuchen', 'error');
+    btn.disabled = false;
+    btn.textContent = editId ? 'Änderungen speichern' : 'Übung erstellen';
+    return;
+  }
 
   if (res.ok) {
     closeModal();
     showToast(editId ? 'Übung aktualisiert!' : 'Übung erstellt!', 'success');
     await fetchExercises();
   } else {
-    showToast(data.error || 'Fehler beim Speichern', 'error');
+    const msg = data.error || (res.status === 413 ? 'Bild ist zu groß (max. 16 MB)' : 'Fehler beim Speichern');
+    showToast(msg, 'error');
     btn.disabled = false;
     btn.textContent = editId ? 'Änderungen speichern' : 'Übung erstellen';
   }

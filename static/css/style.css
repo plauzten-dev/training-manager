@@ -1253,7 +1253,10 @@ textarea { resize: vertical; min-height: 90px; }
   .cal-sidebar { width: 100%; border-radius: 14px; }
   .calendar-card { border-radius: 14px; overflow: visible; }
   .calendar-grid { overflow: visible; }
-  .cal-day-name { padding: 7px 4px; font-size: 0.6rem; }
+  /* Kein sticky auf Mobile: die ganze Seite scrollt als Einheit. Sticky in einem
+   * overflow:visible-Kind eines anderen Scroll-Containers ließ die Tag-Kacheln
+   * hinter der Wochentag-Leiste durchscheinen. */
+  .cal-day-name { padding: 7px 4px; font-size: 0.6rem; position: static; }
   .cal-day { min-height: 52px; padding: 5px 4px; }
   .day-number { width: 22px; height: 22px; font-size: 0.72rem; margin-bottom: 3px; }
   .training-chip { font-size: 0.58rem; padding: 1px 4px; }

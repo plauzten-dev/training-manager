@@ -158,7 +158,7 @@
             <button type="button" class="btn btn-ghost btn-sm avatar-remove-btn" id="user-avatar-remove" onclick="removeUserAvatar()" {% if not user.avatar_path %}style="display:none"{% endif %}>Entfernen</button>
           </div>
         </div>
-        <input type="file" id="user-avatar-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden onchange="uploadUserAvatar(this)">
+        <input type="file" id="user-avatar-input" accept="image/*" hidden onchange="uploadUserAvatar(this)">
       </div>
       <form id="profile-form" onsubmit="submitProfile(event)">
         <div class="form-group">
@@ -312,7 +312,7 @@
       <div class="info-grid">
         <div class="info-row">
           <span class="info-label">App-Version</span>
-          <span class="info-value">B.0.51</span>
+          <span class="info-value">B.0.53</span>
         </div>
         <div class="info-row">
           <span class="info-label">Plattform</span>
@@ -915,7 +915,7 @@ function initNotifications() {
     pill.textContent = 'Nicht verfügbar';
     text.textContent = 'Dieses Gerät unterstützt keine Benachrichtigungen.';
     if (isiOS() && !isStandalone()) {
-      hint.textContent = ‘Auf dem iPhone: Teilen-Symbol → „Zum Home-Bildschirm". Danach sind Benachrichtigungen verfügbar (iOS 16.4 oder neuer).’;
+      hint.textContent = 'Auf dem iPhone: Teilen-Symbol → „Zum Home-Bildschirm". Danach sind Benachrichtigungen verfügbar (iOS 16.4 oder neuer).';
     }
     return;
   }

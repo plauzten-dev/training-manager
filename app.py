@@ -28,7 +28,7 @@ else:
         app.secret_key = key
 
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'heic', 'heif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -82,11 +82,15 @@ if _cloudinary_enabled:
 
 def _upload_image(file):
     """Lädt Bild hoch – Cloudinary wenn konfiguriert, sonst lokal. Gibt gespeicherten Pfad zurück."""
+    ext = file.filename.rsplit('.', 1)[1].lower() if '.' in (file.filename or '') else ''
     if _cloudinary_enabled:
-        result = cloudinary.uploader.upload(file, folder='training-manager')
+        opts = {'folder': 'training-manager'}
+        # HEIC/HEIF (iPhone-Standardformat) → in web-darstellbares JPG konvertieren
+        if ext in ('heic', 'heif'):
+            opts['format'] = 'jpg'
+        result = cloudinary.uploader.upload(file, **opts)
         return result['secure_url']
-    ext = file.filename.rsplit('.', 1)[1].lower()
-    filename = f"{uuid.uuid4().hex}.{ext}"
+    filename = f"{uuid.uuid4().hex}.{ext or 'jpg'}"
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return filename
 
@@ -687,8 +691,13 @@ def create_exercise():
     image_path = None
     if 'image' in request.files:
         file = request.files['image']
-        if file and file.filename and allowed_file(file.filename):
-            image_path = _upload_image(file)
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                return jsonify({'error': 'Bildformat nicht unterstützt (erlaubt: PNG, JPG, GIF, WEBP, HEIC)'}), 400
+            try:
+                image_path = _upload_image(file)
+            except Exception:
+                return jsonify({'error': 'Bild konnte nicht hochgeladen werden'}), 400
 
     conn = get_db()
     cursor = conn.execute(
@@ -722,9 +731,17 @@ def update_exercise(exercise_id):
     image_path = exercise['image_path']
     if 'image' in request.files:
         file = request.files['image']
-        if file and file.filename and allowed_file(file.filename):
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                conn.close()
+                return jsonify({'error': 'Bildformat nicht unterstützt (erlaubt: PNG, JPG, GIF, WEBP, HEIC)'}), 400
+            try:
+                new_path = _upload_image(file)
+            except Exception:
+                conn.close()
+                return jsonify({'error': 'Bild konnte nicht hochgeladen werden'}), 400
             _delete_image(image_path)
-            image_path = _upload_image(file)
+            image_path = new_path
 
     conn.execute(
         'UPDATE exercises SET title=?,description=?,image_path=?,field_players=?,goalkeepers=?,core_competency=?,difficulty=?,field_size=?,sport=? WHERE id=?',
