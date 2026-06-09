@@ -37,9 +37,15 @@ a { text-decoration: none; color: inherit; }
 /* Höhe primär aus JS-Variable (echtes window.innerHeight / visualViewport),
  * Fallback auf 100dvh für Browser ohne JS-Messung. Behebt iOS-Standalone-Bug,
  * bei dem 100dvh größer als das sichtbare Viewport berechnet wird. */
-.app-layout { display: flex; height: 100vh; height: 100dvh; height: var(--app-height, 100dvh); overflow: hidden; box-sizing: border-box; }
+/* Per position:fixed; inset:0 exakt ans Viewport gepinnt – robust gegen iOS-innerHeight-Macken
+ * mit viewport-fit=cover. background = Marken-Navy: füllt die Statusleisten-Fläche oben
+ * (padding-top = Safe-Area) → dunkler Verlauf läuft bis ganz oben, Uhr/WLAN/Akku weiß. */
+.app-layout { position: fixed; inset: 0; display: flex; overflow: hidden; box-sizing: border-box;
+  background: #0f1f35; padding-top: env(safe-area-inset-top); }
 
-.main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+/* heller Hintergrund deckt den Navy-App-Hintergrund im Content-Bereich ab (nur die
+ * Statusleisten-Fläche oben bleibt navy). */
+.main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
 
 /* ── Splash Screen (PWA only) ─────────────────────────────────────────────── */
 #splash-screen {
@@ -1176,14 +1182,15 @@ textarea { resize: vertical; min-height: 90px; }
 
   .app-layout { flex-direction: column; }
   .sidebar { display: none; }
-  /* In-flow flex child am unteren Rand von .app-layout (height = --app-height).
-   * KEIN position:fixed: vermeidet iOS-Inkonsistenz, bei der bottom:0 je nach
-   * Seiteninhalt/Viewport-Zustand unterschiedlich auflöst. So sitzt die Nav auf
-   * JEDER Seite deterministisch am unteren Rand des sichtbaren Bereichs. */
+  /* In-flow flex child am unteren Rand von .app-layout (= Bildschirmunterkante dank
+   * position:fixed; inset:0). Heller Hintergrund deckt den Navy-App-Hintergrund unten ab
+   * (sonst schiene navy hinter der transparenten Nav durch). padding-bottom hält die Pill
+   * über dem Home-Indikator (Safe-Area) und hebt sie zusätzlich etwas an. */
   .mobile-nav-wrap {
     display: flex;
     flex-shrink: 0;
-    padding: 4px 10px 8px;
+    padding: 4px 10px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    background: var(--bg);
     z-index: 100;
   }
 
@@ -1654,7 +1661,7 @@ textarea { resize: vertical; min-height: 90px; }
 .mt-fab {
   display: none;
   position: fixed;
-  bottom: 88px;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   right: 20px;
   width: 54px; height: 54px; border-radius: 50%;
   background: var(--primary); color: #fff;

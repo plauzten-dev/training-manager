@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
   <title>{% block title %}Training Manager{% endblock %}</title>
 
   <!-- PWA -->
@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#0f1f35">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Training">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
   <link rel="icon" type="image/svg+xml" href="/static/icons/icon-192.svg">
@@ -20,11 +20,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- iOS-PWA Viewport-Höhe: setzt --app-height = window.innerHeight.
-       Da KEIN viewport-fit=cover mehr gesetzt ist, hält iOS die Web-View automatisch
-       zwischen Statusleiste (Uhr) und Home-Indikator. innerHeight ist damit exakt die
-       nutzbare Fläche → .app-layout füllt sie vollständig, Nav sitzt am echten unteren
-       Rand, kein weißer Block, keine env(safe-area-inset)-Rechnerei mehr nötig. -->
+  <!-- iOS-PWA: Edge-to-Edge (viewport-fit=cover) → der dunkle App-Hintergrund läuft hinter
+       Statusleiste (Uhr/WLAN/Akku, weiß via black-translucent) und Home-Indikator. Die Höhe
+       wird NICHT mehr über innerHeight gesteuert (das ist mit cover auf iOS unzuverlässig und
+       ließ die Nav schweben), sondern .app-layout ist per position:fixed; inset:0 exakt ans
+       Viewport gepinnt (siehe style.css). --app-height bleibt als Fallback für evtl. Nutzer. -->
   <script>
     (function () {
       var root = document.documentElement;
@@ -52,7 +52,7 @@
       </svg>
       <span class="splash-logo-text">Training Manager</span>
       <div class="splash-bar"></div>
-      <span class="splash-version">B.0.54</span>
+      <span class="splash-version">B.0.55</span>
     </div>
   </div>
 
