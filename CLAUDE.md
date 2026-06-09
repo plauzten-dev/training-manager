@@ -241,8 +241,24 @@ training_attendance (
 git add .
 git commit -m "Beschreibung"
 git push
-# Fly.io deployt automatisch via GitHub-Integration
+# Deployt automatisch via GitHub Actions (.github/workflows/fly-deploy.yml),
+# SOFERN das Repo-Secret FLY_API_TOKEN gesetzt ist (GitHub → Settings → Secrets).
 ```
+
+**WICHTIG (09.06.2026):** Es gab lange KEIN funktionierendes Auto-Deploy – Pushes
+landeten auf GitHub, aber nie auf Fly.io (die alte Behauptung „GitHub-Integration"
+war falsch, es existierte kein Workflow). Jetzt eingerichtet:
+- `.github/workflows/fly-deploy.yml` (`flyctl deploy --remote-only` bei Push auf main)
+- Voraussetzung: GitHub-Secret `FLY_API_TOKEN` (app-scoped Deploy-Token).
+- Prüfen ob ein Deploy wirklich live ging: `curl -sI https://training-manager.fly.dev/static/css/style.css` → `last-modified` checken, oder Fly-Monitoring.
+
+**Manuell deployen (Fallback, falls Workflow klemmt):**
+```powershell
+& "$env:USERPROFILE\.fly\bin\flyctl.exe" deploy --remote-only -a training-manager
+```
+flyctl ist installiert unter `C:\Users\breit\.fly\bin\flyctl.exe` (nicht im PATH).
+Account erfordert SSO → persönliche Tokens NICHT über die UI erstellbar, stattdessen
+`flyctl tokens create deploy -a training-manager`.
 
 ### Fly.io Dashboard
 - Volumes: `fly.io/apps/training-manager/volumes`
@@ -375,5 +391,5 @@ git push
 25. **USER_ROLE JS-Variable (B.0.52)**: In Templates die Rolle als `<script>const USER_ROLE = '{{ user_role }}';</script>` vor dem Page-Script setzen (Muster: `my_trainings.html`, `training.html`, `calendar.html`). Werte: `'trainer'` | `'player'` | `'private'`. Im Template selbst `{% if user_role == 'trainer' %}` für serverseitiges Ausblenden nutzen.
 26. **Kalender-Berechtigungen (B.0.52)**: Header-Buttons "Termin" + "Neues Training" sind in `{% if user_role == 'trainer' %}` gewrapped. In `calendar.js` steuert `USER_ROLE === 'trainer'` ob "Termin hinzufügen" in Sidebar erscheint. "Training hinzufügen" (Sidebar + Wochenansicht) ist für ALLE Rollen sichtbar – Spieler/Private dürfen eigene Trainings anlegen, aber keine Termine.
 27. **Encoding aller Templates (B.0.52)**: Alle `.html`-Dateien müssen als UTF-8 gespeichert sein. Bei zukünftigen Edits mit externen Editoren prüfen ob Umlaute korrekt sind. Mojibake-Muster: `Ãœ`→`Ü`, `Ã¶`→`ö`, `â€"`→`–` etc. signalisiert falsche Speicherkodierung. Betroffen waren: `base.html`, `login.html`, `settings.html`.
-28. **Fly.io Deployment (B.0.52)**: App läuft auf `https://training-manager.fly.dev`. Deploy via `git push` (GitHub-Integration). SQLite-DB persistent auf Volume `/data/training.db` (Env-Var `DB_PATH`). Secrets in Fly.io Dashboard setzen, nicht in `fly.toml`. Auto-Sleep aktiv – für 24/7 `min_machines_running = 1` in `fly.toml`.
+28. **Fly.io Deployment (B.0.52, korrigiert 09.06.2026)**: App läuft auf `https://training-manager.fly.dev`. Deploy via GitHub Actions (`.github/workflows/fly-deploy.yml`) bei Push auf main – braucht Secret `FLY_API_TOKEN`. Manuell: `& "$env:USERPROFILE\.fly\bin\flyctl.exe" deploy --remote-only -a training-manager`. SQLite-DB persistent auf Volume `/data/training.db` (Env-Var `DB_PATH`). Secrets in Fly.io Dashboard setzen, nicht in `fly.toml`. Auto-Sleep aktiv – für 24/7 `min_machines_running = 1` in `fly.toml`. **Verifizieren dass Deploy live ging** (nicht nur push!): `last-modified`-Header der Live-CSS checken.
 29. **Kein Emoji in Templates**: `login.html` hatte `âš½` als Emoji-Logo – wurde durch App-SVG ersetzt. Regel: ausschließlich inline SVG, keine Unicode-Emojis.
