@@ -1,11 +1,40 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 09. Juni 2026
-> Status: ✅ Version B.0.54 – Safe-Areas komplett entfernt (iOS-Nav sauber gelöst)
+> Status: ✅ Version B.0.55 – Edge-to-Edge dunkle Statusleiste, Nav angehoben
 
 ---
 
-## B.0.54 – Änderungen (09.06.2026, 17. Session) – Safe-Area-Refactor
+## B.0.55 – Änderungen (09.06.2026, 17. Session) – Edge-to-Edge dunkle Statusleiste
+
+> Hinweis: dreht die Safe-Area-Entfernung aus B.0.54 teilweise zurück – `viewport-fit=cover`
+> ist wieder aktiv, aber das Nav-Schweben wird jetzt anders verhindert (`position:fixed; inset:0`).
+
+- [x] **Wunsch**: dunkler App-Hintergrund/Hero-Verlauf soll bis ganz oben hinter die Statusleiste
+      laufen, Uhr/WLAN/Akku weiß, Dynamic Island eingeblendet.
+- [x] `viewport-fit=cover` + `status-bar-style: black-translucent` wieder aktiv (base.html + login.html)
+      → Web-View randlos, weiße Statusleisten-Symbole.
+- [x] `.app-layout { position: fixed; inset: 0 }` statt `height: var(--app-height)` – pinnt das Layout
+      exakt ans Viewport, **robust gegen die iOS-innerHeight-Unzuverlässigkeit mit cover** (das war die
+      Ursache des Nav-Schwebens in B.0.53). + `background: #0f1f35` (= Hero-Verlauf-Startfarbe)
+      + `padding-top: env(safe-area-inset-top)` → Navy füllt die Statusleisten-Fläche nahtlos.
+- [x] `.main-wrapper` + `.mobile-nav-wrap`: heller Hintergrund (`var(--bg)`) → Content + Unterkante
+      bleiben hell, nur die Statusleiste oben ist navy.
+- [x] Nav angehoben: `.mobile-nav-wrap` padding-bottom `calc(env(safe-area-inset-bottom) + 16px)`;
+      `.mt-fab` bottom `calc(96px + env(safe-area-inset-bottom))`.
+- [x] SW-Cache v10→v11, Version B.0.55. Live verifiziert (cover, black-translucent, fixed+navy, v11).
+- ⚠️ **iOS-Hinweis bleibt**: Statusleisten-Stil wird beim Home-Screen-Install gecacht → installierte
+      PWA löschen + neu hinzufügen, damit `black-translucent` greift. Am iPhone gegenchecken.
+
+**LEHRE iOS-PWA (final)**: Für „eigene Farbe hinter der Statusleiste" braucht es zwingend
+`viewport-fit=cover` + `black-translucent`. Damit cover die Nav NICHT verschweben lässt, NICHT die
+Höhe über innerHeight/dvh steuern, sondern `.app-layout { position: fixed; inset: 0 }`. Den Navy-Strip
+oben = `app-layout`-Hintergrund + `padding-top: env(safe-area-inset-top)`; Content/Nav mit hellem
+Hintergrund überdecken, damit nur oben navy bleibt.
+
+---
+
+## B.0.54 – Änderungen (09.06.2026, 17. Session) – Safe-Area-Refactor (großteils von B.0.55 abgelöst)
 
 ### Fix #5 (final): iOS-Nav schwebte trotz innerHeight-Fix zu hoch
 - [x] **Architektur-Wechsel statt Safe-Area-Rechnerei**: `viewport-fit=cover` aus ALLEN Templates
