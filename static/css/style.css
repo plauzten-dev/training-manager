@@ -1100,12 +1100,14 @@ textarea { resize: vertical; min-height: 90px; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* ── Mobile Bottom Nav – Floating Pill (position:fixed) ──────────────────── */
+/* ── Mobile Bottom Nav – Floating Pill ───────────────────────────────────── */
 /*
- * position:fixed → Nav schwebt immer am unteren Bildschirmrand, unabhängig
- * von window.innerHeight-Berechnungen. pointer-events:none auf dem Wrapper
- * damit Klicks neben der Pill durchgehen. Scroll-Container bekommen
- * padding-bottom damit Inhalte nicht hinter der Nav verschwinden.
+ * Die Nav ist ein IN-FLOW Flex-Child am unteren Rand von .app-layout
+ * (display:flex; flex-direction:column; height:var(--app-height)).
+ * Bewusst KEIN position:fixed: auf iOS löst bottom:0 je nach Seiteninhalt und
+ * Viewport-Zustand unterschiedlich auf → Nav sass mal am Rand, mal höher. Als
+ * Flex-Child sitzt sie auf JEDER Seite deterministisch am unteren Rand des
+ * sichtbaren Bereichs. main-wrapper (flex:1) scrollt seinen Inhalt darüber.
  */
 .mobile-nav-wrap {
   display: none;
@@ -1174,13 +1176,14 @@ textarea { resize: vertical; min-height: 90px; }
 
   .app-layout { flex-direction: column; }
   .sidebar { display: none; }
+  /* In-flow flex child am unteren Rand von .app-layout (height = --app-height).
+   * KEIN position:fixed: vermeidet iOS-Inkonsistenz, bei der bottom:0 je nach
+   * Seiteninhalt/Viewport-Zustand unterschiedlich auflöst. So sitzt die Nav auf
+   * JEDER Seite deterministisch am unteren Rand des sichtbaren Bereichs. */
   .mobile-nav-wrap {
     display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 4px 10px 8px;
+    flex-shrink: 0;
+    padding: 4px 10px calc(8px + env(safe-area-inset-bottom, 0px));
     z-index: 100;
   }
 
@@ -1198,7 +1201,7 @@ textarea { resize: vertical; min-height: 90px; }
   .dash-hero-greeting { font-size: 1.35rem; }
   .dash-hero-deco { display: none; }
   .dash-body { padding: 18px 16px; gap: 22px; }
-  .dash-page { padding-bottom: 82px; }
+  .dash-page { padding-bottom: 16px; }
 
   /* Dashboard stats: 2 columns on phone */
   .dash-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1227,7 +1230,7 @@ textarea { resize: vertical; min-height: 90px; }
     border-bottom: 1px solid var(--border);
     display: none;
   }
-  .filter-sidebar.mobile-open { display: block; flex: 1; padding-bottom: 82px; }
+  .filter-sidebar.mobile-open { display: block; flex: 1; padding-bottom: 16px; }
   .filter-sidebar.mobile-open ~ .exercises-main { display: none; }
   .exercises-main { padding: 14px 16px; }
   .exercises-count { padding: 0 0 10px; }
@@ -1246,7 +1249,7 @@ textarea { resize: vertical; min-height: 90px; }
   .mobile-filter-btn svg { flex-shrink: 0; width: 13px; height: 13px; }
 
   /* Calendar: ganze Seite scrollt (kein interner Scroll in der Card) */
-  .calendar-layout { flex-direction: column; padding: 10px 12px 80px; gap: 12px; overflow-y: auto; }
+  .calendar-layout { flex-direction: column; padding: 10px 12px 16px; gap: 12px; overflow-y: auto; }
   .cal-sidebar { width: 100%; border-radius: 14px; }
   .calendar-card { border-radius: 14px; overflow: visible; }
   .calendar-grid { overflow: visible; }
@@ -1287,7 +1290,7 @@ textarea { resize: vertical; min-height: 90px; }
   }
 
   /* Training detail – complete mobile redesign */
-  .training-page-layout { padding: 12px 14px 82px; gap: 12px; }
+  .training-page-layout { padding: 12px 14px 16px; gap: 12px; }
 
   /* Header: stack title above action buttons */
   .training-header-card { flex-direction: column; padding: 16px; gap: 12px; }
@@ -1350,8 +1353,7 @@ textarea { resize: vertical; min-height: 90px; }
   .form-row { flex-direction: column; }
 
   /* Bottom fade: gradient over scroll content, above nav */
-  /* overflow-y: auto makes iOS treat all pages as scrollable → consistent position:fixed behaviour */
-  .main-wrapper { position: relative; overflow-y: auto; overflow-x: hidden; }
+  .main-wrapper { position: relative; }
   .main-wrapper::after {
     content: '';
     position: absolute;
@@ -1573,7 +1575,7 @@ textarea { resize: vertical; min-height: 90px; }
 .avatar-remove-btn { color: var(--danger); }
 
 @media (max-width: 640px) {
-  .settings-mob-home { padding: 0 16px 98px; }
+  .settings-mob-home { padding: 0 16px 24px; }
   .settings-detail-grid { padding: 0 16px 48px; }
 }
 
@@ -1649,7 +1651,7 @@ textarea { resize: vertical; min-height: 90px; }
 .mt-fab {
   display: none;
   position: fixed;
-  bottom: 76px;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   right: 20px;
   width: 54px; height: 54px; border-radius: 50%;
   background: var(--primary); color: #fff;
@@ -2416,7 +2418,7 @@ input.team-search-input:focus {
 
 @media (max-width: 640px) {
   .players-top   { padding: 16px 16px 0; gap: 10px; }
-  .players-scroll { padding: 12px 16px 82px; gap: 16px; }
+  .players-scroll { padding: 12px 16px 16px; gap: 16px; }
   .players-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .mobile-nav-item { font-size: 0.58rem; }
   .nav-icon { width: 44px; }
