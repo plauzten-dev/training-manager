@@ -1215,6 +1215,7 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .mobile-nav-item {
   flex: 1;
+  min-width: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 0 4px;
   gap: 3px; color: #8e8e93; font-size: 0.62rem; font-weight: 500;
@@ -1263,12 +1264,12 @@ textarea { resize: vertical; min-height: 90px; }
   .mobile-nav-wrap {
     display: flex;
     flex-shrink: 0;
-    padding: 4px 10px 8px;
+    padding: 6px 10px 14px;
     z-index: 100;
   }
 
   /* Page header */
-  .page-header { padding: 20px 18px 0; flex-wrap: wrap; gap: 10px; }
+  .page-header { padding: 12px 18px 0; flex-wrap: wrap; gap: 10px; }
   .page-title { font-size: 1.25rem; }
   .fav-toggle-label, .via-link-label { display: none; }
 
@@ -1277,7 +1278,7 @@ textarea { resize: vertical; min-height: 90px; }
   .login-form-panel { width: 100%; }
 
   /* Dashboard hero */
-  .dash-hero { padding: 24px 20px 22px; }
+  .dash-hero { padding: 14px 20px 22px; }
   .dash-hero-greeting { font-size: 1.35rem; }
   .dash-hero-deco { display: none; }
   .dash-body { padding: 18px 16px; gap: 22px; }
