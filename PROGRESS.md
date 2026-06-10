@@ -1,7 +1,25 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 10. Juni 2026
-> Status: ✅ Version B.0.57 – Mobile Registrierung als Step-Wizard
+> Status: ✅ Version B.0.58 – Mobile Nav-Politur, Testaccount entfernt, Datenschutz OAuth-Hinweis
+
+---
+
+## B.0.58 – Änderungen (10.06.2026, 20. Session) – Release-Vorbereitung
+
+- [x] **Mobile Bottom-Nav**: alle 6 Items exakt gleich breit (`min-width: 0` auf
+      `.mobile-nav-item`, "Einstellungen" → "Konto" gekürzt) – vorher sprengte der lange
+      Text das Flex-Item und verschob die Icon-Abstände sichtbar.
+- [x] **Mobile Abstände**: `.mobile-nav-wrap` Bottom-Padding 8px → 14px (Nav etwas vom
+      unteren Rand abgesetzt), `.page-header`/`.dash-hero` Top-Padding reduziert (Begrüßung
+      rückt näher an Statusleiste/Dynamic Island).
+- [x] **Testaccount-Login entfernt** (letzter Release-Blocker): Route
+      `POST /api/auth/test-login` (`app.py`), Button + `testLogin()` (`login.html`),
+      `.btn-test-login`-Styles (`style.css`) komplett entfernt.
+- [x] **Datenschutzerklärung ergänzt** (`privacy.html`): neuer Abschnitt 3 "Anmeldung über
+      Google oder Microsoft" (OAuth-Datenweitergabe), Hinweis bei Passwort-Punkt ergänzt,
+      nachfolgende Abschnitte 3-8 → 4-9 umnummeriert.
+- [x] SW-Cache v11→v12, Version B.0.58 an allen 3 Stellen.
 
 ---
 
@@ -283,7 +301,6 @@ Hintergrund überdecken, damit nur oben navy bleibt.
 
 ## Nächste Session – Mögliche nächste Features
 
-- **Testaccount entfernen** – letzter Release-Blocker (3 Stellen: app.py Route, login.html Button, style.css)
 - **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
 - **Saison-/Wochenplanung** – Überblick über geplante Trainingswochen
 - **Share-Link widerrufen** – `DELETE /api/exercises/<id>/share` um Token zu löschen

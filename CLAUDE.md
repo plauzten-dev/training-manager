@@ -344,11 +344,10 @@ Account erfordert SSO → persönliche Tokens NICHT über die UI erstellbar, sta
 - [ ] [pwab.com](https://pwab.com) → Live-URL → Android AAB herunterladen
 - [ ] Google Play Developer-Konto anlegen ($25 Einmalgebühr)
 - [ ] SHA-256-Fingerprint aus Play Console → in `app.py` bei `assetlinks.json` eintragen (Placeholder ersetzen)
-- [ ] Store-Listing: Datenschutz-URL = `https://training-manager-nwga.onrender.com/privacy`
+- [ ] Store-Listing: Datenschutz-URL = `https://training-manager.fly.dev/privacy`
 
 ### Nächste Session – Mögliche Features
 - [ ] **Trainingsvorlagen** – Training als Vorlage markieren und wiederverwenden
-- [ ] **Testaccount entfernen** – Release-Blocker (3 Stellen: app.py, login.html, style.css)
 - [ ] **Share-Link widerrufen** – `DELETE /api/exercises/<id>/share` um Token zu löschen
 
 ### Mittel priorisiert
