@@ -1,7 +1,25 @@
 # Training Manager – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 10. Juni 2026
-> Status: ✅ Version B.0.56 – Play-Store-Release-Vorbereitung (Konto-Löschung, Datenschutz, Consent)
+> Status: ✅ Version B.0.57 – Mobile Registrierung als Step-Wizard
+
+---
+
+## B.0.57 – Änderungen (10.06.2026, 19. Session) – Mobile Registrierung als Step-Wizard
+
+- [x] **Registrierung (Mobile ≤640px) als Step-Wizard**: `templates/login.html` –
+      `#register-form` in `.reg-step`-Sektionen aufgeteilt (Rolle → Einladecode [nur Spieler]
+      → Benutzername → E-Mail → Passwort → Datenschutz/Submit), je ein Feld pro Bildschirm
+      mit Slide-Animation (`.reg-steps-track` + `transform: translateX()`).
+- [x] Wizard-Chrome (Zurück-Pfeil, Progress-Dots, Step-Titel/Subtitle, "Weiter"-Buttons)
+      nur auf Mobile sichtbar; Desktop/Tablet unverändert (`.reg-step { display: contents }`).
+- [x] Tap auf Rollen-Karte (Trainer/Spieler/Privat) wählt Rolle + Auto-Advance zum nächsten
+      Schritt. OAuth-Buttons + Testaccount-Button nur in Schritt 1 sichtbar.
+- [x] Pro-Schritt-Validierung in JS (`regValidateField`) statt HTML5 `required`-Attributen –
+      verhindert native Validierungs-Bubbles auf unsichtbaren/transformierten Feldern.
+      `handleRegister()` validiert zusätzlich vor dem Absenden.
+- [x] Login bleibt unverändert (kompaktes 2-Felder-Formular, kein Wizard).
+- [x] Version B.0.57 an allen 3 Stellen (base/login/settings).
 
 ---
 

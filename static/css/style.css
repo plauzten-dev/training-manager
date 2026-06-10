@@ -429,6 +429,75 @@ textarea { resize: vertical; min-height: 90px; }
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
+/* ── Registrierung: Mobile Step-Wizard ──────────────────────────────────────
+ * Auf Desktop bleibt das Formular unverändert (alle Felder gestapelt):
+ * .reg-step/.reg-steps-track/.reg-wizard-viewport sind "display: contents",
+ * d.h. sie verschwinden aus dem Box-Tree und beeinflussen das Layout nicht.
+ * Das Wizard-Chrome (Header, Step-Titel, Weiter-Buttons, Dots) ist nur ≤640px aktiv. */
+.reg-wizard-header,
+.reg-step-heading,
+#reg-step-error,
+.reg-next-btn { display: none; }
+.reg-wizard-viewport,
+.reg-steps-track,
+.reg-step { display: contents; }
+
+@media (max-width: 640px) {
+  #register-form { overflow: hidden; }
+
+  .reg-wizard-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .reg-back-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border: none; border-radius: 8px;
+    background: var(--bg); color: var(--text); cursor: pointer;
+    transition: background 0.15s;
+  }
+  .reg-back-btn:hover { background: var(--border); }
+  .reg-back-btn.reg-back-hidden { visibility: hidden; }
+
+  .reg-progress-dots { display: flex; gap: 6px; }
+  .reg-progress-dots span {
+    width: 6px; height: 6px; border-radius: 3px;
+    background: var(--border); transition: all 0.25s;
+  }
+  .reg-progress-dots span.active { width: 18px; background: var(--primary); }
+
+  .reg-step-heading { display: block; margin-bottom: 16px; }
+  .reg-step-heading h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+  .reg-step-heading p { color: var(--text-muted); font-size: 0.85rem; }
+
+  #reg-step-error { display: block; }
+  @keyframes reg-shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-6px); }
+    40%, 60% { transform: translateX(6px); }
+  }
+  #reg-step-error.reg-shake { animation: reg-shake 0.4s; }
+
+  .reg-wizard-viewport {
+    display: block; overflow: hidden; position: relative;
+    transition: height 0.3s ease;
+  }
+  .reg-steps-track {
+    display: flex; transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+  }
+  .reg-step {
+    display: block; flex: 0 0 100%; min-width: 100%; box-sizing: border-box;
+  }
+
+  /* Step-Titel übernimmt die Beschriftung – Feld-Labels ausblenden (Checkbox-Label bleibt) */
+  #register-form .reg-step .form-group > label:not(.form-checkbox-label) { display: none; }
+
+  .reg-next-btn { display: flex; margin-top: 4px; }
+
+  /* OAuth/Testaccount nur im ersten Schritt (Rollenwahl) zeigen */
+  .reg-extras-hidden { display: none; }
+}
+
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  SPORT TABS                                                                */
 /* ────────────────────────────────────────────────────────────────────────── */

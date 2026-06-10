@@ -31,7 +31,7 @@
       </svg>
       <span class="splash-logo-text">Training Manager</span>
       <div class="splash-bar"></div>
-      <span class="splash-version">B.0.56</span>
+      <span class="splash-version">B.0.57</span>
     </div>
   </div>
 
@@ -100,60 +100,105 @@
 
         <!-- Register form -->
         <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
-          <!-- Role selector -->
-          <div class="form-group">
-            <label>Ich bin...</label>
-            <div class="role-selector" id="role-selector">
-              <button type="button" class="role-btn active" data-role="trainer" onclick="selectRole('trainer')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                Trainer
-              </button>
-              <button type="button" class="role-btn" data-role="player" onclick="selectRole('player')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                Spieler
-                <span class="role-ea-badge">Early Access</span>
-              </button>
-              <button type="button" class="role-btn" data-role="private" onclick="selectRole('private')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                Privat
-                <span class="role-ea-badge">Early Access</span>
-              </button>
+          <!-- Wizard header (mobile only) -->
+          <div class="reg-wizard-header">
+            <button type="button" class="reg-back-btn reg-back-hidden" onclick="regPrevStep()" aria-label="Zurück">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div class="reg-progress-dots" id="reg-progress-dots"></div>
+          </div>
+          <div class="reg-step-heading">
+            <h2 id="reg-step-title"></h2>
+            <p id="reg-step-subtitle"></p>
+          </div>
+          <div id="reg-step-error" class="form-error hidden"></div>
+
+          <div class="reg-wizard-viewport">
+            <div class="reg-steps-track" id="reg-steps-track">
+
+              <!-- Step: Rolle -->
+              <div class="reg-step" data-step="role">
+                <div class="form-group">
+                  <label>Ich bin...</label>
+                  <div class="role-selector" id="role-selector">
+                    <button type="button" class="role-btn active" data-role="trainer" onclick="selectRole('trainer')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      Trainer
+                    </button>
+                    <button type="button" class="role-btn" data-role="player" onclick="selectRole('player')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                      Spieler
+                      <span class="role-ea-badge">Early Access</span>
+                    </button>
+                    <button type="button" class="role-btn" data-role="private" onclick="selectRole('private')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      Privat
+                      <span class="role-ea-badge">Early Access</span>
+                    </button>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-full reg-next-btn" onclick="regNextStep()">Weiter</button>
+              </div>
+
+              <!-- Step: Einladecode (nur Spieler) -->
+              <div class="reg-step" data-step="invite" style="display:none">
+                <div class="form-group">
+                  <label>Einladecode <span style="color:#dc2626">*</span></label>
+                  <input type="text" id="reg-invite-code" placeholder="z.B. A3B9C2D1"
+                         autocomplete="off" maxlength="8"
+                         oninput="this.value=this.value.toUpperCase().replace(/[^A-F0-9]/g,'')">
+                  <p class="form-hint">Den Code bekommst du von deinem Trainer.</p>
+                </div>
+                <button type="button" class="btn btn-primary btn-full reg-next-btn" onclick="regNextStep()">Weiter</button>
+              </div>
+
+              <!-- Step: Benutzername -->
+              <div class="reg-step" data-step="username">
+                <div class="form-group">
+                  <label>Benutzername</label>
+                  <input type="text" id="reg-username" placeholder="Dein Benutzername" autocomplete="username">
+                </div>
+                <button type="button" class="btn btn-primary btn-full reg-next-btn" onclick="regNextStep()">Weiter</button>
+              </div>
+
+              <!-- Step: E-Mail -->
+              <div class="reg-step" data-step="email">
+                <div class="form-group">
+                  <label>E-Mail</label>
+                  <input type="email" id="reg-email" placeholder="deine@email.de" autocomplete="email">
+                </div>
+                <button type="button" class="btn btn-primary btn-full reg-next-btn" onclick="regNextStep()">Weiter</button>
+              </div>
+
+              <!-- Step: Passwort -->
+              <div class="reg-step" data-step="password">
+                <div class="form-group">
+                  <label>Passwort</label>
+                  <input type="password" id="reg-password" placeholder="Mindestens 6 Zeichen" minlength="6" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                  <label>Passwort wiederholen</label>
+                  <input type="password" id="reg-password2" placeholder="Passwort wiederholen" autocomplete="new-password">
+                </div>
+                <button type="button" class="btn btn-primary btn-full reg-next-btn" onclick="regNextStep()">Weiter</button>
+              </div>
+
+              <!-- Step: Datenschutz + Submit -->
+              <div class="reg-step" data-step="consent">
+                <div class="form-group form-checkbox-group">
+                  <label class="form-checkbox-label">
+                    <input type="checkbox" id="reg-accept-privacy">
+                    <span>Ich akzeptiere die <a href="/privacy" target="_blank" rel="noopener">Datenschutzerklärung</a></span>
+                  </label>
+                </div>
+                <div id="register-error" class="form-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-full" id="register-btn">
+                  Konto erstellen
+                </button>
+              </div>
+
             </div>
           </div>
-          <!-- Invite code – only for players -->
-          <div class="form-group" id="invite-code-group" style="display:none">
-            <label>Einladecode <span style="color:#dc2626">*</span></label>
-            <input type="text" id="reg-invite-code" placeholder="z.B. A3B9C2D1"
-                   autocomplete="off" maxlength="8"
-                   oninput="this.value=this.value.toUpperCase().replace(/[^A-F0-9]/g,'')">
-            <p class="form-hint">Den Code bekommst du von deinem Trainer.</p>
-          </div>
-          <div class="form-group">
-            <label>Benutzername</label>
-            <input type="text" id="reg-username" placeholder="Dein Benutzername" required autocomplete="username">
-          </div>
-          <div class="form-group">
-            <label>E-Mail</label>
-            <input type="email" id="reg-email" placeholder="deine@email.de" required autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label>Passwort</label>
-            <input type="password" id="reg-password" placeholder="Mindestens 6 Zeichen" required minlength="6" autocomplete="new-password">
-          </div>
-          <div class="form-group">
-            <label>Passwort wiederholen</label>
-            <input type="password" id="reg-password2" placeholder="Passwort wiederholen" required autocomplete="new-password">
-          </div>
-          <div class="form-group form-checkbox-group">
-            <label class="form-checkbox-label">
-              <input type="checkbox" id="reg-accept-privacy" required>
-              <span>Ich akzeptiere die <a href="/privacy" target="_blank" rel="noopener">Datenschutzerklärung</a></span>
-            </label>
-          </div>
-          <div id="register-error" class="form-error hidden"></div>
-          <button type="submit" class="btn btn-primary btn-full" id="register-btn">
-            Konto erstellen
-          </button>
         </form>
 
         {% if google_enabled or microsoft_enabled %}
@@ -211,11 +256,13 @@
         registerForm.classList.add('hidden');
         tabLogin.classList.add('active');
         tabRegister.classList.remove('active');
+        setRegExtrasVisible(true);
       } else {
         loginForm.classList.add('hidden');
         registerForm.classList.remove('hidden');
         tabLogin.classList.remove('active');
         tabRegister.classList.add('active');
+        regGoToStep(0, { focus: false });
       }
     }
 
@@ -265,30 +312,151 @@
     function selectRole(role) {
       selectedRole = role;
       document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === role));
-      const codeGroup = document.getElementById('invite-code-group');
+      const inviteStep = document.querySelector('.reg-step[data-step="invite"]');
       const codeInput = document.getElementById('reg-invite-code');
       if (role === 'player') {
-        codeGroup.style.display = '';
-        codeInput.required = true;
+        inviteStep.style.display = '';
       } else {
-        codeGroup.style.display = 'none';
-        codeInput.required = false;
+        inviteStep.style.display = 'none';
         codeInput.value = '';
       }
+      if (window.innerWidth <= 640 && regStepIndex === 0) {
+        setTimeout(regNextStep, 250);
+      }
     }
+
+    /* ── Registrierungs-Wizard (Mobile) ─────────────────────────────────────── */
+    const STEP_META = {
+      role:     { title: 'Wie nutzt du Training Manager?', subtitle: '' },
+      invite:   { title: 'Einladecode', subtitle: 'Du bekommst ihn von deinem Trainer.' },
+      username: { title: 'Wie sollen wir dich nennen?', subtitle: '' },
+      email:    { title: 'Deine E-Mail-Adresse', subtitle: 'Nur für dein Konto – wird nicht weitergegeben.' },
+      password: { title: 'Passwort festlegen', subtitle: 'Mindestens 6 Zeichen' },
+      consent:  { title: 'Fast geschafft', subtitle: 'Letzter Schritt vor dem Start' },
+    };
+
+    let regStepIndex = 0;
+
+    function getRegSteps() {
+      const steps = ['role'];
+      if (selectedRole === 'player') steps.push('invite');
+      steps.push('username', 'email', 'password', 'consent');
+      return steps;
+    }
+
+    function setRegExtrasVisible(visible) {
+      document.querySelectorAll('.btn-test-login, .oauth-divider, .oauth-buttons').forEach(el => {
+        el.classList.toggle('reg-extras-hidden', !visible);
+      });
+    }
+
+    function regGoToStep(index, opts) {
+      opts = opts || {};
+      const steps = getRegSteps();
+      if (index < 0) index = 0;
+      if (index > steps.length - 1) index = steps.length - 1;
+      regStepIndex = index;
+      const stepKey = steps[index];
+
+      const track = document.getElementById('reg-steps-track');
+      track.style.transform = 'translateX(-' + (index * 100) + '%)';
+
+      const activeEl = document.querySelector('.reg-step[data-step="' + stepKey + '"]');
+      const viewport = document.querySelector('.reg-wizard-viewport');
+      if (activeEl && viewport) {
+        viewport.style.height = activeEl.scrollHeight + 'px';
+      }
+
+      const meta = STEP_META[stepKey];
+      document.getElementById('reg-step-title').textContent = meta.title;
+      const subEl = document.getElementById('reg-step-subtitle');
+      subEl.textContent = meta.subtitle;
+      subEl.style.display = meta.subtitle ? '' : 'none';
+
+      const dotsEl = document.getElementById('reg-progress-dots');
+      dotsEl.innerHTML = '';
+      steps.forEach((s, i) => {
+        const dot = document.createElement('span');
+        if (i === index) dot.classList.add('active');
+        dotsEl.appendChild(dot);
+      });
+
+      document.querySelector('.reg-back-btn').classList.toggle('reg-back-hidden', index === 0);
+      document.getElementById('reg-step-error').classList.add('hidden');
+      setRegExtrasVisible(stepKey === 'role');
+
+      if (opts.focus !== false && activeEl) {
+        const input = activeEl.querySelector('input');
+        if (input) setTimeout(() => input.focus(), 350);
+      }
+    }
+
+    function regValidateField(step) {
+      switch (step) {
+        case 'invite':
+          return document.getElementById('reg-invite-code').value.length === 8
+            ? null : 'Der Einladecode muss 8 Zeichen lang sein.';
+        case 'username':
+          return document.getElementById('reg-username').value.trim() !== ''
+            ? null : 'Bitte gib einen Benutzernamen ein.';
+        case 'email':
+          return /.+@.+\..+/.test(document.getElementById('reg-email').value.trim())
+            ? null : 'Bitte gib eine gültige E-Mail-Adresse ein.';
+        case 'password': {
+          const p1 = document.getElementById('reg-password').value;
+          const p2 = document.getElementById('reg-password2').value;
+          if (p1.length < 6) return 'Das Passwort muss mindestens 6 Zeichen haben.';
+          if (p1 !== p2) return 'Passwörter stimmen nicht überein.';
+          return null;
+        }
+        default:
+          return null;
+      }
+    }
+
+    function regNextStep() {
+      const steps = getRegSteps();
+      const err = regValidateField(steps[regStepIndex]);
+      if (err) {
+        const errEl = document.getElementById('reg-step-error');
+        errEl.textContent = err;
+        errEl.classList.remove('hidden');
+        errEl.classList.remove('reg-shake');
+        void errEl.offsetWidth;
+        errEl.classList.add('reg-shake');
+        return;
+      }
+      regGoToStep(regStepIndex + 1);
+    }
+
+    function regPrevStep() {
+      regGoToStep(regStepIndex - 1);
+    }
+
+    let regResizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(regResizeTimer);
+      regResizeTimer = setTimeout(() => {
+        if (!document.getElementById('register-form').classList.contains('hidden')) {
+          regGoToStep(regStepIndex, { focus: false });
+        }
+      }, 150);
+    });
 
     async function handleRegister(e) {
       e.preventDefault();
       const btn = document.getElementById('register-btn');
       const errEl = document.getElementById('register-error');
-      const pw1 = document.getElementById('reg-password').value;
-      const pw2 = document.getElementById('reg-password2').value;
-
       errEl.classList.add('hidden');
-      if (pw1 !== pw2) {
-        errEl.textContent = 'Passwörter stimmen nicht überein';
-        errEl.classList.remove('hidden');
-        return;
+
+      for (const step of getRegSteps()) {
+        if (step === 'role' || step === 'consent') continue;
+        const err = regValidateField(step);
+        if (err) {
+          errEl.textContent = err;
+          errEl.classList.remove('hidden');
+          return;
+        }
       }
       if (!document.getElementById('reg-accept-privacy').checked) {
         errEl.textContent = 'Bitte akzeptiere die Datenschutzerklärung';
@@ -302,7 +470,7 @@
       const body = {
         username: document.getElementById('reg-username').value,
         email: document.getElementById('reg-email').value,
-        password: pw1,
+        password: document.getElementById('reg-password').value,
         role: selectedRole,
         accept_privacy: true,
       };
