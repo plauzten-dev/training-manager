@@ -76,12 +76,6 @@
           <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Registrieren</button>
         </div>
 
-        <!-- TODO: VOR RELEASE ENTFERNEN -->
-        <button type="button" class="btn-test-login" onclick="testLogin()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-          Testaccount – Sofort einloggen
-        </button>
-
         <!-- Login form -->
         <form id="login-form" onsubmit="handleLogin(event)">
           <div class="form-group">
@@ -266,19 +260,6 @@
       }
     }
 
-    async function testLogin() {
-      const btn = document.querySelector('.btn-test-login');
-      btn.disabled = true;
-      btn.textContent = 'Einloggen...';
-      const res = await fetch('/api/auth/test-login', { method: 'POST' });
-      if (res.ok) {
-        window.location.href = '/dashboard';
-      } else {
-        btn.disabled = false;
-        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg> Testaccount – Sofort einloggen';
-      }
-    }
-
     async function handleLogin(e) {
       e.preventDefault();
       const btn = document.getElementById('login-btn');
@@ -345,7 +326,7 @@
     }
 
     function setRegExtrasVisible(visible) {
-      document.querySelectorAll('.btn-test-login, .oauth-divider, .oauth-buttons').forEach(el => {
+      document.querySelectorAll('.oauth-divider, .oauth-buttons').forEach(el => {
         el.classList.toggle('reg-extras-hidden', !visible);
       });
     }

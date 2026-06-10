@@ -498,23 +498,6 @@ def logout():
     return jsonify({'message': 'Abgemeldet'})
 
 
-# TODO: VOR RELEASE ENTFERNEN
-@app.route('/api/auth/test-login', methods=['POST'])
-def test_login():
-    conn = get_db()
-    user = conn.execute('SELECT * FROM users WHERE username = ?', ('TEST',)).fetchone()
-    if not user:
-        conn.execute('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-                     ('TEST', 'test@test.de', hash_password('test1234')))
-        conn.commit()
-        user = conn.execute('SELECT * FROM users WHERE username = ?', ('TEST',)).fetchone()
-    conn.close()
-    session['user_id'] = user['id']
-    session['username'] = user['username']
-    session['user_role'] = 'trainer'
-    return jsonify({'message': 'Testaccount eingeloggt'})
-
-
 @app.route('/api/auth/change-password', methods=['PUT'])
 @login_required
 def change_password():
