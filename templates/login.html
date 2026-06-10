@@ -31,7 +31,7 @@
       </svg>
       <span class="splash-logo-text">Training Manager</span>
       <div class="splash-bar"></div>
-      <span class="splash-version">B.0.54</span>
+      <span class="splash-version">B.0.56</span>
     </div>
   </div>
 
@@ -143,6 +143,12 @@
           <div class="form-group">
             <label>Passwort wiederholen</label>
             <input type="password" id="reg-password2" placeholder="Passwort wiederholen" required autocomplete="new-password">
+          </div>
+          <div class="form-group form-checkbox-group">
+            <label class="form-checkbox-label">
+              <input type="checkbox" id="reg-accept-privacy" required>
+              <span>Ich akzeptiere die <a href="/privacy" target="_blank" rel="noopener">Datenschutzerklärung</a></span>
+            </label>
           </div>
           <div id="register-error" class="form-error hidden"></div>
           <button type="submit" class="btn btn-primary btn-full" id="register-btn">
@@ -284,6 +290,11 @@
         errEl.classList.remove('hidden');
         return;
       }
+      if (!document.getElementById('reg-accept-privacy').checked) {
+        errEl.textContent = 'Bitte akzeptiere die Datenschutzerklärung';
+        errEl.classList.remove('hidden');
+        return;
+      }
 
       btn.disabled = true;
       btn.textContent = 'Konto wird erstellt...';
@@ -293,6 +304,7 @@
         email: document.getElementById('reg-email').value,
         password: pw1,
         role: selectedRole,
+        accept_privacy: true,
       };
       if (selectedRole === 'player') {
         body.invite_code = document.getElementById('reg-invite-code').value;

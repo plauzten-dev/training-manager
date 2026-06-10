@@ -1,7 +1,28 @@
 # Training Manager – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 09. Juni 2026
-> Status: ✅ Version B.0.55 – Edge-to-Edge dunkle Statusleiste, Nav angehoben
+> Zuletzt aktualisiert: 10. Juni 2026
+> Status: ✅ Version B.0.56 – Play-Store-Release-Vorbereitung (Konto-Löschung, Datenschutz, Consent)
+
+---
+
+## B.0.56 – Änderungen (10.06.2026, 18. Session) – Play-Store-Release-Vorbereitung
+
+- [x] **Konto-Löschung (Self-Service)**: Neue Route `DELETE /api/auth/account` (`app.py`) –
+      löscht den User samt aller per `ON DELETE CASCADE`/`SET NULL` verknüpften Daten
+      (Trainings, Teams, Spieler, Termine, Favoriten, geteilte Übungs-Links) und alle
+      zugehörigen Profilbilder (User + Spieler). Bestätigung per Passwort, bei OAuth-Konten
+      per eingetipptem Benutzernamen.
+- [x] **Settings-UI**: Neue "Gefahrenzone"-Sektion (`detail-konto-loeschen`) in
+      `templates/settings.html` mit Warntext, Bestätigungs-Modal (`confirmDeleteAccount`/
+      `doDeleteAccount`) und Redirect nach `/login` bei Erfolg.
+- [x] **Datenschutzerklärung** (`templates/privacy.html`): Domain auf
+      `training-manager.fly.dev` korrigiert, Kontakt `mail.plauzten@gmail.com` ergänzt,
+      Abschnitt 4 auf Fly.io + persistentes Volume aktualisiert, Abschnitt 5 verweist auf
+      Self-Service-Löschung in den Einstellungen, Datum auf Juni 2026 aktualisiert.
+- [x] **Consent-Checkbox** bei Registrierung (`templates/login.html` + `app.py`):
+      Pflicht-Checkbox "Datenschutzerklärung akzeptieren" mit Link zu `/privacy`,
+      serverseitige Validierung in `register()` (`accept_privacy` → 400 wenn fehlend).
+- [x] SW-Cache `v10` → `v11`. Version B.0.56 an allen 3 Stellen (base/login/settings).
 
 ---
 

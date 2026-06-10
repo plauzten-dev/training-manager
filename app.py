@@ -407,12 +407,15 @@ def register():
     password    = data.get('password') or ''
     role        = (data.get('role') or 'trainer').strip()
     invite_code = (data.get('invite_code') or '').strip().upper()
+    accept_privacy = bool(data.get('accept_privacy'))
 
     if role not in ('trainer', 'player', 'private'):
         role = 'trainer'
 
     if not username or not email or not password:
         return jsonify({'error': 'Alle Felder müssen ausgefüllt sein'}), 400
+    if not accept_privacy:
+        return jsonify({'error': 'Bitte akzeptiere die Datenschutzerklärung'}), 400
     if len(password) < 6:
         return jsonify({'error': 'Passwort muss mindestens 6 Zeichen lang sein'}), 400
     if role == 'player' and not invite_code:
@@ -604,6 +607,41 @@ def delete_user_avatar():
     if old and old['avatar_path']:
         _delete_image(old['avatar_path'])
     return jsonify({'message': 'Profilbild entfernt'})
+
+
+@app.route('/api/auth/account', methods=['DELETE'])
+@login_required
+def delete_account():
+    data = request.get_json() or {}
+    conn = get_db()
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+
+    if user['password_hash']:
+        password = data.get('password') or ''
+        if not verify_password(password, user['password_hash']):
+            conn.close()
+            return jsonify({'error': 'Passwort ist falsch'}), 400
+    else:
+        username = (data.get('username') or '').strip()
+        if username != user['username']:
+            conn.close()
+            return jsonify({'error': 'Benutzername stimmt nicht überein'}), 400
+
+    avatar_paths = []
+    if user['avatar_path']:
+        avatar_paths.append(user['avatar_path'])
+    for p in conn.execute('SELECT avatar_path FROM players WHERE user_id = ? AND avatar_path IS NOT NULL', (session['user_id'],)).fetchall():
+        avatar_paths.append(p['avatar_path'])
+
+    conn.execute('DELETE FROM users WHERE id = ?', (session['user_id'],))
+    conn.commit()
+    conn.close()
+
+    for path in avatar_paths:
+        _delete_image(path)
+
+    session.clear()
+    return jsonify({'message': 'Konto gelöscht'})
 
 
 # ── Exercises API ─────────────────────────────────────────────────────────────
