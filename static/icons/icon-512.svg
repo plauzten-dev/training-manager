@@ -1,14 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="80" fill="#0f1f35"/>
-  <!-- Field outline -->
-  <rect x="43" y="101" width="427" height="309" rx="32" stroke="#4ade80" stroke-width="24" fill="none"/>
-  <!-- Net line (horizontal = Tennis/Volleyball) -->
-  <line x1="43" y1="256" x2="470" y2="256" stroke="#4ade80" stroke-width="22"/>
-  <!-- Center circle (Fußball-Referenz) -->
-  <circle cx="256" cy="256" r="69" stroke="#4ade80" stroke-width="22" fill="none"/>
-  <!-- Side boxes -->
-  <rect x="43" y="176" width="85" height="160" rx="16" stroke="#4ade80" stroke-width="20" fill="none"/>
-  <rect x="384" y="176" width="85" height="160" rx="16" stroke="#4ade80" stroke-width="20" fill="none"/>
-  <!-- Ball-Punkt -->
-  <circle cx="256" cy="256" r="16" fill="#4ade80"/>
+  <!-- Flow-Ring -->
+  <circle cx="256" cy="256" r="90" stroke="#4ade80" stroke-width="24" fill="none"/>
+  <path d="M256 90 A166 166 0 0 1 422 256" stroke="#4ade80" stroke-width="24" fill="none" stroke-linecap="round"/>
+  <!-- Ziel-Punkt -->
+  <circle cx="256" cy="256" r="30" fill="#4ade80"/>
 </svg>

@@ -1,7 +1,7 @@
 {
   "id": "https://training-manager-nwga.onrender.com/",
-  "name": "Training Manager",
-  "short_name": "Training",
+  "name": "Trainflow",
+  "short_name": "Trainflow",
   "description": "Professionelle Trainingsplanung für Sporttrainer – Übungen, Kalender, PDF-Export.",
   "start_url": "/dashboard",
   "scope": "/",

@@ -1,9 +1,9 @@
 @echo off
-title Training Manager
+title Trainflow
 color 0A
 echo.
 echo  =====================================
-echo   Training Manager - Wird gestartet...
+echo   Trainflow - Wird gestartet...
 echo  =====================================
 echo.
 echo  Installiere Abhaengigkeiten...

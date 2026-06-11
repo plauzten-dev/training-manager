@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Einstellungen – Training Manager{% endblock %}
+{% block title %}Einstellungen – Trainflow{% endblock %}
 
 {% block content %}
 <div class="settings-page">
@@ -351,7 +351,7 @@
       <div class="info-grid">
         <div class="info-row">
           <span class="info-label">App-Version</span>
-          <span class="info-value">B.0.58</span>
+          <span class="info-value">B.0.59</span>
         </div>
         <div class="info-row">
           <span class="info-label">Plattform</span>
@@ -1028,7 +1028,7 @@ function initNotifications() {
   if (perm === 'granted') {
     pill.className = 'notif-pill on';
     pill.textContent = 'Aktiviert';
-    text.textContent = 'Du erhältst Benachrichtigungen von Training Manager.';
+    text.textContent = 'Du erhältst Benachrichtigungen von Trainflow.';
     testBtn.style.display = '';
   } else if (perm === 'denied') {
     pill.className = 'notif-pill off';
@@ -1056,7 +1056,7 @@ async function requestNotifications() {
 
 async function sendTestNotification() {
   if (Notification.permission !== 'granted') { initNotifications(); return; }
-  const title = 'Training Manager';
+  const title = 'Trainflow';
   const opts = {
     body: 'Das ist eine Test-Benachrichtigung – alles funktioniert!',
     icon: '/static/icons/icon-192.png',

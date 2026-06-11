@@ -1922,7 +1922,7 @@ if __name__ == '__main__':
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     print('\n' + '='*40)
-    print('  Training Manager gestartet!')
+    print('  Trainflow gestartet!')
     print('  Oeffne: http://localhost:5000')
     print('  Beenden: Ctrl+C')
     print('='*40 + '\n')

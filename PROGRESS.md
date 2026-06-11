@@ -1,7 +1,22 @@
-# Training Manager – Fortschritts-Erinnerung
+# Trainflow – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 10. Juni 2026
-> Status: ✅ Version B.0.58 – Mobile Nav-Politur, Testaccount entfernt, Datenschutz OAuth-Hinweis
+> Zuletzt aktualisiert: 11. Juni 2026
+> Status: ✅ Version B.0.59 – App umbenannt zu "Trainflow", neues App-Icon (Flow-Ring)
+
+---
+
+## B.0.59 – Änderungen (11.06.2026, 21. Session) – Rebranding zu Trainflow
+
+- [x] **App-Name geändert**: "Training Manager" → "Trainflow" in allen sichtbaren
+      Bereichen (Seitentitel, Splash-Screens, Sidebar-/Login-Logo, PWA-Manifest
+      `name`/`short_name`, iOS Home-Screen-Titel, Push-Benachrichtigungen,
+      PDF-/Share-Branding, `start.bat`). Live-URL, Fly-App-Name, GitHub-Repo,
+      Cloudinary-Ordner und Android-Package-Name bleiben unverändert (kein
+      Infrastruktur-Umzug).
+- [x] **Neues App-Icon "Flow-Ring"**: `static/icons/icon-192.svg`, `icon-512.svg`,
+      `icon-192.png`, `icon-512.png` ersetzt – grüner Ring + 90°-Flow-Bogen mit
+      Endpunkten + zentraler Ziel-Punkt auf Navy-Hintergrund (`#0f1f35`/`#4ade80`).
+- [x] SW-Cache v12→v13, Version B.0.59 an allen 3 Stellen.
 
 ---
 

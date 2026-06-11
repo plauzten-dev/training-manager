@@ -1,4 +1,4 @@
-const CACHE = 'training-manager-v12';
+const CACHE = 'training-manager-v13';
 
 const PRECACHE = [
   '/static/css/style.css',
@@ -44,7 +44,7 @@ self.addEventListener('notificationclick', event => {
 
 // Push-Event (für späteren Server-Push vorbereitet – aktuell ungenutzt)
 self.addEventListener('push', event => {
-  let data = { title: 'Training Manager', body: '' };
+  let data = { title: 'Trainflow', body: '' };
   try {
     if (event.data) data = Object.assign(data, event.data.json());
   } catch (e) {

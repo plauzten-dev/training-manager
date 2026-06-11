@@ -1,14 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="32" fill="#0f1f35"/>
-  <!-- Field outline -->
-  <rect x="16" y="38" width="160" height="116" rx="12" stroke="#4ade80" stroke-width="10" fill="none"/>
-  <!-- Net line / Mittellinie (horizontal = Tennis/Volleyball) -->
-  <line x1="16" y1="96" x2="176" y2="96" stroke="#4ade80" stroke-width="9"/>
-  <!-- Center circle (Fußball-Referenz) -->
-  <circle cx="96" cy="96" r="26" stroke="#4ade80" stroke-width="9" fill="none"/>
-  <!-- Side boxes (Tor / Aufschlagfeld – ambivalent) -->
-  <rect x="16" y="66" width="32" height="60" rx="6" stroke="#4ade80" stroke-width="8" fill="none"/>
-  <rect x="144" y="66" width="32" height="60" rx="6" stroke="#4ade80" stroke-width="8" fill="none"/>
-  <!-- Ball-Punkt in der Mitte -->
-  <circle cx="96" cy="96" r="6" fill="#4ade80"/>
+  <rect width="192" height="192" rx="30" fill="#0f1f35"/>
+  <!-- Flow-Ring -->
+  <circle cx="96" cy="96" r="34" stroke="#4ade80" stroke-width="9" fill="none"/>
+  <path d="M96 34 A62 62 0 0 1 158 96" stroke="#4ade80" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <!-- Ziel-Punkt -->
+  <circle cx="96" cy="96" r="11" fill="#4ade80"/>
 </svg>
