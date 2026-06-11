@@ -1,7 +1,18 @@
 # Trainflow – Fortschritts-Erinnerung
 
 > Zuletzt aktualisiert: 11. Juni 2026
-> Status: ✅ Version B.0.59 – App umbenannt zu "Trainflow", neues App-Icon (Flow-Ring)
+> Status: ✅ Version B.0.60 – Neuer animierter Splash-Screen mit Flow-Ring-Logo
+
+---
+
+## B.0.60 – Änderungen (11.06.2026, 22. Session) – Splash-Screen-Redesign
+
+- [x] **Splash-Screen neu gestaltet** (`base.html` + `login.html`): Flow-Ring-Logo
+      (rotierender Ring + pulsierender Mittelpunkt) statt altem Spielfeld-Icon,
+      pulsierender Glow-Hintergrund, Bounce-Einblendanimation für Logo, Text-Reveal
+      mit Letter-Spacing-Effekt, fließender Gradient-Fortschrittsbalken.
+- [x] Anzeigedauer 1.4s→1.7s + Fade-out 0.4s→0.5s.
+- [x] SW-Cache v13→v14, Version B.0.60 an allen 3 Stellen.
 
 ---
 

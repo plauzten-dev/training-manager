@@ -41,18 +41,16 @@
 <body>
   <!-- PWA Splash Screen -->
   <div id="splash-screen" style="display:none">
+    <div class="splash-glow"></div>
     <div class="splash-logo">
-      <svg width="52" height="52" viewBox="0 0 28 28" fill="none">
-        <rect x="2" y="5" width="24" height="18" rx="2" stroke="#4ade80" stroke-width="1.8"/>
-        <line x1="2" y1="14" x2="26" y2="14" stroke="#4ade80" stroke-width="1.4"/>
-        <circle cx="14" cy="14" r="4" stroke="#4ade80" stroke-width="1.4"/>
-        <rect x="2" y="9" width="5" height="10" rx="1" stroke="#4ade80" stroke-width="1.2"/>
-        <rect x="21" y="9" width="5" height="10" rx="1" stroke="#4ade80" stroke-width="1.2"/>
-        <circle cx="14" cy="14" r="1" fill="#4ade80"/>
+      <svg width="88" height="88" viewBox="0 0 512 512" fill="none">
+        <circle class="splash-ring-track" cx="256" cy="256" r="90" stroke="#4ade80" stroke-width="24" fill="none"/>
+        <path class="splash-ring-arc" d="M256 90 A166 166 0 0 1 422 256" stroke="#4ade80" stroke-width="24" fill="none" stroke-linecap="round"/>
+        <circle class="splash-ring-dot" cx="256" cy="256" r="30" fill="#4ade80"/>
       </svg>
       <span class="splash-logo-text">Trainflow</span>
-      <div class="splash-bar"></div>
-      <span class="splash-version">B.0.59</span>
+      <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+      <span class="splash-version">B.0.60</span>
     </div>
   </div>
 
@@ -231,8 +229,8 @@
           splash.remove();
           document.documentElement.style.background = '';
           document.body.style.background = '';
-        }, 400);
-      }, 1400);
+        }, 500);
+      }, 1700);
     })();
   </script>
 </body>

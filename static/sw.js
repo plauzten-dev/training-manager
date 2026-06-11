@@ -1,4 +1,4 @@
-const CACHE = 'training-manager-v13';
+const CACHE = 'training-manager-v14';
 
 const PRECACHE = [
   '/static/css/style.css',
