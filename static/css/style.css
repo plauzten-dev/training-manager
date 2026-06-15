@@ -2920,11 +2920,11 @@ input.team-search-input:focus {
 /* ════════════════════════════════════════════════════════════════════════════
    TRAINING-DETAIL (Design-Refresh)
    ════════════════════════════════════════════════════════════════════════════ */
-#training-page-content { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+#training-page-content { height: 100%; display: flex; flex-direction: column; min-height: 0; position: relative; }
 .td-page {
   flex: 1; min-height: 0; overflow-y: auto;
   width: 100%; max-width: 760px; margin: 0 auto;
-  padding: 14px 16px 24px;
+  padding: 14px 16px 104px;
   display: flex; flex-direction: column; gap: 16px;
 }
 
@@ -3008,15 +3008,15 @@ input.team-search-input:focus {
   border: 1px solid var(--border); border-radius: 8px; padding: 4px 6px; background: var(--bg);
 }
 
-/* Start-Button als fixierte Fußzeile über der NavBar (scrollt nicht mit) */
+/* Start-Button als fixierte Fußzeile über der NavBar – mit weichem Fade dahinter */
 .td-footer {
-  flex-shrink: 0;
-  padding: 10px 16px 12px;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  position: relative; z-index: 7;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 7;
+  padding: 36px 16px 12px;
+  background: linear-gradient(to top, var(--bg) 0%, var(--bg) 46%, rgba(241,245,249,0) 100%);
+  pointer-events: none;
 }
 .td-start-btn {
+  pointer-events: auto;
   display: flex; align-items: center; justify-content: center; gap: 9px;
   width: 100%; max-width: 760px; margin: 0 auto; padding: 15px;
   background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff;
