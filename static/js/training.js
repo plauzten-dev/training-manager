@@ -210,12 +210,11 @@ function renderPage() {
         <div class="training-notes-card">${notesHTML}</div>
       </div>
 
-      ${training.exercises.length ? `<button class="td-start-btn" onclick="startTraining()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-        Training starten
-      </button>` : ''}
-
-    </div>`;
+    </div>
+    ${training.exercises.length ? `<div class="td-footer"><button class="td-start-btn" onclick="startTraining()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+      Training starten
+    </button></div>` : ''}`;
   attachDragHandlers();
   loadAttendance();
 }
