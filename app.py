@@ -534,17 +534,28 @@ def register():
                 conn.commit()
                 return jsonify({'error': 'Dieser Einladecode wurde bereits verwendet'}), 400
 
-        # Harte Verifikation: kein Login bis die E-Mail bestätigt ist.
-        token, expires = _new_verification_token()
-        conn.execute('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?',
-                     (token, expires, user['id']))
+        if _smtp_enabled:
+            # Harte Verifikation: kein Login bis die E-Mail bestätigt ist.
+            token, expires = _new_verification_token()
+            conn.execute('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?',
+                         (token, expires, user['id']))
+            conn.commit()
+            _send_verification_email(email, username, token)
+            return jsonify({
+                'message': 'Fast geschafft! Wir haben dir einen Bestätigungslink per E-Mail geschickt.',
+                'verification_required': True,
+                'email': email,
+            })
+
+        # Kein SMTP konfiguriert → E-Mail-Verifikation vorerst ausgesetzt:
+        # Konto direkt verifizieren und einloggen (greift automatisch wieder,
+        # sobald SMTP_* als Fly.io-Secrets gesetzt sind → _smtp_enabled True).
+        conn.execute('UPDATE users SET email_verified = 1 WHERE id = ?', (user['id'],))
         conn.commit()
-        _send_verification_email(email, username, token)
-        return jsonify({
-            'message': 'Fast geschafft! Wir haben dir einen Bestätigungslink per E-Mail geschickt.',
-            'verification_required': True,
-            'email': email,
-        })
+        session['user_id']   = user['id']
+        session['username']  = user['username']
+        session['user_role'] = role
+        return jsonify({'message': 'Registrierung erfolgreich', 'username': username})
     except sqlite3.IntegrityError as e:
         msg = str(e)
         if 'username' in msg:
@@ -571,7 +582,9 @@ def login():
     if not user or not verify_password(password, user['password_hash']):
         return jsonify({'error': 'Ungültige Anmeldedaten'}), 401
 
-    if not user['email_verified']:
+    # Verifikation nur erzwingen, wenn SMTP konfiguriert ist (sonst kämen keine
+    # Bestätigungs-Mails an). Ohne SMTP wird die Verifikation vorerst ausgesetzt.
+    if _smtp_enabled and not user['email_verified']:
         return jsonify({
             'error': 'Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach.',
             'verification_required': True,
