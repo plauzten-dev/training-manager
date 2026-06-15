@@ -172,6 +172,7 @@ function updateSportSelMobile(sport) {
     btn.style.color       = isActive ? c : '';
   });
   document.getElementById('sport-sel-mob-panel')?.classList.remove('open');
+  updateCompactHeader(sport);
 }
 
 function toggleSportSelMobile(event) {
@@ -214,7 +215,12 @@ async function fetchExercises() {
 function renderExercises(exercises) {
   const grid  = document.getElementById('exercises-grid');
   const count = document.getElementById('exercises-count');
-  count.textContent = `${exercises.length} Übung${exercises.length !== 1 ? 'en' : ''} gefunden`;
+  const label = `${exercises.length} Übung${exercises.length !== 1 ? 'en' : ''}`;
+  count.textContent = `${label} gefunden`;
+  const sub = document.getElementById('ex-count-sub');
+  if (sub) sub.textContent = currentSport === 'favorites'
+    ? `${label} in deinen Favoriten`
+    : `${label} in deiner Datenbank`;
 
   if (!exercises.length) {
     grid.innerHTML = `
@@ -226,6 +232,11 @@ function renderExercises(exercises) {
     return;
   }
   grid.innerHTML = exercises.map(cardHTML).join('');
+
+  // Nach Listenwechsel sauberer Zustand: an den Anfang, Kopfzeile ausklappen
+  const sm = document.querySelector('.exercises-main');
+  if (sm) sm.scrollTop = 0;
+  document.body.classList.remove('ex-condensed');
 }
 
 function cardHTML(e) {
@@ -330,6 +341,7 @@ async function showDetail(id) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Zu Training hinzufügen
       </button>
+      ${e.is_owner ? `
       <button class="btn btn-ghost btn-sm" id="share-btn-${e.id}" onclick="shareExercise(${e.id}, this)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         Teilen
@@ -341,7 +353,7 @@ async function showDetail(id) {
       <button class="btn btn-danger btn-sm" onclick="confirmDelete(${e.id}, '${escHtml(e.title).replace(/'/g,"\\'")}')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
         Löschen
-      </button>
+      </button>` : ''}
     </div>`;
 }
 
@@ -803,3 +815,32 @@ function initMobileFilterBtn() {
   window.addEventListener('resize', update);
 }
 initMobileFilterBtn();
+
+// ── Einklappbare Kopfzeile beim Scrollen (≤640px) ─────────────────────────────
+(function initCondensedHeader() {
+  const scroller = document.querySelector('.exercises-main');
+  if (!scroller) return;
+  scroller.addEventListener('scroll', () => {
+    if (window.innerWidth > 640) return;
+    const y   = scroller.scrollTop;
+    const has = document.body.classList.contains('ex-condensed');
+    if (!has && y > 64) document.body.classList.add('ex-condensed');
+    else if (has && y < 24) document.body.classList.remove('ex-condensed');
+  }, { passive: true });
+})();
+
+// Kopfzeile wieder ausklappen (Tap auf kompakten Titel / Such-Icon)
+function expandExHeader(focusSearch) {
+  document.body.classList.remove('ex-condensed');
+  const scroller = document.querySelector('.exercises-main');
+  if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+  if (focusSearch) setTimeout(() => document.getElementById('ex-search-mob-input')?.focus(), 340);
+}
+
+// Kompakte Kopfzeile: Sportart-Label + Favoriten-Status synchronisieren
+function updateCompactHeader(sport) {
+  const cs = document.getElementById('ex-compact-sport');
+  if (cs) cs.textContent = sport === 'favorites' ? 'Favoriten' : (sport || 'Alle');
+  const fb = document.getElementById('ex-compact-fav');
+  if (fb) fb.classList.toggle('fav-active', sport === 'favorites');
+}

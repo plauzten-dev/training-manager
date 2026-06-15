@@ -3,6 +3,8 @@ import sqlite3
 import os
 import datetime
 import uuid
+import smtplib
+from email.message import EmailMessage
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from functools import wraps
@@ -32,6 +34,15 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'heic', 'heif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Session-Cookie härten. HttpOnly ist Flask-Default. SameSite=Lax blockt das
+# Cookie bei Cross-Site-POSTs (CSRF-Schutz). Secure nur in Produktion (HTTPS),
+# damit lokale Dev-Logins über http://localhost weiter funktionieren.
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=bool(os.environ.get('SECRET_KEY')),
+)
 
 # HTTPS-Proxy-Fix für Render/gunicorn (damit OAuth-Callbacks mit https:// generiert werden)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -78,6 +89,55 @@ if _cloudinary_enabled:
         api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
         secure=True,
     )
+
+
+# ── E-Mail / SMTP (Verifikation) ───────────────────────────────────────────────
+SMTP_HOST     = os.environ.get('SMTP_HOST')
+SMTP_PORT     = int(os.environ.get('SMTP_PORT', '587'))
+SMTP_USER     = os.environ.get('SMTP_USER')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
+SMTP_FROM     = os.environ.get('SMTP_FROM') or SMTP_USER
+_smtp_enabled = bool(SMTP_HOST and SMTP_USER and SMTP_PASSWORD)
+
+VERIFICATION_TTL_HOURS = 24
+
+
+def _new_verification_token():
+    """Erzeugt (token, expires_iso) für die E-Mail-Bestätigung."""
+    token = secrets.token_urlsafe(32)
+    expires = (datetime.datetime.utcnow() + datetime.timedelta(hours=VERIFICATION_TTL_HOURS)).isoformat()
+    return token, expires
+
+
+def _send_verification_email(to_email, username, token):
+    """Sendet die Bestätigungs-Mail per SMTP. Ohne SMTP-Config wird der Link nur
+    in die Konsole geloggt (Dev-Fallback). Gibt True bei Erfolg zurück."""
+    link = f"{request.host_url.rstrip('/')}/verify-email/{token}"
+    text = (
+        f"Hallo {username},\n\n"
+        f"bitte bestätige deine E-Mail-Adresse für Trainflow, indem du auf den folgenden Link klickst:\n\n"
+        f"{link}\n\n"
+        f"Der Link ist {VERIFICATION_TTL_HOURS} Stunden gültig.\n\n"
+        f"Falls du dich nicht bei Trainflow registriert hast, kannst du diese E-Mail einfach ignorieren.\n\n"
+        f"Dein Trainflow-Team"
+    )
+    if not _smtp_enabled:
+        print(f"\n[E-Mail-Verifikation – kein SMTP konfiguriert]\n  An:   {to_email}\n  Link: {link}\n")
+        return True
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = 'Trainflow – Bestätige deine E-Mail-Adresse'
+        msg['From'] = SMTP_FROM
+        msg['To'] = to_email
+        msg.set_content(text)
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"[SMTP-Fehler] Verifikations-Mail an {to_email} fehlgeschlagen: {e}")
+        return False
 
 
 def _upload_image(file):
@@ -198,7 +258,16 @@ def login_page():
 
 
 # ── OAuth-Hilfsfunktion ───────────────────────────────────────────────────────
-def _oauth_finish(provider, oauth_id, email, display_name):
+def _claim_truthy(val):
+    """OIDC-Claims können bool oder String ('true'/'1') sein – robust auswerten."""
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() in ('true', '1', 'yes')
+    return bool(val)
+
+
+def _oauth_finish(provider, oauth_id, email, display_name, email_verified=False):
     conn = get_db()
     try:
         user = conn.execute(
@@ -206,12 +275,18 @@ def _oauth_finish(provider, oauth_id, email, display_name):
             (provider, str(oauth_id))
         ).fetchone()
 
+        # E-Mail nur für Matching/Verknüpfung verwenden, wenn der Provider sie
+        # als verifiziert meldet. Sonst droht Account-Übernahme durch eine
+        # untergeschobene fremde (unverifizierte) E-Mail.
+        if not email_verified:
+            email = ''
+
         if not user and email:
             # E-Mail bereits registriert → OAuth-Konto verknüpfen
             user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
             if user:
                 conn.execute(
-                    'UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?',
+                    'UPDATE users SET oauth_provider = ?, oauth_id = ?, email_verified = 1 WHERE id = ?',
                     (provider, str(oauth_id), user['id'])
                 )
                 conn.commit()
@@ -226,8 +301,8 @@ def _oauth_finish(provider, oauth_id, email, display_name):
                 username = f"{base}{n}"
                 n += 1
             conn.execute(
-                'INSERT INTO users (username, email, password_hash, oauth_provider, oauth_id)'
-                ' VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO users (username, email, password_hash, oauth_provider, oauth_id, email_verified)'
+                ' VALUES (?, ?, ?, ?, ?, 1)',
                 (username, email or '', '', provider, str(oauth_id))
             )
             conn.commit()
@@ -262,7 +337,8 @@ def auth_google_callback():
     try:
         token = _oauth.google.authorize_access_token()
         info  = token.get('userinfo') or {}
-        return _oauth_finish('google', info.get('sub', ''), info.get('email', ''), info.get('name', ''))
+        return _oauth_finish('google', info.get('sub', ''), info.get('email', ''),
+                             info.get('name', ''), _claim_truthy(info.get('email_verified')))
     except Exception:
         return redirect('/login?oauth_error=1')
 
@@ -284,7 +360,9 @@ def auth_microsoft_callback():
         token = _oauth.microsoft.authorize_access_token()
         info  = token.get('userinfo') or {}
         name  = info.get('name') or info.get('preferred_username', '')
-        return _oauth_finish('microsoft', info.get('sub', ''), info.get('email', ''), name)
+        # Microsoft signalisiert verifizierte E-Mail über 'xms_edov' (manchmal 'email_verified').
+        verified = _claim_truthy(info.get('xms_edov', info.get('email_verified')))
+        return _oauth_finish('microsoft', info.get('sub', ''), info.get('email', ''), name, verified)
     except Exception:
         return redirect('/login?oauth_error=1')
 
@@ -349,7 +427,7 @@ def training_pdf_page(training_id):
         return redirect(url_for('calendar_page'))
 
     exercises = conn.execute(
-        """SELECT e.*, te.order_index FROM exercises e
+        """SELECT e.*, te.order_index, te.block, te.duration FROM exercises e
            JOIN training_exercises te ON e.id = te.exercise_id
            WHERE te.training_id = ? ORDER BY te.order_index""",
         (training_id,)
@@ -456,10 +534,17 @@ def register():
                 conn.commit()
                 return jsonify({'error': 'Dieser Einladecode wurde bereits verwendet'}), 400
 
-        session['user_id'] = user['id']
-        session['username'] = user['username']
-        session['user_role'] = role
-        return jsonify({'message': 'Registrierung erfolgreich', 'username': username})
+        # Harte Verifikation: kein Login bis die E-Mail bestätigt ist.
+        token, expires = _new_verification_token()
+        conn.execute('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?',
+                     (token, expires, user['id']))
+        conn.commit()
+        _send_verification_email(email, username, token)
+        return jsonify({
+            'message': 'Fast geschafft! Wir haben dir einen Bestätigungslink per E-Mail geschickt.',
+            'verification_required': True,
+            'email': email,
+        })
     except sqlite3.IntegrityError as e:
         msg = str(e)
         if 'username' in msg:
@@ -486,10 +571,62 @@ def login():
     if not user or not verify_password(password, user['password_hash']):
         return jsonify({'error': 'Ungültige Anmeldedaten'}), 401
 
+    if not user['email_verified']:
+        return jsonify({
+            'error': 'Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach.',
+            'verification_required': True,
+            'email': user['email'],
+        }), 403
+
     session['user_id'] = user['id']
     session['username'] = user['username']
     session['user_role'] = user['role'] if user['role'] else 'trainer'
     return jsonify({'message': 'Anmeldung erfolgreich', 'username': user['username']})
+
+
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    conn = get_db()
+    user = conn.execute('SELECT * FROM users WHERE verification_token = ?', (token,)).fetchone()
+    if not user:
+        conn.close()
+        return redirect('/login?verify_error=invalid')
+    try:
+        expired = datetime.datetime.fromisoformat(user['verification_expires']) < datetime.datetime.utcnow()
+    except Exception:
+        expired = False
+    if expired:
+        conn.close()
+        return redirect('/login?verify_error=expired')
+    conn.execute(
+        'UPDATE users SET email_verified = 1, verification_token = NULL, verification_expires = NULL WHERE id = ?',
+        (user['id'],)
+    )
+    conn.commit()
+    conn.close()
+    return redirect('/login?verified=1')
+
+
+@app.route('/api/auth/resend-verification', methods=['POST'])
+def resend_verification():
+    data = request.get_json() or {}
+    identifier = (data.get('email') or data.get('username') or '').strip()
+    # Generische Antwort gegen Konto-Enumeration
+    generic = {'message': 'Falls ein unbestätigtes Konto existiert, haben wir eine E-Mail gesendet.'}
+    if not identifier:
+        return jsonify(generic)
+    conn = get_db()
+    user = conn.execute(
+        'SELECT * FROM users WHERE username = ? OR email = ?', (identifier, identifier)
+    ).fetchone()
+    if user and not user['email_verified'] and user['email']:
+        token, expires = _new_verification_token()
+        conn.execute('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?',
+                     (token, expires, user['id']))
+        conn.commit()
+        _send_verification_email(user['email'], user['username'], token)
+    conn.close()
+    return jsonify(generic)
 
 
 @app.route('/api/auth/logout', methods=['POST'])
@@ -549,6 +686,22 @@ def change_profile():
         return jsonify({'error': 'Fehler beim Speichern'}), 400
     finally:
         conn.close()
+
+
+@app.route('/api/auth/weekly-goal', methods=['PUT'])
+@login_required
+def change_weekly_goal():
+    data = request.get_json() or {}
+    try:
+        goal = int(data.get('weekly_goal'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Ungültiges Wochenziel'}), 400
+    goal = max(1, min(14, goal))
+    conn = get_db()
+    conn.execute('UPDATE users SET weekly_goal = ? WHERE id = ?', (goal, session['user_id']))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Wochenziel aktualisiert', 'weekly_goal': goal})
 
 
 @app.route('/api/auth/me')
@@ -642,11 +795,12 @@ def get_exercises():
     uid = session['user_id']
 
     query = '''SELECT e.*,
+               CASE WHEN e.owner_user_id = ? THEN 1 ELSE 0 END AS is_owner,
                CASE WHEN ef.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_favorite
                FROM exercises e
                LEFT JOIN exercise_favorites ef ON ef.exercise_id = e.id AND ef.user_id = ?
                WHERE 1=1'''
-    params = [uid]
+    params = [uid, uid]
 
     if favorites_only:
         query += ' AND ef.user_id IS NOT NULL'
@@ -690,7 +844,9 @@ def get_exercise(exercise_id):
     conn.close()
     if not exercise:
         return jsonify({'error': 'Übung nicht gefunden'}), 404
-    return jsonify(dict(exercise))
+    result = dict(exercise)
+    result['is_owner'] = 1 if exercise['owner_user_id'] == session['user_id'] else 0
+    return jsonify(result)
 
 
 @app.route('/api/exercises', methods=['POST'])
@@ -722,11 +878,12 @@ def create_exercise():
 
     conn = get_db()
     cursor = conn.execute(
-        'INSERT INTO exercises (title, description, image_path, field_players, goalkeepers, core_competency, difficulty, field_size, sport) VALUES (?,?,?,?,?,?,?,?,?)',
-        (title, description, image_path, int(field_players), int(goalkeepers), core_competency, difficulty, field_size, sport)
+        'INSERT INTO exercises (title, description, image_path, field_players, goalkeepers, core_competency, difficulty, field_size, sport, owner_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)',
+        (title, description, image_path, int(field_players), int(goalkeepers), core_competency, difficulty, field_size, sport, session['user_id'])
     )
     conn.commit()
     exercise = dict(conn.execute('SELECT * FROM exercises WHERE id = ?', (cursor.lastrowid,)).fetchone())
+    exercise['is_owner'] = 1
     conn.close()
     return jsonify(exercise), 201
 
@@ -748,6 +905,9 @@ def update_exercise(exercise_id):
     if not exercise:
         conn.close()
         return jsonify({'error': 'Übung nicht gefunden'}), 404
+    if exercise['owner_user_id'] != session['user_id']:
+        conn.close()
+        return jsonify({'error': 'Keine Berechtigung für diese Übung'}), 403
 
     image_path = exercise['image_path']
     if 'image' in request.files:
@@ -782,6 +942,9 @@ def delete_exercise(exercise_id):
     if not exercise:
         conn.close()
         return jsonify({'error': 'Übung nicht gefunden'}), 404
+    if exercise['owner_user_id'] != session['user_id']:
+        conn.close()
+        return jsonify({'error': 'Keine Berechtigung für diese Übung'}), 403
 
     _delete_image(exercise['image_path'])
 
@@ -813,6 +976,9 @@ def share_exercise(exercise_id):
     if not exercise:
         conn.close()
         return jsonify({'error': 'Übung nicht gefunden'}), 404
+    if exercise['owner_user_id'] != session['user_id']:
+        conn.close()
+        return jsonify({'error': 'Keine Berechtigung für diese Übung'}), 403
 
     token = exercise['share_token']
     if not token:
@@ -841,9 +1007,9 @@ def import_exercise(token):
 
     e = dict(exercise)
     cursor = conn.execute(
-        'INSERT INTO exercises (title, description, image_path, field_players, goalkeepers, core_competency, difficulty, field_size, sport) VALUES (?,?,?,?,?,?,?,?,?)',
+        'INSERT INTO exercises (title, description, image_path, field_players, goalkeepers, core_competency, difficulty, field_size, sport, owner_user_id) VALUES (?,?,?,?,?,?,?,?,?,?)',
         (e['title'], e['description'], e['image_path'], e['field_players'], e['goalkeepers'],
-         e['core_competency'], e['difficulty'], e['field_size'], e['sport'])
+         e['core_competency'], e['difficulty'], e['field_size'], e['sport'], session['user_id'])
     )
     conn.commit()
     new_id = cursor.lastrowid
@@ -1085,14 +1251,15 @@ def create_training():
     title = (data.get('title') or '').strip()
     date = (data.get('date') or '').strip()
     notes = data.get('notes') or ''
+    time = (data.get('time') or '').strip() or None
 
     if not title or not date:
         return jsonify({'error': 'Titel und Datum erforderlich'}), 400
 
     conn = get_db()
     cursor = conn.execute(
-        'INSERT INTO trainings (user_id, title, date, notes) VALUES (?,?,?,?)',
-        (session['user_id'], title, date, notes)
+        'INSERT INTO trainings (user_id, title, date, notes, time) VALUES (?,?,?,?,?)',
+        (session['user_id'], title, date, notes, time)
     )
     conn.commit()
     training = dict(conn.execute('SELECT * FROM trainings WHERE id = ?', (cursor.lastrowid,)).fetchone())
@@ -1127,7 +1294,7 @@ def get_training(training_id):
         return jsonify({'error': 'Training nicht gefunden'}), 404
 
     exercises = conn.execute(
-        """SELECT e.*, te.order_index FROM exercises e
+        """SELECT e.*, te.order_index, te.block, te.duration FROM exercises e
            JOIN training_exercises te ON e.id = te.exercise_id
            WHERE te.training_id = ? ORDER BY te.order_index""",
         (training_id,)
@@ -1154,7 +1321,11 @@ def update_training(training_id):
         conn.close()
         return jsonify({'error': 'Training nicht gefunden'}), 404
 
-    conn.execute('UPDATE trainings SET title=?,date=?,notes=? WHERE id=?', (title, date, notes, training_id))
+    if 'time' in data:
+        time = (data.get('time') or '').strip() or None
+        conn.execute('UPDATE trainings SET title=?,date=?,notes=?,time=? WHERE id=?', (title, date, notes, time, training_id))
+    else:
+        conn.execute('UPDATE trainings SET title=?,date=?,notes=? WHERE id=?', (title, date, notes, training_id))
     conn.commit()
     conn.close()
     return jsonify({'message': 'Training aktualisiert'})
@@ -1197,8 +1368,8 @@ def duplicate_training(training_id):
         new_title = original['title']
 
     cursor = conn.execute(
-        'INSERT INTO trainings (user_id, title, date, notes) VALUES (?,?,?,?)',
-        (session['user_id'], new_title, new_date, '')
+        'INSERT INTO trainings (user_id, title, date, notes, time) VALUES (?,?,?,?,?)',
+        (session['user_id'], new_title, new_date, '', original['time'] if 'time' in original.keys() else None)
     )
     new_id = cursor.lastrowid
 
@@ -1208,8 +1379,8 @@ def duplicate_training(training_id):
     ).fetchall()
     for ex in exercises:
         conn.execute(
-            'INSERT INTO training_exercises (training_id, exercise_id, order_index) VALUES (?,?,?)',
-            (new_id, ex['exercise_id'], ex['order_index'])
+            'INSERT INTO training_exercises (training_id, exercise_id, order_index, block, duration) VALUES (?,?,?,?,?)',
+            (new_id, ex['exercise_id'], ex['order_index'], ex['block'], ex['duration'])
         )
 
     conn.commit()
@@ -1223,6 +1394,13 @@ def duplicate_training(training_id):
 def add_exercise_to_training(training_id):
     data = request.get_json()
     exercise_id = data.get('exercise_id')
+    block = (data.get('block') or 'Hauptteil').strip()
+    if block not in ('Aufwärmen', 'Hauptteil', 'Abschluss'):
+        block = 'Hauptteil'
+    try:
+        duration = int(data.get('duration')) if data.get('duration') not in (None, '') else None
+    except (TypeError, ValueError):
+        duration = None
 
     conn = get_db()
     t = conn.execute('SELECT id FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])).fetchone()
@@ -1242,11 +1420,42 @@ def add_exercise_to_training(training_id):
     ).fetchone()[0]
     order = (max_order or 0) + 1
 
-    conn.execute('INSERT INTO training_exercises (training_id, exercise_id, order_index) VALUES (?,?,?)',
-                 (training_id, exercise_id, order))
+    conn.execute('INSERT INTO training_exercises (training_id, exercise_id, order_index, block, duration) VALUES (?,?,?,?,?)',
+                 (training_id, exercise_id, order, block, duration))
     conn.commit()
     conn.close()
     return jsonify({'message': 'Übung hinzugefügt'}), 201
+
+
+@app.route('/api/trainings/<int:training_id>/exercises/<int:exercise_id>/meta', methods=['PUT'])
+@login_required
+def update_training_exercise_meta(training_id, exercise_id):
+    data = request.get_json() or {}
+    conn = get_db()
+    t = conn.execute('SELECT id FROM trainings WHERE id = ? AND user_id = ?', (training_id, session['user_id'])).fetchone()
+    if not t:
+        conn.close()
+        return jsonify({'error': 'Training nicht gefunden'}), 404
+
+    fields, params = [], []
+    if 'block' in data:
+        block = (data.get('block') or 'Hauptteil').strip()
+        if block not in ('Aufwärmen', 'Hauptteil', 'Abschluss'):
+            block = 'Hauptteil'
+        fields.append('block = ?'); params.append(block)
+    if 'duration' in data:
+        try:
+            duration = int(data.get('duration')) if data.get('duration') not in (None, '') else None
+        except (TypeError, ValueError):
+            duration = None
+        fields.append('duration = ?'); params.append(duration)
+
+    if fields:
+        params += [training_id, exercise_id]
+        conn.execute(f'UPDATE training_exercises SET {", ".join(fields)} WHERE training_id = ? AND exercise_id = ?', params)
+        conn.commit()
+    conn.close()
+    return jsonify({'message': 'Aktualisiert'})
 
 
 @app.route('/api/trainings/<int:training_id>/exercises/reorder', methods=['PUT'])
@@ -1340,6 +1549,67 @@ def dashboard_api():
         "WHERE sport='Allgemein' ORDER BY RANDOM() LIMIT 3"
     ).fetchall()]
 
+    # ── Wochenfortschritt (Mo–So der aktuellen Woche) ──────────────────────────
+    week_start = today - datetime.timedelta(days=today.weekday())   # Montag
+    week_end   = week_start + datetime.timedelta(days=6)            # Sonntag
+    user_ids   = [user_id] + ([trainer_id] if trainer_id else [])
+    placeholders = ','.join('?' for _ in user_ids)
+    week_done = conn.execute(
+        f'SELECT COUNT(*) FROM trainings WHERE user_id IN ({placeholders}) AND date>=? AND date<=?',
+        (*user_ids, week_start.isoformat(), week_end.isoformat())
+    ).fetchone()[0]
+
+    goal_row = conn.execute('SELECT weekly_goal FROM users WHERE id=?', (user_id,)).fetchone()
+    week_goal = (goal_row['weekly_goal'] if goal_row and goal_row['weekly_goal'] else 4)
+
+    # Trainings-/Termin-Tage dieser Woche (für die Punkte unter der Tagesleiste)
+    t_days = {r[0] for r in conn.execute(
+        f'SELECT DISTINCT date FROM trainings WHERE user_id IN ({placeholders}) AND date>=? AND date<=?',
+        (*user_ids, week_start.isoformat(), week_end.isoformat())
+    ).fetchall()}
+    e_days = {r[0] for r in conn.execute(
+        'SELECT DISTINCT date FROM events WHERE user_id=? AND date>=? AND date<=?',
+        (user_id, week_start.isoformat(), week_end.isoformat())
+    ).fetchall()}
+    week_days = []
+    for i in range(7):
+        d = (week_start + datetime.timedelta(days=i))
+        ds = d.isoformat()
+        week_days.append({
+            'date': ds, 'day_num': d.day, 'weekday': i,
+            'has_training': ds in t_days, 'has_event': ds in e_days,
+            'is_today': d == today,
+        })
+
+    # ── Heute: Einheiten (Trainings + Termine) mit Uhrzeit ─────────────────────
+    today_str = today.isoformat()
+    today_units = []
+    today_trainings = conn.execute(
+        f'SELECT id, title, time, user_id FROM trainings WHERE user_id IN ({placeholders}) AND date=?',
+        (*user_ids, today_str)
+    ).fetchall()
+    for t in today_trainings:
+        sport_row = conn.execute(
+            '''SELECT e.sport, COUNT(*) c FROM training_exercises te
+               JOIN exercises e ON e.id = te.exercise_id
+               WHERE te.training_id=? GROUP BY e.sport ORDER BY c DESC LIMIT 1''',
+            (t['id'],)
+        ).fetchone()
+        today_units.append({
+            'kind': 'training', 'id': t['id'], 'title': t['title'],
+            'time': t['time'], 'sport': sport_row['sport'] if sport_row else 'Allgemein',
+            'from_trainer': bool(trainer_id and t['user_id'] == trainer_id),
+        })
+    for ev in conn.execute(
+        'SELECT id, title, time, location, type FROM events WHERE user_id=? AND date=?',
+        (user_id, today_str)
+    ).fetchall():
+        today_units.append({
+            'kind': 'event', 'id': ev['id'], 'title': ev['title'],
+            'time': ev['time'], 'location': ev['location'], 'type': ev['type'],
+        })
+    today_units.sort(key=lambda u: (u['time'] is None, u['time'] or ''))
+
     conn.close()
     return jsonify({
         'stats': {
@@ -1347,6 +1617,11 @@ def dashboard_api():
             'total_trainings':      total_trainings,
             'total_exercises':      total_exercises,
         },
+        'week': {
+            'goal': week_goal, 'done': week_done,
+            'start': week_start.isoformat(), 'days': week_days,
+        },
+        'today_units': today_units,
         'upcoming':  upcoming,
         'suggested': suggested,
     })
@@ -1831,6 +2106,15 @@ def my_attendance(training_id):
     if not player:
         conn.close()
         return jsonify({'error': 'Kein Spielerprofil verknüpft'}), 404
+
+    # Das Training muss dem Trainer dieses Spielers gehören – sonst könnte ein
+    # Spieler Anwesenheits-Einträge für beliebige fremde Trainings schreiben.
+    training = conn.execute(
+        'SELECT id FROM trainings WHERE id = ? AND user_id = ?', (training_id, player['user_id'])
+    ).fetchone()
+    if not training:
+        conn.close()
+        return jsonify({'error': 'Training nicht gefunden'}), 404
 
     if request.method == 'GET':
         att = conn.execute(

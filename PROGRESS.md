@@ -1,7 +1,50 @@
 # Trainflow – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 11. Juni 2026
-> Status: ✅ Version B.0.60 – Neuer animierter Splash-Screen mit Flow-Ring-Logo
+> Zuletzt aktualisiert: 15. Juni 2026
+> Status: ✅ Version B.0.62 – Mobile-Design-Refresh (Info_Designs) + neues Playbook-Logo
+
+---
+
+## B.0.62 – Änderungen (15.06.2026) – Nav-Feinschliff, Übungen-Kopfzeile, neues Logo
+
+- [x] **Bottom-Nav auf 5 Plätze** (4 Icons + zentraler FAB exakt mittig): `Übersicht ·
+      Kalender · [ + ] · Übungen · Trainings` für alle Rollen. `Mein Team` als
+      Dashboard-Kachel (Trainer). FAB sitzt jetzt **bündig in der Leiste** (kein Überstand).
+      Bugfix: `.mobile-nav-inner { flex:1 }` – Leiste war zuvor nur inhaltsbreit/linksbündig.
+- [x] **Übungen-Kopfzeile klappt beim Scrollen ein**: großer Block kollabiert sanft
+      (max-height/opacity) in eine schlanke Symbolleiste (`Übungen · Sportart … 🔍 ♥ ⛭ +`),
+      gleiche Funktionen, Hysterese (ein >64px / aus <24px). Wrapper `.ex-fullhead` + `.ex-compact`.
+- [x] **Neues App-Logo "Playbook"** (Taktik-Knoten): Navy-Squircle mit grünem Glow + grünem
+      Knoten-Graph (Hub + 3 Knoten, 2 als Ringe). Ersetzt überall das Flow-Ring-Logo:
+      `icon-192/512.svg`, `icon-192/512.png` (PIL-Supersampling), Sidebar, Splash (base+login),
+      Login-Hero, Privacy-Header. Splash-Logo pulsiert dezent (`.pb-hub`/`.pb-ring`).
+- [x] SW-Cache v15→v16, Version B.0.62 an allen 3 Stellen.
+
+---
+
+## B.0.61 – Änderungen (15.06.2026) – Mobile-Design-Refresh aus `Info_Designs/`
+
+Umsetzung der 5 gelieferten Design-Mockups – **nur Mobile** neu gestaltet (Desktop bleibt
+funktional), neue Elemente als **echte Features** (DB-Migrationen laufen automatisch).
+
+- [x] **Design-Foundation**: Hauptfarbe Blau → **Grün** (`--primary: #16a34a`). Neue
+      Bottom-Nav mit grünem FAB-Aktions-Sheet (Neues Training/Termin/Übung via `?new=`).
+- [x] **Dashboard neu** (`dashboard.html`): Top-Bar (Datum + Begrüßung + Glocke + Avatar →
+      Einstellungen), Wochen-Tagesleiste, **Wochen-Fortschritts-Ring** (X/Ziel, antippbar →
+      `PUT /api/auth/weekly-goal`), Heute-Timeline, Glocken-Dropdown; bestehende
+      Stats/Charts/Vorschläge/Zitat erhalten.
+- [x] **Übungen**: Header + Anzahl, runde Icon-Buttons, sichtbare Suchleiste, Sport-Chips.
+- [x] **Kalender**: Titel „Kalender" + runder + Button, Tageszellen als farbige Punkte,
+      Tagesdetail-Karten mit farbigem linken Rand + Uhrzeit.
+- [x] **Team**: Stats-Karte (Spieler/Anwesenheit %/Trainings) + Gesundheits-Chips, KADER-Liste.
+- [x] **Training-Detail** (`training.js`): Topbar (Back/Duplizieren/Edit/PDF/Löschen),
+      Sport-Icon+Titel+Meta, Stats (Minuten/Übungen/Blöcke), **Tabs** (Übungen/Verlauf/Notizen),
+      **nummerierte Blöcke** (Aufwärmen/Hauptteil/Abschluss mit Dauer), **Live-Modus
+      „Training starten"** (Vollbild-Runner mit Countdown-Timer, prev/next).
+- [x] **Backend/DB**: `users.weekly_goal`, `trainings.time`, `training_exercises.block` +
+      `duration`. Routen: `PUT /api/auth/weekly-goal`, `PUT /api/trainings/<id>/exercises/<eid>/meta`;
+      `time` in create/update/duplicate; `block/duration` in add-exercise; Dashboard-API liefert
+      `week{goal,done,days}` + `today_units`.
 
 ---
 

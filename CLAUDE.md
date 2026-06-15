@@ -1,4 +1,8 @@
-# Training Manager – Projekt-Kontext für Claude
+# Trainflow – Projekt-Kontext für Claude
+
+> App-Name (sichtbar): **Trainflow** (seit B.0.59, vormals "Training Manager").
+> Interne Kennungen (Live-URL, Fly-App, GitHub-Repo, Cloudinary-Ordner, Android-Package)
+> heißen weiterhin `training-manager` / `com.trainingmanager.app` – bewusst nicht migriert.
 
 > Diese Datei wird automatisch von Claude Code gelesen. Sie enthält alles was du brauchst,
 > um sofort produktiv weiter zu arbeiten.
@@ -55,10 +59,10 @@ MaxiWebs/
 │   ├── css/style.css        ← GESAMTES Stylesheet inkl. responsiver Breakpoints
 │   ├── manifest.json        ← PWA-Manifest (id, name, icons, shortcuts, categories)
 │   ├── sw.js                ← Service Worker (Cache v2, Offline-Fallback auf /offline)
-│   ├── icons/
-│   │   ├── icon-192.svg     ← Original-SVG
-│   │   ├── icon-512.svg     ← Original-SVG
-│   │   ├── icon-192.png     ← PNG für Play Store + apple-touch-icon
+│   ├── icons/                ← "Playbook"-Logo (Navy-Squircle + grüner Knoten-Graph, seit B.0.62)
+│   │   ├── icon-192.svg     ← Vektor-Quelle (Verläufe pbBg/pbGlow/pbNode)
+│   │   ├── icon-512.svg     ← Vektor-Quelle
+│   │   ├── icon-192.png     ← PNG (per PIL-Supersampling generiert) für Play Store + apple-touch-icon
 │   │   └── icon-512.png     ← PNG für Play Store
 │   ├── screenshots/         ← Leer – Store-Screenshots hier ablegen (390×844px)
 │   └── js/
@@ -87,9 +91,14 @@ exercises (
   created_at
 )
 
-trainings (id, user_id, title, date, notes, created_at)
+trainings (id, user_id, title, date, notes, time, created_at)
+  -- time TEXT (HH:MM, optional, seit B.0.61) → Dashboard-Heute-Timeline
 
-training_exercises (id, training_id, exercise_id, order_index)
+training_exercises (id, training_id, exercise_id, order_index, block, duration)
+  -- block TEXT DEFAULT 'Hauptteil' ('Aufwärmen'|'Hauptteil'|'Abschluss', seit B.0.61)
+  -- duration INTEGER (Minuten, optional) → Trainings-Stats & Live-Modus
+
+-- users zusätzlich: weekly_goal INTEGER DEFAULT 4 (Dashboard-Wochenring, seit B.0.61)
 
 teams (
   id, user_id,
@@ -208,11 +217,15 @@ training_attendance (
 
 ```css
 --sidebar-bg: #0f1f35    /* Dunkles Sidebar */
---primary: #2563eb       /* Blau – Buttons, Links */
+--primary: #16a34a       /* Grün – Buttons, Links, aktive Nav (seit B.0.61, vormals Blau) */
+--primary-hover: #15803d
+--primary-soft: #dcfce7  /* heller grüner Badge-/Hover-Hintergrund */
+--accent-navy: #0f1f35   /* Avatar/Today-Pill/Highlight-Karten */
 --success: #16a34a       /* Grün */
 --danger: #dc2626        /* Rot – Löschen */
 --bg: #f1f5f9            /* Seiten-Hintergrund */
---surface: #ffffff       /* Karten */
+--surface: #ffffff       /* HINWEIS: NICHT in :root definiert → immer var(--card) nutzen */
+--card: #ffffff          /* Karten */
 --border: #e2e8f0        /* Linien */
 
 /* Sport-Farben (Karten-Gradienten) */
@@ -327,7 +340,14 @@ Account erfordert SSO → persönliche Tokens NICHT über die UI erstellbar, sta
 ### Phase 3 – Hosting ✅ (erledigt)
 - Render.com Free-Tier, gunicorn, Cloudinary, SECRET_KEY als Env-Var
 
-### Phase 4 – Native App (optional, viel Aufwand)
+### Phase 4 – Mobile-Design-Refresh ✅ (B.0.61/62, erledigt)
+- Grünes Farbsystem, Bottom-Nav mit zentralem FAB (5 Plätze), Einstellungen via Avatar
+- Dashboard mit Wochen-Ring + Heute-Timeline, Übungen-Kopfzeile klappt beim Scrollen ein
+- Kalender-/Team-/Training-Detail im neuen Stil; Training-Detail mit Tabs, Blöcken (Dauer)
+  und Live-Modus „Training starten"; neues „Playbook"-Logo überall
+- Echte Features dahinter: Wochenziel, Trainingsuhrzeit, Übungs-Blöcke/Dauer
+
+### Phase 5 – Native App (optional, viel Aufwand)
 - [ ] **Capacitor** (Ionic) wrappen – benötigt Node.js, verpackt HTML/CSS/JS als native App
 - [ ] Backend-URL in JS konfigurierbar machen (nicht hardcoded localhost)
 
@@ -378,7 +398,7 @@ Account erfordert SSO → persönliche Tokens NICHT über die UI erstellbar, sta
 13. **init_db() läuft beim Import**: Außerhalb von `__main__` – wird auch unter gunicorn ausgeführt.
 14. **Bildupload**: `_upload_image()` + `_delete_image()` in app.py – Cloudinary wenn Env-Vars gesetzt, sonst lokal.
 15. **image_path**: Kann lokaler Dateiname (z.B. `abc123.jpg`) ODER volle Cloudinary-URL sein – JS prüft `startsWith('http')`.
-16. **Mobile Nav Layout (B.0.47+)**: Nav nutzt `position:fixed; bottom:0; left:0; right:0` – schwebt immer am unteren Bildschirmrand. `.mobile-nav-wrap { pointer-events:none }`, `.mobile-nav { pointer-events:all }` damit Klicks neben der Pill durchgehen. Alle Scroll-Container (`.dash-page`, `.training-page-layout`, `.settings-mob-home`, `.players-scroll`) haben im Mobile-Breakpoint `padding-bottom: 82px` (kein `env(safe-area-inset-bottom)` mehr – Safe Area wurde B.0.47 komplett entfernt). FAB-Button: `bottom: 76px`. `--app-height` (JS: `window.innerHeight`) bleibt für `.app-layout` erhalten.
+16. **Mobile Nav Layout (B.0.61/62)**: Bottom-Nav ist ein IN-FLOW Flex-Child von `.app-layout` (kein `position:fixed`). **5 Plätze: `Übersicht · Kalender · [ + FAB ] · Übungen · Trainings`** (alle Rollen gleich). Zentraler grüner FAB (`.mobile-nav-fab`, in der Leiste zentriert, kein Überstand) öffnet das Aktions-Sheet `#fab-menu` (Neues Training / Neuer Termin [Trainer] / Neue Übung – jeweils `?new=`-Query auf der Zielseite). **WICHTIG**: `.mobile-nav-inner { flex:1; width:100% }` (sonst nur inhaltsbreit/linksbündig). `Mein Team` ist NICHT in der Nav → Dashboard-Kachel `.dash-quicklink` (nur Trainer). „Konto" ebenfalls nicht → Einstellungen über das **Avatar-Icon** oben rechts im Dashboard. Aktive Farbe grün.
 17. **Players Page Struktur (v0.25)**: `players.html` hat zwei Zonen: `.players-top` (kein overflow → Team-Tabs können voll-breit scrollen) und `.players-scroll` (overflow-y:auto → scrollbarer Content). Bei Änderungen an der Players-Page beide Zonen berücksichtigen.
 18. **iOS-Zoom deaktiviert (B.0.47)**: Viewport hat `maximum-scale=1.0`. Alle `input, select, textarea` haben im Mobile-Breakpoint `font-size: 16px !important` – iOS zoomt bei Input-Fokus wenn font-size < 16px, daher !important nötig.
 19. **PDF-Zugriff für Spieler (B.0.47)**: Route `/training/<id>/pdf` erlaubt Spielern das Öffnen von Trainer-Trainings (via `linked_user_id → players.user_id`-Check), nicht nur eigene Trainings.

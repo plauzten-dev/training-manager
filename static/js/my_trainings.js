@@ -202,9 +202,15 @@ function showCreateModal() {
         <label>Titel *</label>
         <input type="text" id="new-title" placeholder="z.B. Aufwärmtraining" required>
       </div>
-      <div class="form-group">
-        <label>Datum *</label>
-        <input type="date" id="new-date" value="${today}" required>
+      <div class="form-row" style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label>Datum *</label>
+          <input type="date" id="new-date" value="${today}" required>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>Uhrzeit</label>
+          <input type="time" id="new-time">
+        </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
@@ -224,7 +230,8 @@ async function submitCreate(e) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       title: document.getElementById('new-title').value.trim(),
-      date:  document.getElementById('new-date').value
+      date:  document.getElementById('new-date').value,
+      time:  document.getElementById('new-time').value
     })
   });
 

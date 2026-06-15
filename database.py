@@ -173,6 +173,27 @@ def init_db():
     except Exception:
         pass
 
+    # Migration: E-Mail-Verifikation. Beim erstmaligen Anlegen der Spalte werden
+    # alle Bestandskonten als verifiziert markiert (einmalig im selben try-Block),
+    # damit sich niemand nachträglich aussperrt.
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+        conn.execute("UPDATE users SET email_verified = 1")
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN verification_token TEXT")
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN verification_expires TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
     # Migration: invite_code on players (used to link player accounts)
     try:
         conn.execute("ALTER TABLE players ADD COLUMN invite_code TEXT")
@@ -188,6 +209,14 @@ def init_db():
     # Migration: linked_user_id on players (the user account that claimed this player slot)
     try:
         conn.execute("ALTER TABLE players ADD COLUMN linked_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: owner_user_id on exercises (wer die Übung angelegt hat).
+    # NULL = Seed-/Systemübung → von niemandem editier-/löschbar (read-only Bibliothek).
+    try:
+        conn.execute("ALTER TABLE exercises ADD COLUMN owner_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE")
         conn.commit()
     except Exception:
         pass
@@ -244,6 +273,32 @@ def init_db():
     # Migration: add team_id to events
     try:
         conn.execute("ALTER TABLE events ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: weekly training goal per user (Dashboard-Wochenring)
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN weekly_goal INTEGER NOT NULL DEFAULT 4")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: optional start time on a training (Dashboard-Heute-Timeline)
+    try:
+        conn.execute("ALTER TABLE trainings ADD COLUMN time TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: block (Aufwärmen/Hauptteil/Abschluss) + duration (Minuten) je Übung im Training
+    try:
+        conn.execute("ALTER TABLE training_exercises ADD COLUMN block TEXT NOT NULL DEFAULT 'Hauptteil'")
+        conn.commit()
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE training_exercises ADD COLUMN duration INTEGER")
         conn.commit()
     except Exception:
         pass

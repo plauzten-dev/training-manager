@@ -2,10 +2,29 @@
 
 const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const SPORT_BG_CLASS = {
-  'Fußball':  'sport-bg-fussball',
-  'Tennis':   'sport-bg-tennis',
-  'Floorball':'sport-bg-floorball',
+  'Fußball':   'sport-bg-fussball',
+  'Tennis':    'sport-bg-tennis',
+  'Floorball': 'sport-bg-floorball',
+  'Basketball':'sport-bg-basketball',
+  'Volleyball':'sport-bg-volleyball',
+  'Gym':       'sport-bg-gym',
+  'Allgemein': 'sport-bg-allgemein',
 };
+
+// Trainings-Blöcke (Design: nummerierte Blöcke)
+const BLOCK_ORDER  = ['Aufwärmen', 'Hauptteil', 'Abschluss'];
+const BLOCK_COLORS = { 'Aufwärmen': '#3b82f6', 'Hauptteil': '#16a34a', 'Abschluss': '#7c3aed' };
+
+// Aktive Trainingseinheit: häufigste Sportart der enthaltenen Übungen
+function dominantSport() {
+  const counts = {};
+  (training.exercises || []).forEach(e => { counts[e.sport] = (counts[e.sport] || 0) + 1; });
+  let best = null, bestN = 0;
+  for (const s in counts) { if (counts[s] > bestN) { best = s; bestN = counts[s]; } }
+  return best || 'Allgemein';
+}
+
+function blockOf(e) { return BLOCK_ORDER.includes(e.block) ? e.block : 'Hauptteil'; }
 const SPORT_FIELD_SVG_SM = {
   'Fußball':   `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"><rect x="2" y="5" width="24" height="18" rx="1"/><line x1="14" y1="5" x2="14" y2="23"/><circle cx="14" cy="14" r="4"/></svg>`,
   'Tennis':    `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"><rect x="2" y="2" width="24" height="24" rx="1"/><line x1="14" y1="2" x2="14" y2="26"/><line x1="2" y1="14" x2="26" y2="14"/></svg>`,
@@ -63,70 +82,21 @@ function renderPage() {
   const dateObj = new Date(training.date + 'T00:00:00');
   const displayDate = `${dateObj.getDate()}. ${MONTHS_DE[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
 
-  document.getElementById('training-page-content').innerHTML = `
-    <div class="training-page-layout">
+  const sport     = dominantSport();
+  const sportCls  = SPORT_BG_CLASS[sport] || 'sport-bg-allgemein';
+  const today     = new Date(); today.setHours(0,0,0,0);
+  const isToday   = dateObj.getTime() === today.getTime();
+  const tomorrow  = new Date(today); tomorrow.setDate(today.getDate()+1);
+  const relDate   = isToday ? 'Heute' : (dateObj.getTime() === tomorrow.getTime() ? 'Morgen' : displayDate);
+  const metaParts = [sport, relDate + (training.time ? ' ' + training.time : '')];
+  const totalMin  = training.exercises.reduce((s,e) => s + (parseInt(e.duration) || 0), 0);
+  const blockCnt  = new Set(training.exercises.map(blockOf)).size;
+  const exCnt     = training.exercises.length;
 
-      <!-- Header -->
-      <div class="training-header-card">
-        <div class="training-title-block">
-          <h1 id="training-title-display">${escHtml(training.title)}</h1>
-          <div class="training-date-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            ${displayDate}
-          </div>
-        </div>
-        <div class="training-actions">
-          ${canEdit ? `
-          <button class="btn btn-ghost btn-sm" onclick="showEditModal()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Bearbeiten
-          </button>` : ''}
-          <a href="/training/${TRAINING_ID}/pdf" target="_blank" class="btn btn-ghost btn-sm" title="Als PDF exportieren">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            PDF
-          </a>
-          ${canEdit ? `
-          <button class="btn btn-danger btn-sm" onclick="confirmDeleteTraining()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>` : ''}
-          <a href="/my-trainings" class="btn btn-ghost btn-sm">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-            Zurück
-          </a>
-        </div>
-      </div>
-
-      <!-- Notes -->
-      <div class="training-notes-card">
-        <div class="notes-label">Notizen</div>
-        ${canEdit
-          ? `<textarea class="notes-textarea" id="notes-area" placeholder="Notizen zum Training..."
-               oninput="scheduleNotesSave()">${escHtml(training.notes || '')}</textarea>
-             <div class="notes-save-row">
-               <span id="notes-status" style="font-size:0.78rem;color:var(--text-muted)"></span>
-             </div>`
-          : `<div class="notes-readonly">${training.notes ? escHtml(training.notes) : '<span style="color:var(--text-muted);font-size:0.85rem">Keine Notizen</span>'}</div>`
-        }
-      </div>
-
-      <!-- Exercises -->
-      <div class="exercises-section">
-        <div class="section-header">
-          <span class="section-title">Übungen</span>
-          <span class="section-count" id="ex-count">${training.exercises.length} Übung${training.exercises.length !== 1 ? 'en' : ''}</span>
-        </div>
-        <div class="exercise-list" id="exercise-list">
-          ${renderExerciseList()}
-        </div>
-        ${canEdit ? `
-        <button class="add-exercise-btn" onclick="showAddExerciseModal()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Übung hinzufügen
-        </button>` : ''}
-      </div>
-
-      <!-- Anwesenheit: Trainer sieht vollen Block, Spieler bei Trainer-Training eigenen Status, sonst nichts -->
-      ${USER_ROLE === 'trainer' ? `
+  // Verlauf-Panel-Inhalt je nach Rolle
+  let verlaufHTML;
+  if (USER_ROLE === 'trainer') {
+    verlaufHTML = `
       <div class="attendance-section" id="attendance-section">
         <div class="section-header">
           <span class="section-title">Anwesenheit</span>
@@ -151,29 +121,163 @@ function renderPage() {
             <div class="spinner" style="width:22px;height:22px;border-width:2px;margin:0 auto"></div>
           </div>
         </div>
-      </div>` : isTrainerTraining ? `
+      </div>`;
+  } else if (isTrainerTraining) {
+    verlaufHTML = `
       <div class="attendance-section" id="attendance-section">
-        <div class="section-header">
-          <span class="section-title">Meine Anwesenheit</span>
-        </div>
+        <div class="section-header"><span class="section-title">Meine Anwesenheit</span></div>
         <div id="my-attendance-block" style="padding:8px 0">
           <div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto"></div>
         </div>
-      </div>` : ''}
+      </div>`;
+  } else {
+    verlaufHTML = `
+      <div class="td-empty">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+        <p>Für private Trainings wird keine Anwesenheit erfasst.</p>
+      </div>`;
+  }
+
+  const notesHTML = canEdit
+    ? `<textarea class="notes-textarea" id="notes-area" placeholder="Notizen zum Training..."
+         oninput="scheduleNotesSave()">${escHtml(training.notes || '')}</textarea>
+       <div class="notes-save-row"><span id="notes-status" style="font-size:0.78rem;color:var(--text-muted)"></span></div>`
+    : `<div class="notes-readonly">${training.notes ? escHtml(training.notes) : '<span style="color:var(--text-muted);font-size:0.85rem">Keine Notizen</span>'}</div>`;
+
+  document.getElementById('training-page-content').innerHTML = `
+    <div class="td-page">
+
+      <!-- Topbar -->
+      <div class="td-topbar">
+        <a href="/my-trainings" class="td-iconbtn" title="Zurück">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <div class="td-topbar-right">
+          ${canEdit ? `<button class="td-iconbtn" onclick="duplicateTraining()" title="Training duplizieren">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>` : ''}
+          ${canEdit ? `<button class="td-iconbtn" onclick="showEditModal()" title="Bearbeiten">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>` : ''}
+          <a href="/training/${TRAINING_ID}/pdf" target="_blank" class="td-iconbtn" title="Als PDF exportieren">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          </a>
+          ${canEdit ? `<button class="td-iconbtn td-iconbtn-danger" onclick="confirmDeleteTraining()" title="Löschen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>` : ''}
+        </div>
+      </div>
+
+      <!-- Titel -->
+      <div class="td-titlerow">
+        <div class="td-sport-icon ${sportCls}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/></svg>
+        </div>
+        <div class="td-titletext">
+          <h1 class="td-title" id="training-title-display">${escHtml(training.title)}</h1>
+          <div class="td-meta">${metaParts.map(escHtml).join(' · ')}</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="td-stats">
+        <div class="td-stat"><b id="td-stat-min">${totalMin}</b><span>Minuten</span></div>
+        <div class="td-stat"><b id="td-stat-ex">${exCnt}</b><span>Übungen</span></div>
+        <div class="td-stat"><b id="td-stat-blocks">${blockCnt}</b><span>Blöcke</span></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="td-tabs">
+        <button class="td-tab active" data-tab="ex" onclick="switchTab('ex')">Übungen</button>
+        <button class="td-tab" data-tab="verlauf" onclick="switchTab('verlauf')">Verlauf</button>
+        <button class="td-tab" data-tab="notes" onclick="switchTab('notes')">Notizen</button>
+      </div>
+
+      <!-- Panel: Übungen -->
+      <div class="td-panel" id="td-panel-ex">
+        ${renderBlocks()}
+        ${canEdit ? `<button class="add-exercise-btn" onclick="showAddExerciseModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Übung hinzufügen
+        </button>` : ''}
+      </div>
+
+      <!-- Panel: Verlauf -->
+      <div class="td-panel hidden" id="td-panel-verlauf">${verlaufHTML}</div>
+
+      <!-- Panel: Notizen -->
+      <div class="td-panel hidden" id="td-panel-notes">
+        <div class="training-notes-card">${notesHTML}</div>
+      </div>
+
+      ${training.exercises.length ? `<button class="td-start-btn" onclick="startTraining()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        Training starten
+      </button>` : ''}
 
     </div>`;
   attachDragHandlers();
   loadAttendance();
 }
 
-function renderExerciseList() {
+// Tab-Wechsel
+function switchTab(tab) {
+  document.querySelectorAll('.td-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('td-panel-ex').classList.toggle('hidden', tab !== 'ex');
+  document.getElementById('td-panel-verlauf').classList.toggle('hidden', tab !== 'verlauf');
+  document.getElementById('td-panel-notes').classList.toggle('hidden', tab !== 'notes');
+}
+
+// Blöcke rendern (nummerierte Karten mit ihren Übungen)
+function renderBlocks() {
   if (!training.exercises.length) {
-    return `<div class="empty-state">
+    return `<div class="td-empty">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M2 20h20M6 20V10M12 20V4M18 20v-6"/></svg>
       <p>Noch keine Übungen hinzugefügt.</p>
     </div>`;
   }
-  return training.exercises.map((e, i) => exerciseItemHTML(e, i)).join('');
+  const present = BLOCK_ORDER.filter(b => training.exercises.some(e => blockOf(e) === b));
+  return present.map((block, idx) => {
+    const items = training.exercises.filter(e => blockOf(e) === block);
+    const min   = items.reduce((s,e) => s + (parseInt(e.duration) || 0), 0);
+    const color = BLOCK_COLORS[block];
+    return `
+      <div class="td-block">
+        <div class="td-block-head">
+          <span class="td-block-num" style="background:${color}">${idx + 1}</span>
+          <div class="td-block-title">
+            <span class="td-block-name">${block}</span>
+            <span class="td-block-sub">${items.length} Übung${items.length !== 1 ? 'en' : ''}${min ? ` · ${min} Min` : ''}</span>
+          </div>
+          ${min ? `<span class="td-block-min">${min} Min</span>` : ''}
+        </div>
+        <div class="exercise-list td-block-list" data-block="${block}">
+          ${items.map(e => exerciseItemHTML(e)).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Übungs-Panel neu rendern (nach Änderung von Block/Dauer/Reihenfolge)
+function refreshExPanel() {
+  const panel = document.getElementById('td-panel-ex');
+  if (panel) {
+    const addBtn = window._canEdit ? `<button class="add-exercise-btn" onclick="showAddExerciseModal()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Übung hinzufügen</button>` : '';
+    panel.innerHTML = renderBlocks() + addBtn;
+    attachDragHandlers();
+  }
+  refreshStats();
+}
+
+function refreshStats() {
+  const totalMin = training.exercises.reduce((s,e) => s + (parseInt(e.duration) || 0), 0);
+  const blockCnt = new Set(training.exercises.map(blockOf)).size;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('td-stat-min', totalMin);
+  set('td-stat-ex', training.exercises.length);
+  set('td-stat-blocks', blockCnt);
 }
 
 const PLAYER_ICON_SM = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>`;
@@ -188,6 +292,19 @@ function exerciseItemHTML(e, i) {
     ? `<img src="${e.image_path.startsWith('http') ? e.image_path : '/uploads/' + e.image_path}" alt="${escHtml(e.title)}">`
     : `<div class="field-placeholder ${bgClass}" style="width:100%;height:100%">${svgSmall}</div>`;
 
+  const metaCtrls = window._canEdit ? `
+        <div class="ex-meta-ctrls" onclick="event.stopPropagation()">
+          <select class="ex-block-sel" onchange="updateExerciseMeta(${e.id}, 'block', this.value)">
+            ${BLOCK_ORDER.map(b => `<option value="${b}"${blockOf(e) === b ? ' selected' : ''}>${b}</option>`).join('')}
+          </select>
+          <span class="ex-min-wrap">
+            <input type="number" min="0" max="240" class="ex-min-input" placeholder="–"
+                   value="${e.duration != null ? e.duration : ''}"
+                   onchange="updateExerciseMeta(${e.id}, 'duration', this.value)">
+            <span>Min</span>
+          </span>
+        </div>` : '';
+
   return `
     <div class="exercise-list-item" id="ex-item-${e.id}" ${window._canEdit ? 'draggable="true"' : ''} data-id="${e.id}">
       ${window._canEdit ? `<div class="drag-handle" title="Ziehen zum Sortieren">${DRAG_HANDLE_SVG}</div>` : ''}
@@ -200,12 +317,27 @@ function exerciseItemHTML(e, i) {
           <span>${escHtml(e.core_competency)}</span>
           <span class="badge ${diffBadge(e.difficulty)}" style="font-size:0.7rem">${e.difficulty}</span>
         </div>
+        ${metaCtrls}
       </div>
       ${window._canEdit ? `
       <button class="exercise-list-remove" title="Entfernen" onclick="removeExercise(${e.id})">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>` : ''}
     </div>`;
+}
+
+// Block/Dauer einer Übung im Training aktualisieren
+async function updateExerciseMeta(exerciseId, field, value) {
+  const ex = training.exercises.find(e => e.id === exerciseId);
+  if (!ex) return;
+  if (field === 'duration') ex.duration = value === '' ? null : (parseInt(value) || 0);
+  else ex.block = value;
+  const res = await fetch(`/api/trainings/${TRAINING_ID}/exercises/${exerciseId}/meta`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ [field]: value })
+  });
+  if (!res.ok) { showToast('Fehler beim Speichern', 'error'); return; }
+  refreshExPanel();
 }
 
 function diffBadge(d) {
@@ -244,9 +376,15 @@ function showEditModal() {
         <label>Titel *</label>
         <input type="text" name="title" value="${escHtml(training.title)}" required>
       </div>
-      <div class="form-group">
-        <label>Datum *</label>
-        <input type="date" name="date" value="${training.date}" required>
+      <div class="form-row" style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label>Datum *</label>
+          <input type="date" name="date" value="${training.date}" required>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>Uhrzeit</label>
+          <input type="time" name="time" value="${escHtml(training.time || '')}">
+        </div>
       </div>
       <div class="form-group">
         <label>Notizen</label>
@@ -265,17 +403,33 @@ async function submitEditTraining(e) {
   const res = await fetch(`/api/trainings/${TRAINING_ID}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: form.title.value, date: form.date.value, notes: form.notes.value })
+    body: JSON.stringify({ title: form.title.value, date: form.date.value, time: form.time.value, notes: form.notes.value })
   });
   if (res.ok) {
     training.title = form.title.value;
     training.date  = form.date.value;
+    training.time  = form.time.value || null;
     training.notes = form.notes.value;
     closeModal();
     renderPage();
     showToast('Training aktualisiert!', 'success');
   } else {
     showToast('Fehler', 'error');
+  }
+}
+
+// Training duplizieren (Kopie mit neuem Datum)
+async function duplicateTraining() {
+  const res = await fetch(`/api/trainings/${TRAINING_ID}/duplicate`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date: training.date })
+  });
+  if (res.ok) {
+    const t = await res.json();
+    showToast('Training dupliziert!', 'success');
+    window.location.href = `/training/${t.id}`;
+  } else {
+    showToast('Fehler beim Duplizieren', 'error');
   }
 }
 
@@ -305,6 +459,12 @@ async function doDeleteTraining() {
 async function showAddExerciseModal() {
   openModal('Übung hinzufügen', `
     <div>
+      <div class="picker-block-row">
+        <label>Block:</label>
+        <select id="picker-block">
+          ${BLOCK_ORDER.map(b => `<option value="${b}"${b === 'Hauptteil' ? ' selected' : ''}>${b}</option>`).join('')}
+        </select>
+      </div>
       <input type="text" id="picker-search" class="filter-input" placeholder="Übung suchen..."
         oninput="filterPickerCards()" style="margin-bottom:14px;width:100%">
       <div class="exercise-picker-grid" id="picker-grid">
@@ -353,10 +513,11 @@ function filterPickerCards() {
 }
 
 async function addExercise(exerciseId) {
+  const block = document.getElementById('picker-block')?.value || 'Hauptteil';
   const res = await fetch(`/api/trainings/${TRAINING_ID}/exercises`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ exercise_id: exerciseId })
+    body: JSON.stringify({ exercise_id: exerciseId, block })
   });
   if (res.ok) {
     showToast('Übung hinzugefügt!', 'success');
@@ -372,10 +533,7 @@ async function removeExercise(exerciseId) {
   const res = await fetch(`/api/trainings/${TRAINING_ID}/exercises/${exerciseId}`, { method: 'DELETE' });
   if (res.ok) {
     training.exercises = training.exercises.filter(e => e.id !== exerciseId);
-    document.getElementById('exercise-list').innerHTML = renderExerciseList();
-    document.getElementById('ex-count').textContent =
-      `${training.exercises.length} Übung${training.exercises.length !== 1 ? 'en' : ''}`;
-    attachDragHandlers();
+    refreshExPanel();
     showToast('Übung entfernt', 'info');
   } else {
     showToast('Fehler', 'error');
@@ -390,10 +548,11 @@ let touchOffX    = 0;
 let touchOffY    = 0;
 
 function attachDragHandlers() {
-  const list = document.getElementById('exercise-list');
-  if (!list) return;
+  const lists = document.querySelectorAll('.exercise-list');
+  if (!lists.length) return;
 
-  list.querySelectorAll('.exercise-list-item[draggable]').forEach(item => {
+  document.querySelectorAll('.exercise-list .exercise-list-item[draggable]').forEach(item => {
+    const list = item.closest('.exercise-list');
     // ── Mouse drag ──
     item.addEventListener('dragstart', (e) => {
       dragSrcId = item.dataset.id;
@@ -459,8 +618,7 @@ function onTouchMove(e) {
   const el = document.elementFromPoint(touch.clientX, touch.clientY);
   touchClone.style.display = '';
 
-  const list = document.getElementById('exercise-list');
-  list?.querySelectorAll('.exercise-list-item').forEach(i => i.classList.remove('drag-over'));
+  document.querySelectorAll('.exercise-list-item').forEach(i => i.classList.remove('drag-over'));
   const over = el?.closest('.exercise-list-item');
   if (over && over.dataset.id !== touchDragId) over.classList.add('drag-over');
 }
@@ -471,13 +629,12 @@ function onTouchEnd(e) {
 
   if (touchClone) { touchClone.remove(); touchClone = null; }
 
-  const list = document.getElementById('exercise-list');
-  list?.querySelectorAll('.exercise-list-item').forEach(i => {
+  document.querySelectorAll('.exercise-list-item').forEach(i => {
     i.classList.remove('drag-over');
     i.style.opacity = '';
   });
 
-  if (!touchDragId || !list) { touchDragId = null; return; }
+  if (!touchDragId) { touchDragId = null; return; }
 
   const touch  = e.changedTouches[0];
   const el     = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -491,11 +648,20 @@ function reorderExercises(srcId, dstId) {
   const srcIdx = training.exercises.findIndex(ex => String(ex.id) === srcId);
   const dstIdx = training.exercises.findIndex(ex => String(ex.id) === dstId);
   if (srcIdx === -1 || dstIdx === -1) return;
-  const [moved] = training.exercises.splice(srcIdx, 1);
-  training.exercises.splice(dstIdx, 0, moved);
-  document.getElementById('exercise-list').innerHTML = renderExerciseList();
-  attachDragHandlers();
+  const moved  = training.exercises[srcIdx];
+  const target = training.exercises[dstIdx];
+  const blockChanged = blockOf(moved) !== blockOf(target);
+  moved.block = blockOf(target);   // beim Ziehen in einen anderen Block übernehmen
+  training.exercises.splice(srcIdx, 1);
+  training.exercises.splice(training.exercises.findIndex(ex => String(ex.id) === dstId), 0, moved);
+  refreshExPanel();
   saveDragOrder();
+  if (blockChanged) {
+    fetch(`/api/trainings/${TRAINING_ID}/exercises/${moved.id}/meta`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ block: moved.block })
+    });
+  }
 }
 
 async function saveDragOrder() {
@@ -701,6 +867,139 @@ async function toggleAttendance(playerId, currentState) {
   });
   if (res.ok) loadAttendance();
   else showToast('Fehler beim Speichern', 'error');
+}
+
+// ── Live-Modus: Training starten ──────────────────────────────────────────────
+let runOrder = [], runIdx = 0, runTimer = null, runRemaining = 0, runElapsed = 0, runPaused = false;
+
+function orderedExercises() {
+  const out = [];
+  BLOCK_ORDER.forEach(b => training.exercises.filter(e => blockOf(e) === b).forEach(e => out.push(e)));
+  return out;
+}
+
+function startTraining() {
+  runOrder = orderedExercises();
+  if (!runOrder.length) { showToast('Keine Übungen zum Starten', 'info'); return; }
+  runIdx = 0;
+  let overlay = document.getElementById('td-runner');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'td-runner';
+    overlay.className = 'td-runner';
+    document.body.appendChild(overlay);
+  }
+  document.body.style.overflow = 'hidden';
+  renderRunStep();
+}
+
+function fmtTime(s) {
+  s = Math.max(0, Math.round(s));
+  const m = Math.floor(s / 60);
+  return `${m}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function clearRunTimer() { if (runTimer) { clearInterval(runTimer); runTimer = null; } }
+
+function renderRunStep() {
+  clearRunTimer();
+  const overlay = document.getElementById('td-runner');
+  if (!overlay) return;
+
+  if (runIdx >= runOrder.length) {
+    overlay.innerHTML = `
+      <div class="run-done">
+        <div class="run-done-ring">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>
+        </div>
+        <h2>Training abgeschlossen!</h2>
+        <p>Stark gemacht. ${runOrder.length} Übung${runOrder.length !== 1 ? 'en' : ''} absolviert.</p>
+        <button class="td-start-btn" style="max-width:280px" onclick="closeRunner()">Fertig</button>
+      </div>`;
+    return;
+  }
+
+  const e = runOrder[runIdx];
+  const block = blockOf(e);
+  const bgClass = SPORT_BG_CLASS[e.sport] || 'sport-bg-allgemein';
+  const svgSmall = SPORT_FIELD_SVG_SM[e.sport] || SPORT_FIELD_SVG_SM['default'];
+  const img = e.image_path
+    ? `<img src="${e.image_path.startsWith('http') ? e.image_path : '/uploads/' + e.image_path}" alt="">`
+    : `<div class="field-placeholder ${bgClass}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">${svgSmall}</div>`;
+
+  const hasDur = e.duration != null && e.duration > 0;
+  runRemaining = hasDur ? e.duration * 60 : 0;
+  runElapsed = 0;
+  runPaused = false;
+
+  overlay.innerHTML = `
+    <div class="run-top">
+      <button class="run-close" onclick="closeRunner()" aria-label="Schließen">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="run-progress-text">${runIdx + 1} / ${runOrder.length}</div>
+      <span class="run-block-tag" style="background:${BLOCK_COLORS[block]}22;color:${BLOCK_COLORS[block]}">${block}</span>
+    </div>
+    <div class="run-progress-bar"><div class="run-progress-fill" style="width:${(runIdx) / runOrder.length * 100}%"></div></div>
+
+    <div class="run-body">
+      <div class="run-img">${img}</div>
+      <h2 class="run-title">${escHtml(e.title)}</h2>
+      <div class="run-meta">${escHtml(e.core_competency)} · ${escHtml(e.difficulty)} · ${escHtml(e.sport)}</div>
+      <div class="run-timer ${hasDur ? '' : 'run-timer-up'}" id="run-timer">${hasDur ? fmtTime(runRemaining) : '0:00'}</div>
+      ${e.description ? `<p class="run-desc">${escHtml(e.description)}</p>` : ''}
+    </div>
+
+    <div class="run-controls">
+      <button class="run-nav-btn" onclick="runPrev()" ${runIdx === 0 ? 'disabled' : ''}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="run-play-btn" id="run-play" onclick="toggleRunPause()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+      </button>
+      <button class="run-nav-btn run-next" onclick="runNext()">
+        ${runIdx === runOrder.length - 1
+          ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>`
+          : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>`}
+      </button>
+    </div>`;
+
+  startRunTimer(hasDur);
+}
+
+function startRunTimer(countdown) {
+  clearRunTimer();
+  runTimer = setInterval(() => {
+    if (runPaused) return;
+    const el = document.getElementById('run-timer');
+    if (!el) { clearRunTimer(); return; }
+    if (countdown) {
+      runRemaining -= 1;
+      if (runRemaining <= 0) { runRemaining = 0; el.textContent = '0:00'; el.classList.add('run-timer-done'); clearRunTimer(); return; }
+      el.textContent = fmtTime(runRemaining);
+    } else {
+      runElapsed += 1;
+      el.textContent = fmtTime(runElapsed);
+    }
+  }, 1000);
+}
+
+function toggleRunPause() {
+  runPaused = !runPaused;
+  const btn = document.getElementById('run-play');
+  if (btn) btn.innerHTML = runPaused
+    ? `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>`
+    : `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>`;
+}
+
+function runNext() { runIdx += 1; renderRunStep(); }
+function runPrev() { if (runIdx > 0) { runIdx -= 1; renderRunStep(); } }
+
+function closeRunner() {
+  clearRunTimer();
+  const overlay = document.getElementById('td-runner');
+  if (overlay) overlay.remove();
+  document.body.style.overflow = '';
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

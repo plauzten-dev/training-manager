@@ -218,6 +218,29 @@ async function loadPlayers(teamId) {
   renderContent(team);
   renderStats(allPlayers);
   applyFilters();
+  loadTeamMeta(teamId);
+}
+
+// Anwesenheits-% + Trainingsanzahl für die Design-Statkarte
+async function loadTeamMeta(teamId) {
+  // Trainings gesamt
+  try {
+    const tr = await (await fetch('/api/trainings')).json();
+    const el = document.getElementById('stat-trainings');
+    if (el) el.textContent = Array.isArray(tr) ? tr.length : '–';
+  } catch { /* ignore */ }
+
+  // Anwesenheit (Durchschnitt über alle Spieler des Teams)
+  if (!teamId) { const a = document.getElementById('stat-attendance'); if (a) a.textContent = '–'; return; }
+  try {
+    const sum = await (await fetch(`/api/teams/${teamId}/attendance-summary`)).json();
+    let present = 0, marked = 0;
+    (sum || []).forEach(r => { present += (r.present_count || 0); marked += (r.marked_count || 0); });
+    const el = document.getElementById('stat-attendance');
+    if (el) el.textContent = marked > 0 ? Math.round(present / marked * 100) + '%' : '–';
+  } catch {
+    const el = document.getElementById('stat-attendance'); if (el) el.textContent = '–';
+  }
 }
 
 function renderContent(team) {
@@ -255,24 +278,31 @@ function renderContent(team) {
       </div>
     </div>
 
-    <!-- Stats -->
-    <div class="team-stats-row">
-      <div class="team-stat-card">
+    <!-- Stats (Design: Spieler / Anwesenheit / Trainings) -->
+    <div class="team-stats-card">
+      <div class="team-stat-col">
         <span class="stat-number" id="stat-total">0</span>
         <span class="stat-label">Spieler</span>
       </div>
-      <div class="team-stat-card stat-fit">
-        <span class="stat-number" id="stat-fit">0</span>
-        <span class="stat-label">Fit</span>
+      <div class="team-stat-col">
+        <span class="stat-number" id="stat-attendance">–</span>
+        <span class="stat-label">Anwesenheit</span>
       </div>
-      <div class="team-stat-card stat-krank">
-        <span class="stat-number" id="stat-krank">0</span>
-        <span class="stat-label">Krank</span>
+      <div class="team-stat-col">
+        <span class="stat-number" id="stat-trainings">–</span>
+        <span class="stat-label">Trainings</span>
       </div>
-      <div class="team-stat-card stat-verletzt">
-        <span class="stat-number" id="stat-verletzt">0</span>
-        <span class="stat-label">Verletzt</span>
-      </div>
+    </div>
+
+    <!-- Gesundheitsstatus-Übersicht (Fit / Krank / Verletzt) -->
+    <div class="team-health-row">
+      <span class="team-health-chip health-fit"><span class="hc-dot"></span><b id="stat-fit">0</b> Fit</span>
+      <span class="team-health-chip health-krank"><span class="hc-dot"></span><b id="stat-krank">0</b> Krank</span>
+      <span class="team-health-chip health-verletzt"><span class="hc-dot"></span><b id="stat-verletzt">0</b> Verletzt</span>
+    </div>
+
+    <div class="team-kader-head">
+      <span>Kader</span>
     </div>
 
     <!-- Search + Filter -->
@@ -305,8 +335,10 @@ function renderStats(players) {
   setCount('stat-krank',    krank);
   setCount('stat-verletzt', verletzt);
 
+  const curTeam = allTeams.find(t => t.id === currentTeamId);
   document.getElementById('team-subtitle').textContent =
     allTeams.length === 0 ? 'Teams verwalten' :
+    curTeam ? `${curTeam.name} · ${curTeam.sport}` :
     `${allTeams.length} Team${allTeams.length !== 1 ? 's' : ''} · ${players.length} Spieler`;
 }
 

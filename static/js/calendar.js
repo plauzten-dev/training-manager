@@ -194,12 +194,15 @@ function renderSidebar(dateStr) {
       <div class="cal-list-dot"></div>
       <div>
         <div class="training-list-title">${escHtml(t.title)}</div>
-        <div class="training-list-meta">${t.exercise_count || 0} Übung${t.exercise_count !== 1 ? 'en' : ''}</div>
+        <div class="training-list-meta">
+          ${t.time ? `<span>${escHtml(t.time)} Uhr</span>` : ''}
+          <span>${t.exercise_count || 0} Übung${t.exercise_count !== 1 ? 'en' : ''}</span>
+        </div>
       </div>
     </div>`).join('');
 
   const eventsHTML = events.map(ev => `
-    <div class="training-list-item cal-event-item" onclick="showEditEventModal(${ev.id},'${dateStr}')">
+    <div class="training-list-item cal-event-item" style="border-left-color:${EVENT_COLORS[ev.type] || '#64748b'}" onclick="showEditEventModal(${ev.id},'${dateStr}')">
       <div class="cal-list-dot" style="background:${EVENT_COLORS[ev.type] || '#64748b'}"></div>
       <div style="flex:1">
         <div class="training-list-title">${escHtml(ev.title)}</div>
@@ -357,9 +360,15 @@ function showCreateTrainingModal(date) {
         <label>Titel *</label>
         <input type="text" name="title" placeholder="z.B. Dienstagstraining" required autofocus>
       </div>
-      <div class="form-group">
-        <label>Datum *</label>
-        <input type="date" name="date" value="${dateVal}" required>
+      <div class="form-row" style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label>Datum *</label>
+          <input type="date" name="date" value="${dateVal}" required>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>Uhrzeit</label>
+          <input type="time" name="time">
+        </div>
       </div>
       <div class="form-group">
         <label>Notizen</label>
@@ -378,6 +387,7 @@ async function submitCreateTraining(e) {
   const data = {
     title: form.title.value.trim(),
     date:  form.date.value,
+    time:  form.time.value,
     notes: form.notes.value
   };
   const res = await fetch('/api/trainings', {
