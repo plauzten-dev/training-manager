@@ -575,6 +575,7 @@ textarea { resize: vertical; min-height: 90px; }
 /* Exercises header actions + mobile search */
 .ex-header-actions { display: flex; gap: 8px; align-items: center; }
 .ex-search-mob { display: none; }
+.sport-sel-mob { display: none; }
 .icon-round-btn { gap: 6px; }
 
 /* Kompakte, einklappbare Kopfzeile (nur Mobile beim Scrollen) */
@@ -949,30 +950,6 @@ textarea { resize: vertical; min-height: 90px; }
 .top-ex-track { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
 .top-ex-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.6s ease; }
 .top-ex-count { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
-
-.dash-quote-col { display: flex; flex-direction: column; }
-.dash-quote {
-  background: linear-gradient(140deg, #0f1f35 0%, #102240 50%, #1a3460 100%);
-  border-radius: var(--radius); padding: 28px 28px 24px;
-  display: flex; flex-direction: column; justify-content: space-between;
-  position: relative; overflow: hidden; flex: 1;
-  min-height: 180px;
-}
-.dash-quote-mark {
-  position: absolute; top: 2px; left: 18px;
-  font-size: 9rem; font-weight: 900; line-height: 1;
-  color: rgba(255,255,255,0.05); font-family: Georgia, serif;
-  pointer-events: none; user-select: none;
-}
-.dash-quote-text {
-  font-size: 0.92rem; color: rgba(255,255,255,0.85); line-height: 1.7;
-  font-style: italic; position: relative;
-}
-.dash-quote-author {
-  margin-top: 18px; font-size: 0.8rem; color: rgba(255,255,255,0.45);
-  border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px;
-  font-style: normal; position: relative;
-}
 
 .exercise-card-body { padding: 16px 18px 18px; }
 .exercise-card-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
@@ -1516,7 +1493,6 @@ textarea { resize: vertical; min-height: 90px; }
   .user-settings-icon { display: none; }
   .filter-sidebar { width: 180px; }
   .dash-bottom { grid-template-columns: 1fr; }
-  .dash-quote-col { display: none; }
   .dash-stats-grid { grid-template-columns: 1fr; }
 }
 
@@ -1566,17 +1542,38 @@ textarea { resize: vertical; min-height: 90px; }
 
   /* Bottom section: stack */
   .dash-bottom { grid-template-columns: 1fr; gap: 16px; }
-  .dash-quote-col { display: none; }
   .dash-stats-grid { grid-template-columns: 1fr; }
 
-  /* Sport tabs: auf Mobile als horizontal scrollbare Chips (Design-Refresh) */
-  .sport-tabs-bar {
-    display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px;
-    padding: 12px 16px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  /* Sport-Auswahl auf Mobile: Dropdown-Trigger statt horizontal scrollender
+     Pillen-Reihe. 8 Chips ("Alle Sportarten" + 7 Sportarten) passten nie in
+     eine Bildschirmbreite – auf 375px waren nach der zweiten Pille schon
+     Schluss, der Rest war nur per Wischen erreichbar. Trigger + Filter-Button
+     stehen zusammen in einer Zeile, kein Scrollen mehr nötig. */
+  .sport-tabs-bar { display: none; }
+  .sport-sel-mob {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px 4px;
   }
-  .sport-tabs-bar::-webkit-scrollbar { display: none; }
-  .sport-tab { flex-shrink: 0; padding: 8px 14px; font-size: 0.82rem; border-radius: 999px; }
-  .sport-sel-mob { display: none; }
+  .sport-sel-mob .sport-sel-mob-trigger { flex: 1; min-width: 0; width: auto; }
+
+  /* Filter-Trigger: kompakter Icon-Button statt Vollbreiten-Pille in eigener
+     Zeile. Grüner Akzent-Punkt zeigt aktive Filter an (siehe updateFilterBadge
+     in exercises.js), damit man nicht erst aufklappen muss um es zu wissen. */
+  .ex-filter-trigger {
+    position: relative; flex-shrink: 0;
+    width: 38px; height: 38px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 12px;
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  }
+  .ex-filter-trigger:hover { border-color: #94a3b8; color: var(--text); }
+  .ex-filter-trigger.ex-filter-open { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+  .ex-filter-badge {
+    display: none; position: absolute; top: -3px; right: -3px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--primary); border: 2px solid var(--bg);
+  }
+  .ex-filter-badge.show { display: block; }
 
   /* Exercises header: title + count + runde Icon-Buttons */
   .ex-header-actions { gap: 6px; }
@@ -1601,19 +1598,19 @@ textarea { resize: vertical; min-height: 90px; }
   .ex-search-mob svg { flex-shrink: 0; }
   .ex-search-mob input { border: none; outline: none; background: transparent; flex: 1; color: var(--text); }
 
-  /* Eingeklappte Kopfzeile: großen Block sanft kollabieren, schlanke Leiste einblenden */
-  .ex-fullhead {
-    overflow: hidden;
-    max-height: 360px; opacity: 1;
-    transition: max-height .32s ease, opacity .22s ease;
-  }
-  body.ex-condensed .ex-fullhead { max-height: 0; opacity: 0; }
-  body.ex-condensed .ex-compact {
+  /* Eingeklappte Kopfzeile: Höhe + Crossfade laufen 1:1 mit dem Scroll-Offset
+     (siehe updateExHeaderProgress in exercises.js) statt über separat getimte
+     CSS-Transitions – dadurch keine Drift zwischen Scroll-Geste und Animation
+     mehr (war die Ursache für das ruckelige/verzögerte Ein-/Ausblenden). */
+  .ex-header-wrap { position: relative; overflow: hidden; }
+  .ex-fullhead { position: relative; will-change: opacity; }
+  .ex-compact {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    position: absolute; top: 0; left: 0; right: 0;
     padding: 8px 14px 8px 16px;
     border-bottom: 1px solid var(--border);
     background: var(--bg);
-    animation: exCompactIn .26s ease;
+    opacity: 0; pointer-events: none; will-change: opacity;
   }
   .ex-compact-left { display: flex; align-items: baseline; gap: 8px; min-width: 0; cursor: pointer; }
   .ex-compact-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
@@ -1632,7 +1629,6 @@ textarea { resize: vertical; min-height: 90px; }
   .ex-compact-btn:active { background: var(--bg); }
   .ex-compact-btn.ex-compact-add { background: var(--primary); border-color: var(--primary); color: #fff; }
   .ex-compact-btn.fav-active { color: #e11d48; border-color: #e11d48; background: #fff0f3; }
-  @keyframes exCompactIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 
   /* Exercises: filter as collapsible panel */
   .exercises-layout { flex-direction: column; padding: 0; gap: 0; flex: 1; overflow: hidden; }
@@ -1647,18 +1643,6 @@ textarea { resize: vertical; min-height: 90px; }
   .exercises-main { padding: 14px 16px; }
   .exercises-count { padding: 0 0 10px; }
   .exercises-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-
-  /* Mobile filter toggle button */
-  .mobile-filter-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    margin: 10px 16px 0;
-    padding: 6px 12px; background: transparent;
-    border: 1.5px solid var(--border); border-radius: 999px;
-    font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
-    cursor: pointer; width: auto;
-  }
-  .mobile-filter-btn:hover { border-color: #94a3b8; color: var(--text); }
-  .mobile-filter-btn svg { flex-shrink: 0; width: 13px; height: 13px; }
 
   /* Calendar header: Desktop-Buttons aus, runder + an */
   .cal-desktop-btn { display: none; }
@@ -2727,8 +2711,10 @@ input.team-search-input:focus {
 .ex-sport-option.active { font-weight: 700; }
 
 /* ── Mobile Sport Selector ───────────────────────────────────────────────── */
-/* display:none by default; toggled to block inside @media(≤640px) at end of file */
-.sport-sel-mob { display: none; padding: 12px 16px 0; position: relative; }
+/* display:none Default steht weiter oben bei .ex-compact (muss VOR der
+   @media(≤640px)-Regel stehen, die es auf flex umschaltet, sonst gewinnt diese
+   spätere, unconditional Regel im Cascade und die Auswahl bleibt unsichtbar). */
+.sport-sel-mob { padding: 12px 16px 0; position: relative; }
 .sport-sel-mob-trigger {
   display: flex; align-items: center; gap: 9px; width: 100%;
   padding: 10px 14px; border-radius: 10px;
@@ -2741,7 +2727,9 @@ input.team-search-input:focus {
 .sport-sel-mob-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; transition: background 0.15s; }
 .sport-sel-mob-panel {
   display: none;
-  position: absolute; top: calc(100% + 2px); left: 16px; right: 16px; z-index: 200;
+  /* position:fixed (statt absolute) + Position aus JS (toggleSportSelMobile),
+     da .ex-header-wrap overflow:hidden hat und ein absolutes Panel abschneiden würde */
+  position: fixed; z-index: 9999;
   background: var(--card); border: 1.5px solid var(--border);
   border-radius: 12px; padding: 10px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.15);
@@ -2910,11 +2898,6 @@ input.team-search-input:focus {
 
 @media (max-width: 380px) {
   .players-grid { grid-template-columns: 1fr; }
-}
-
-/* Mobile sport selector replaced by horizontal sport chips (Design-Refresh) */
-@media (max-width: 640px) {
-  .sport-sel-mob { display: none; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

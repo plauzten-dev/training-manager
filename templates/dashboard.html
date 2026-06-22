@@ -125,13 +125,6 @@
       </div>
     </div>
 
-    <!-- ── Motivation ────────────────────────────────────────────────────────── -->
-    <div class="dash-quote">
-      <div class="dash-quote-mark" aria-hidden="true">"</div>
-      <div class="dash-quote-text" id="quote-text"></div>
-      <div class="dash-quote-author" id="quote-author"></div>
-    </div>
-
   </div>
 </div>
 {% endblock %}
@@ -157,19 +150,6 @@ const SPORT_BG = {
 };
 const EV_COLORS = { spiel: '#d97706', turnier: '#7c3aed', sonstiges: '#64748b' };
 
-const QUOTES = [
-  { text: 'Champions werden nicht in Sporthallen gemacht. Champions werden aus etwas gemacht, das sie tief in sich tragen – einem Wunsch, einem Traum, einer Vision.', author: 'Muhammad Ali' },
-  { text: 'Erfolg ist kein Zufall. Er ist harte Arbeit, Ausdauer, Lernen und vor allem Liebe zu dem, was du tust.', author: 'Pelé' },
-  { text: 'Disziplin ist die Brücke zwischen Zielen und Erfolg.', author: 'Jim Rohn' },
-  { text: 'Es gibt kein Limit. Es gibt nur Plateaus – und du musst nicht dort bleiben.', author: 'Bruce Lee' },
-  { text: 'Der Schmerz des Trainings ist temporär. Der Stolz auf das Erreichte bleibt ein Leben lang.', author: '' },
-  { text: 'Das einzige schlechte Training ist das, das nicht stattgefunden hat.', author: '' },
-  { text: 'Nicht aufzugeben ist der erste Schritt zum Sieg.', author: '' },
-  { text: 'Glaube an dich. Arbeite für dich. Die Ergebnisse kommen von selbst.', author: '' },
-  { text: 'Herausforderungen machen das Leben interessant. Sie zu überwinden macht das Leben bedeutsam.', author: 'Joshua J. Marine' },
-  { text: 'Wer aufhört, besser zu werden, hat aufgehört, gut zu sein.', author: 'Philip Rosenthal' },
-];
-
 const TAGLINES = [
   ['Guten Morgen'], ['Guten Mittag'], ['Guten Nachmittag'], ['Guten Abend'],
 ];
@@ -186,14 +166,6 @@ function getGreeting() {
   document.getElementById('dash-greet').textContent = `${getGreeting()}, {{ username }}`;
   document.getElementById('dash-date').textContent =
     `${FULL_DAYS[now.getDay()]}, ${now.getDate()}. ${MONTHS[now.getMonth()]}`;
-})();
-
-(function initQuote() {
-  const start      = new Date(new Date().getFullYear(), 0, 0);
-  const dayOfYear  = Math.floor((Date.now() - start) / 86400000);
-  const q          = QUOTES[dayOfYear % QUOTES.length];
-  document.getElementById('quote-text').textContent   = '„' + q.text + '“';
-  document.getElementById('quote-author').textContent = q.author ? `— ${q.author}` : '— Unbekannt';
 })();
 
 function countUp(el, target, duration = 600) {

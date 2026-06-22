@@ -1,7 +1,22 @@
 # Trainflow – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 15. Juni 2026
-> Status: ✅ Version B.0.62 – Mobile-Design-Refresh (Info_Designs) + neues Playbook-Logo
+> Zuletzt aktualisiert: 22. Juni 2026
+> Status: ✅ Version B.0.63 – Übungen-Toolbar überarbeitet, Dashboard-Zitat entfernt
+
+---
+
+## B.0.63 – Änderungen (22.06.2026) – Übungen-Toolbar, Dashboard aufgeräumt
+
+- [x] **Übungen-Kopfzeile (Mobile)**: Sport-Pillen-Reihe + lose "Filter anzeigen"-Zeile
+      ersetzt durch eine Zeile aus Sport-Dropdown (`sport-sel-mob`, reaktivierte
+      Altkomponente statt scrollender Chips) + kompaktem Filter-Icon-Button
+      (`.ex-filter-trigger`, grüner Badge-Punkt bei aktiven Filtern). Dabei zwei
+      Altlasten gefixt: doppelte `display:none`-Regel für `.sport-sel-mob` und ein
+      Stacking-Context-Bug (`will-change` auf `.ex-fullhead` verdeckte das Dropdown-Panel
+      hinter den Übungskarten) – Panel hängt sich beim Öffnen jetzt an `document.body`.
+- [x] **Dashboard**: Motivations-Zitat-Block entfernt (`.dash-quote`, `QUOTES`-Array,
+      `initQuote()`). Toter `.dash-quote-col`-Leftover ebenfalls entfernt.
+- [x] SW-Cache v16→v17, Version B.0.63 an allen 3 Stellen.
 
 ---
 

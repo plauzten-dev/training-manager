@@ -2,7 +2,9 @@
 {% block title %}Übungen – Trainflow{% endblock %}
 
 {% block content %}
-<!-- Kompakte Kopfzeile beim Scrollen (nur Mobile, eingeblendet via body.ex-condensed) -->
+<!-- Header: volle Kopfzeile + kompakte Leiste, gemeinsam in ex-header-wrap fürs
+     ruckelfreie, scroll-synchrone Crossfade (siehe updateExHeaderProgress in exercises.js) -->
+<div class="ex-header-wrap" id="ex-header-wrap">
 <div class="ex-compact" id="ex-compact">
   <div class="ex-compact-left" onclick="expandExHeader(false)">
     <span class="ex-compact-title">Übungen</span>
@@ -24,7 +26,7 @@
   </div>
 </div>
 
-<div class="ex-fullhead">
+<div class="ex-fullhead" id="ex-fullhead">
 <div class="page-header">
   <div>
     <h1 class="page-title">Übungen</h1>
@@ -88,7 +90,9 @@
   </button>
 </div>
 
-<!-- Mobile Sport Selector (≤640px) -->
+<!-- Mobile Sport Selector: ersetzt die scrollende Pillen-Reihe auf ≤640px –
+     ein Dropdown-Trigger statt 8 nebeneinander gequetschter Chips, passt
+     immer in eine Zeile zusammen mit dem Filter-Button, kein Scrollen nötig. -->
 <div class="sport-sel-mob" id="sport-sel-mob">
   <button class="sport-sel-mob-trigger" id="sport-sel-mob-trigger" onclick="toggleSportSelMobile(event)">
     <span class="sport-sel-mob-dot" id="sport-sel-mob-dot" style="background:#64748b"></span>
@@ -122,13 +126,13 @@
       <span class="sport-sel-dot-sm" style="background:#0d9488"></span>Allgemein
     </button>
   </div>
+  <button class="ex-filter-trigger" id="mobile-filter-toggle" onclick="toggleMobileFilter()" aria-label="Filter" title="Filter" style="display:none">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+    <span class="ex-filter-badge" id="ex-filter-badge"></span>
+  </button>
 </div>
-
-<button class="mobile-filter-btn" id="mobile-filter-toggle" onclick="toggleMobileFilter()" style="display:none">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-  <span id="filter-btn-label">Filter anzeigen</span>
-</button>
 </div><!-- /.ex-fullhead -->
+</div><!-- /.ex-header-wrap -->
 
 <div class="exercises-layout">
   <!-- Filter sidebar -->

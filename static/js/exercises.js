@@ -77,9 +77,10 @@ async function init() {
 
   // Close mobile sport panel on outside click
   document.addEventListener('click', (e) => {
-    const mob = document.getElementById('sport-sel-mob');
-    if (mob && !mob.contains(e.target)) {
-      document.getElementById('sport-sel-mob-panel')?.classList.remove('open');
+    const mob   = document.getElementById('sport-sel-mob');
+    const panel = document.getElementById('sport-sel-mob-panel');
+    if (mob && panel && !mob.contains(e.target) && !panel.contains(e.target)) {
+      panel.classList.remove('open');
     }
   });
 
@@ -177,7 +178,24 @@ function updateSportSelMobile(sport) {
 
 function toggleSportSelMobile(event) {
   event.stopPropagation();
-  document.getElementById('sport-sel-mob-panel')?.classList.toggle('open');
+  const panel   = document.getElementById('sport-sel-mob-panel');
+  const trigger = document.getElementById('sport-sel-mob-trigger');
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  if (!isOpen && trigger) {
+    // An document.body hängen statt im ex-header-wrap zu belassen: .ex-fullhead
+    // hat will-change:opacity (für den scroll-synchronen Header-Crossfade), das
+    // erzeugt einen eigenen Stacking-Context – darin wäre z-index:9999 nur lokal
+    // gültig und würde von der später im DOM stehenden .exercises-layout
+    // (Übungskarten) optisch überdeckt. Als Body-Kind + position:fixed umgeht
+    // das die Stacking-Context-Falle zuverlässig (wie ein simples Portal).
+    if (panel.parentElement !== document.body) document.body.appendChild(panel);
+    const rect = trigger.getBoundingClientRect();
+    panel.style.top   = (rect.bottom + 4) + 'px';
+    panel.style.left  = rect.left + 'px';
+    panel.style.width = rect.width + 'px';
+  }
+  panel.classList.toggle('open');
 }
 
 // ── Fetch & Render ────────────────────────────────────────────────────────────
@@ -236,7 +254,7 @@ function renderExercises(exercises) {
   // Nach Listenwechsel sauberer Zustand: an den Anfang, Kopfzeile ausklappen
   const sm = document.querySelector('.exercises-main');
   if (sm) sm.scrollTop = 0;
-  document.body.classList.remove('ex-condensed');
+  updateExHeaderProgress();
 }
 
 function cardHTML(e) {
@@ -778,7 +796,7 @@ async function shareExercise(exerciseId, btn) {
 }
 
 // ── Filters ───────────────────────────────────────────────────────────────────
-function applyFilters()    { fetchExercises(); }
+function applyFilters()    { updateFilterBadge(); fetchExercises(); }
 function debounceSearch()  { clearTimeout(searchTimeout); searchTimeout = setTimeout(fetchExercises, 350); }
 
 function resetFilters() {
@@ -788,6 +806,7 @@ function resetFilters() {
   document.getElementById('filter-fieldsize').value  = '';
   document.getElementById('search-input').value      = '';
   document.querySelector('input[name="difficulty"][value=""]').checked = true;
+  updateFilterBadge();
   fetchExercises();
 }
 
@@ -801,9 +820,22 @@ init();
 // ── Mobile filter toggle ──────────────────────────────────────────────────────
 function toggleMobileFilter() {
   const sidebar = document.querySelector('.filter-sidebar');
-  const label   = document.getElementById('filter-btn-label');
+  const btn     = document.getElementById('mobile-filter-toggle');
   const open    = sidebar.classList.toggle('mobile-open');
-  label.textContent = open ? 'Filter ausblenden' : 'Filter anzeigen';
+  btn?.classList.toggle('ex-filter-open', open);
+}
+
+// Grüner Punkt am Filter-Trigger zeigt an, ob Filter (außer Sportart/Suche,
+// die schon eigene Bedienelemente haben) aktiv sind, ohne dafür aufklappen zu müssen.
+function updateFilterBadge() {
+  const badge = document.getElementById('ex-filter-badge');
+  if (!badge) return;
+  const active = document.getElementById('filter-players').value !== ''
+    || document.getElementById('filter-gk').value !== ''
+    || document.getElementById('filter-competency').value !== ''
+    || document.getElementById('filter-fieldsize').value !== ''
+    || document.querySelector('input[name="difficulty"]:checked')?.value !== '';
+  badge.classList.toggle('show', active);
 }
 
 function initMobileFilterBtn() {
@@ -817,21 +849,58 @@ function initMobileFilterBtn() {
 initMobileFilterBtn();
 
 // ── Einklappbare Kopfzeile beim Scrollen (≤640px) ─────────────────────────────
+// Höhe + Crossfade hängen direkt (1:1) am Scroll-Offset statt an einer
+// Schwellwert-Klasse mit eigener CSS-Transition-Dauer – so läuft die Animation
+// exakt synchron zur Scroll-Geste (oder zum nativen smooth-scroll bei
+// expandExHeader), ohne Drift/Ruckeln. rAF batcht die Style-Writes auf 1×/Frame.
+const EX_COLLAPSE_DISTANCE = 90; // px Scroll bis komplett eingeklappt
+
+function updateExHeaderProgress() {
+  const scroller = document.querySelector('.exercises-main');
+  const wrap      = document.getElementById('ex-header-wrap');
+  const fullhead  = document.getElementById('ex-fullhead');
+  const compact   = document.getElementById('ex-compact');
+  if (!scroller || !wrap || !fullhead || !compact) return;
+
+  if (window.innerWidth > 640) {
+    wrap.style.height = '';
+    fullhead.style.opacity = '';
+    fullhead.style.pointerEvents = '';
+    compact.style.opacity = '';
+    compact.style.pointerEvents = '';
+    return;
+  }
+
+  const fullH    = fullhead.offsetHeight;
+  const compactH = compact.offsetHeight || 53;
+  const p        = Math.max(0, Math.min(1, scroller.scrollTop / EX_COLLAPSE_DISTANCE));
+
+  wrap.style.height = (fullH - p * (fullH - compactH)) + 'px';
+  fullhead.style.opacity = String(Math.max(0, 1 - p * 1.3));
+  compact.style.opacity  = String(Math.max(0, Math.min(1, (p - 0.25) / 0.75)));
+
+  const compactActive = p > 0.55;
+  fullhead.style.pointerEvents = compactActive ? 'none' : 'auto';
+  compact.style.pointerEvents  = compactActive ? 'auto' : 'none';
+}
+
 (function initCondensedHeader() {
   const scroller = document.querySelector('.exercises-main');
   if (!scroller) return;
-  scroller.addEventListener('scroll', () => {
+  let ticking = false;
+  const onScroll = () => {
     if (window.innerWidth > 640) return;
-    const y   = scroller.scrollTop;
-    const has = document.body.classList.contains('ex-condensed');
-    if (!has && y > 64) document.body.classList.add('ex-condensed');
-    else if (has && y < 24) document.body.classList.remove('ex-condensed');
-  }, { passive: true });
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { updateExHeaderProgress(); ticking = false; });
+  };
+  scroller.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', updateExHeaderProgress);
+  updateExHeaderProgress();
 })();
 
 // Kopfzeile wieder ausklappen (Tap auf kompakten Titel / Such-Icon)
 function expandExHeader(focusSearch) {
-  document.body.classList.remove('ex-condensed');
   const scroller = document.querySelector('.exercises-main');
   if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
   if (focusSearch) setTimeout(() => document.getElementById('ex-search-mob-input')?.focus(), 340);

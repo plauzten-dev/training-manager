@@ -44,7 +44,7 @@ MaxiWebs/
 │
 ├── templates/
 │   ├── base.html            ← Sidebar + Mobile-Nav, globale Modal-/Toast-Funktionen
-│   ├── dashboard.html       ← Startseite: Begrüßung, Stats, 4-Tage (Heute/Morgen/Übermorgen), Übungsvorschläge, Zitat
+│   ├── dashboard.html       ← Startseite: Begrüßung, Stats, 4-Tage (Heute/Morgen/Übermorgen), Übungsvorschläge
 │   ├── login.html           ← Login + Registrierung (KEIN extends base.html!)
 │   ├── exercises.html       ← Übungsdatenbank (7 Sport-Tabs + Filter-Sidebar + Mobile-Toggle)
 │   ├── calendar.html        ← Trainingskalender
