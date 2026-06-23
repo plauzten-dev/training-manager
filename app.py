@@ -464,7 +464,7 @@ def assetlinks():
                 "namespace": "android_app",
                 "package_name": "com.plauzten.traindesk",
                 "sha256_cert_fingerprints": [
-                    "PLACEHOLDER_SHA256_FINGERPRINT_AFTER_PLAY_STORE_UPLOAD"
+                    "04:B3:9F:86:84:5E:3A:9F:42:60:DF:E9:A2:FE:B8:CC:23:B0:53:E9:2F:A0:73:13:DC:D2:89:4B:BB:DF:17:6A"
                 ]
             }
         }
