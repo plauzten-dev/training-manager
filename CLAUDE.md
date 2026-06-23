@@ -1,11 +1,13 @@
-# Trainflow – Projekt-Kontext für Claude
+# TrainDesk – Projekt-Kontext für Claude
 
-> App-Name (sichtbar): **Trainflow** (seit B.0.59, vormals "Training Manager").
+> App-Name (sichtbar): **TrainDesk** (seit Play-Store-Vorbereitung 23.06.2026, vorher
+> "Trainflow" seit B.0.59, ursprünglich "Training Manager"). Grund für den zweiten
+> Namenswechsel: "Trainflow" kollidierte mit einer bereits existierenden Play-Store-App
+> gleicher Nische.
 > Interne Kennungen (Live-URL, Fly-App, GitHub-Repo, Cloudinary-Ordner) heißen
 > weiterhin `training-manager` – bewusst nicht migriert.
-> Android-Package-ID (Play Store, seit Play-Store-Vorbereitung): **`com.trainflow.app`**
-> – unveränderlich nach Erstveröffentlichung, daher bewusst NICHT `com.trainingmanager.app`
-> verwendet, sondern an den sichtbaren Namen angepasst.
+> Android-Package-ID (Play Store): **`com.plauzten.traindesk`** – unveränderlich nach
+> Erstveröffentlichung, mit Entwickler-Präfix gewählt um Namens-Kollisionen zu vermeiden.
 
 > Diese Datei wird automatisch von Claude Code gelesen. Sie enthält alles was du brauchst,
 > um sofort produktiv weiter zu arbeiten.

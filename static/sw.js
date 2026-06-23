@@ -44,7 +44,7 @@ self.addEventListener('notificationclick', event => {
 
 // Push-Event (für späteren Server-Push vorbereitet – aktuell ungenutzt)
 self.addEventListener('push', event => {
-  let data = { title: 'Trainflow', body: '' };
+  let data = { title: 'TrainDesk', body: '' };
   try {
     if (event.data) data = Object.assign(data, event.data.json());
   } catch (e) {

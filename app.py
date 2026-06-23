@@ -115,18 +115,18 @@ def _send_verification_email(to_email, username, token):
     link = f"{request.host_url.rstrip('/')}/verify-email/{token}"
     text = (
         f"Hallo {username},\n\n"
-        f"bitte bestätige deine E-Mail-Adresse für Trainflow, indem du auf den folgenden Link klickst:\n\n"
+        f"bitte bestätige deine E-Mail-Adresse für TrainDesk, indem du auf den folgenden Link klickst:\n\n"
         f"{link}\n\n"
         f"Der Link ist {VERIFICATION_TTL_HOURS} Stunden gültig.\n\n"
-        f"Falls du dich nicht bei Trainflow registriert hast, kannst du diese E-Mail einfach ignorieren.\n\n"
-        f"Dein Trainflow-Team"
+        f"Falls du dich nicht bei TrainDesk registriert hast, kannst du diese E-Mail einfach ignorieren.\n\n"
+        f"Dein TrainDesk-Team"
     )
     if not _smtp_enabled:
         print(f"\n[E-Mail-Verifikation – kein SMTP konfiguriert]\n  An:   {to_email}\n  Link: {link}\n")
         return True
     try:
         msg = EmailMessage()
-        msg['Subject'] = 'Trainflow – Bestätige deine E-Mail-Adresse'
+        msg['Subject'] = 'TrainDesk – Bestätige deine E-Mail-Adresse'
         msg['From'] = SMTP_FROM
         msg['To'] = to_email
         msg.set_content(text)
@@ -462,9 +462,9 @@ def assetlinks():
             "relation": ["delegate_permission/common.handle_all_urls"],
             "target": {
                 "namespace": "android_app",
-                "package_name": "com.trainflow.app",
+                "package_name": "com.plauzten.traindesk",
                 "sha256_cert_fingerprints": [
-                    "8D:AB:E4:73:35:38:7E:19:95:F2:D3:B0:0F:4F:F2:E9:84:BC:2F:D8:CE:39:D2:B4:D4:5E:13:73:36:52:41:C4"
+                    "PLACEHOLDER_SHA256_FINGERPRINT_AFTER_PLAY_STORE_UPLOAD"
                 ]
             }
         }
@@ -2219,7 +2219,7 @@ if __name__ == '__main__':
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     print('\n' + '='*40)
-    print('  Trainflow gestartet!')
+    print('  TrainDesk gestartet!')
     print('  Oeffne: http://localhost:5000')
     print('  Beenden: Ctrl+C')
     print('='*40 + '\n')

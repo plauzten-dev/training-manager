@@ -1,9 +1,9 @@
 @echo off
-title Trainflow
+title TrainDesk
 color 0A
 echo.
 echo  =====================================
-echo   Trainflow - Wird gestartet...
+echo   TrainDesk - Wird gestartet...
 echo  =====================================
 echo.
 echo  Installiere Abhaengigkeiten...

@@ -1,7 +1,7 @@
 {
   "id": "https://training-manager.fly.dev/",
-  "name": "Trainflow",
-  "short_name": "Trainflow",
+  "name": "TrainDesk",
+  "short_name": "TrainDesk",
   "description": "Professionelle Trainingsplanung für Sporttrainer – Übungen, Kalender, PDF-Export.",
   "start_url": "/dashboard",
   "scope": "/",

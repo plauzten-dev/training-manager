@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Einstellungen – Trainflow{% endblock %}
+{% block title %}Einstellungen – TrainDesk{% endblock %}
 
 {% block content %}
 <div class="settings-page">
@@ -1028,7 +1028,7 @@ function initNotifications() {
   if (perm === 'granted') {
     pill.className = 'notif-pill on';
     pill.textContent = 'Aktiviert';
-    text.textContent = 'Du erhältst Benachrichtigungen von Trainflow.';
+    text.textContent = 'Du erhältst Benachrichtigungen von TrainDesk.';
     testBtn.style.display = '';
   } else if (perm === 'denied') {
     pill.className = 'notif-pill off';
@@ -1056,7 +1056,7 @@ async function requestNotifications() {
 
 async function sendTestNotification() {
   if (Notification.permission !== 'granted') { initNotifications(); return; }
-  const title = 'Trainflow';
+  const title = 'TrainDesk';
   const opts = {
     body: 'Das ist eine Test-Benachrichtigung – alles funktioniert!',
     icon: '/static/icons/icon-192.png',

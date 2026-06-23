@@ -1,7 +1,23 @@
-# Trainflow – Fortschritts-Erinnerung
+# TrainDesk – Fortschritts-Erinnerung
 
-> Zuletzt aktualisiert: 22. Juni 2026
-> Status: ✅ Version B.0.63 – Übungen-Toolbar überarbeitet, Dashboard-Zitat entfernt
+> Zuletzt aktualisiert: 23. Juni 2026
+> Status: ✅ Version B.0.63 – Umbenennung zu TrainDesk (Play-Store-Vorbereitung)
+
+---
+
+## Rebranding (23.06.2026) – "Trainflow" → "TrainDesk"
+
+- Während der Play-Store-Vorbereitung festgestellt: "Trainflow" kollidiert mit einer
+  bereits existierenden Play-Store-App gleicher Nische (Trainingsplanung). Name in
+  allen sichtbaren Bereichen auf **TrainDesk** geändert (Titel, Splash-Screens,
+  `manifest.json`, Push-Benachrichtigungen, PDF-Export, Share-Seite, `start.bat`,
+  `app.py`-Startmeldung/E-Mail-Texte). `PROGRESS.md`-Changelog-Historie (B.0.59 etc.)
+  bewusst NICHT rückwirkend umgeschrieben – war zum jeweiligen Zeitpunkt korrekt.
+- **Android-Package-ID**: `com.plauzten.traindesk` (mit Entwickler-Präfix, um künftige
+  Namens-Kollisionen im global eindeutigen Play-Store-Namespace zu vermeiden).
+- Android-Paket muss in PWABuilder neu generiert werden (alter Stand war auf
+  `com.trainflow.app`/"Trainflow" ausgelegt) – neuer SHA-256-Fingerprint danach wieder
+  in `app.py` (`/.well-known/assetlinks.json`) einzutragen.
 
 ---
 
