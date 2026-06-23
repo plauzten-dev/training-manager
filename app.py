@@ -462,9 +462,9 @@ def assetlinks():
             "relation": ["delegate_permission/common.handle_all_urls"],
             "target": {
                 "namespace": "android_app",
-                "package_name": "com.trainingmanager.app",
+                "package_name": "com.trainflow.app",
                 "sha256_cert_fingerprints": [
-                    "PLACEHOLDER_SHA256_FINGERPRINT_AFTER_PLAY_STORE_UPLOAD"
+                    "8D:AB:E4:73:35:38:7E:19:95:F2:D3:B0:0F:4F:F2:E9:84:BC:2F:D8:CE:39:D2:B4:D4:5E:13:73:36:52:41:C4"
                 ]
             }
         }

@@ -1,8 +1,11 @@
 # Trainflow – Projekt-Kontext für Claude
 
 > App-Name (sichtbar): **Trainflow** (seit B.0.59, vormals "Training Manager").
-> Interne Kennungen (Live-URL, Fly-App, GitHub-Repo, Cloudinary-Ordner, Android-Package)
-> heißen weiterhin `training-manager` / `com.trainingmanager.app` – bewusst nicht migriert.
+> Interne Kennungen (Live-URL, Fly-App, GitHub-Repo, Cloudinary-Ordner) heißen
+> weiterhin `training-manager` – bewusst nicht migriert.
+> Android-Package-ID (Play Store, seit Play-Store-Vorbereitung): **`com.trainflow.app`**
+> – unveränderlich nach Erstveröffentlichung, daher bewusst NICHT `com.trainingmanager.app`
+> verwendet, sondern an den sichtbaren Namen angepasst.
 
 > Diese Datei wird automatisch von Claude Code gelesen. Sie enthält alles was du brauchst,
 > um sofort produktiv weiter zu arbeiten.
