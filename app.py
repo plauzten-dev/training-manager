@@ -464,7 +464,7 @@ def assetlinks():
                 "namespace": "android_app",
                 "package_name": "com.plauzten.traindesk",
                 "sha256_cert_fingerprints": [
-                    "04:B3:9F:86:84:5E:3A:9F:42:60:DF:E9:A2:FE:B8:CC:23:B0:53:E9:2F:A0:73:13:DC:D2:89:4B:BB:DF:17:6A"
+                    "E5:95:17:1C:6A:C9:E2:EE:EB:28:20:8E:A2:33:93:8F:BB:6A:F2:EB:F6:67:2F:01:E6:51:A9:91:A3:20:BB:95"
                 ]
             }
         }
